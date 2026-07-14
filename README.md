@@ -4,6 +4,22 @@
 
 Platform teams ingest multimodal documents once, retrieve typed Evidence under hard Tenant isolation, and optionally run Guarded Agentic Retrieval with budgets and traces — without rebuilding a RAG stack per product and without a workforce search UI.
 
+## About (GitHub)
+
+Use this for the repository **About** panel:
+
+| Field | Value |
+| --- | --- |
+| **Description** | AMKP — Agentic Multimodal Knowledge Plane. API/SDK/MCP-first Evidence + Policy + Tenancy for multi-product RAG: hard tenant isolation, structure-aware ingest, guarded agentic retrieve, eval/POC. |
+| **Website** | _(none yet — local docs: `design-artifacts/amkp-html-docs/index.html`)_ |
+| **Topics** | `amkp` `rag` `multimodal` `multi-tenant` `mcp` `nestjs` `pgvector` `knowledge-plane` `agentic-retrieval` `typescript` |
+
+**Short blurb (≤350 chars, paste into GitHub Description):**
+
+```text
+AMKP (Agentic Multimodal Knowledge Plane): API/SDK/MCP-first Evidence + Policy + Tenancy plane for multi-product RAG — hard isolation, Parse Ladder / TableEvidence, guarded agentic retrieve, traces & eval.
+```
+
 | | |
 | --- | --- |
 | **Product** | AMKP |
