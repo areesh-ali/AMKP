@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMKP Product Overview</title>
+<style>
+  :root {
+    --ink: #0b0f14;
+    --slate: #141c26;
+    --slate-mid: #1e2a38;
+    --text: #dce4ed;
+    --text-muted: #7d8fa8;
+    --cyan: #22d3ee;
+    --cyan-dim: #0e7490;
+    --amber: #f59e0b;
+    --border: #2d3f55;
+    --glow-cyan: rgba(34, 211, 238, 0.12);
+    --glow-amber: rgba(245, 158, 11, 0.1);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--ink);
+    color: var(--text);
+    line-height: 1.65;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  nav { margin-bottom: 2rem; font-size: 0.8rem; }
+  nav a { color: var(--text-muted); text-decoration: none; margin-right: 1.25rem; }
+  nav a:hover { color: var(--cyan); }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+  h1 { font-size: clamp(1.5rem, 3.5vw, 2.25rem); font-weight: 600; letter-spacing: -0.02em; }
+  h1 .accent { color: var(--cyan); }
+  .meta { font-family: "SF Mono", "Fira Code", Consolas, monospace; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem; letter-spacing: 0.05em; }
+  section { margin-bottom: 2.5rem; }
+  h2 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--amber);
+    margin-bottom: 1rem;
+  }
+  h2::before { content: "// "; color: var(--text-muted); }
+  .prose p { margin-bottom: 1rem; color: var(--text); }
+  .prose p:last-child { margin-bottom: 0; }
+  .callout {
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    padding: 1.25rem;
+    margin: 1.5rem 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .callout strong { color: var(--amber); }
+  .pillars {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .pillar {
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .pillar::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--cyan), transparent);
+  }
+  .pillar:nth-child(2)::before { background: linear-gradient(90deg, var(--amber), transparent); }
+  .pillar:nth-child(3)::before { background: linear-gradient(90deg, var(--cyan), var(--amber)); }
+  .pillar:nth-child(4)::before { background: linear-gradient(90deg, var(--amber), var(--cyan)); }
+  .pillar-id {
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.65rem;
+    color: var(--cyan);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+  .pillar h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .pillar p { font-size: 0.85rem; color: var(--text-muted); }
+  .pillar ul { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.75rem; padding-left: 1rem; }
+  .pillar ul li { margin-bottom: 0.25rem; }
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0.75rem;
+  }
+  .metric {
+    background: var(--slate-mid);
+    border: 1px solid var(--border);
+    padding: 1rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+  .metric-id {
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.7rem;
+    color: var(--cyan);
+    margin-bottom: 0.35rem;
+  }
+  .nongoals {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.5rem;
+    list-style: none;
+  }
+  .nongoals li {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding: 0.6rem 0.75rem;
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+  .nongoals li::before { content: "✕ "; color: #ef4444; font-weight: bold; }
+  .compare {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-top: 1rem;
+  }
+  .compare th, .compare td {
+    border: 1px solid var(--border);
+    padding: 0.75rem;
+    text-align: left;
+  }
+  .compare th { background: var(--slate-mid); color: var(--amber); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .compare td:first-child { color: var(--text-muted); }
+  footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.8rem; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a href="index.html">← Hub</a>
+    <a href="ux-journeys.html">UX Journeys</a>
+    <a href="requirements-map.html">Requirements</a>
+  </nav>
+
+  <header>
+    <h1><span class="accent">AMKP</span> Product Overview</h1>
+    <p class="meta">STAKEHOLDER NARRATIVE · RAG-SOL · 2026-07-14</p>
+  </header>
+
+  <section class="prose">
+    <h2>The Problem</h2>
+    <p>Platform teams must ship grounded AI across several products. They stitch vector DBs, parsers, frameworks, and ad-hoc ACL filters—and get inconsistent quality, duplicated spend, cross-tenant risk, and agent demos that become proofs of cost.</p>
+    <p>The missing piece is not "an LLM." It is a shared plane that combines <strong>multimodal evidence fidelity</strong>, <strong>hard tenancy</strong>, and <strong>controlled multi-hop</strong>—integrable behind many products.</p>
+    <div class="callout">
+      <strong>Who this serves:</strong> Product and platform engineers at multi-product software companies and ISVs. Success means a new product tenant live in about a day, zero cross-tenant leaks in soak testing, and AI features shipped without a three-person ML platform hire.
+    </div>
+  </section>
+
+  <section class="prose">
+    <h2>The Solution</h2>
+    <p>AMKP exposes ingest and retrieve as first-class APIs (plus MCP tools). Customers get evidence objects with citation-obligatory, typed payloads where possible; silo/namespace-default multi-product tenancy with JWT-derived identity and automated leak tests; a structure-aware multimodal parse ladder; and a guarded agentic router that defaults to single-pass with capped multi-hop only when needed.</p>
+    <p>BYO LLM is supported. AMKP owns grounding infrastructure, not the chat surface.</p>
+  </section>
+
+  <section>
+    <h2>Four Pillars</h2>
+    <div class="pillars">
+      <div class="pillar">
+        <div class="pillar-id">PILLAR 01</div>
+        <h3>Hard Tenancy</h3>
+        <p>Silo/namespace-default multi-product isolation. Tenant derived from auth—never from client-supplied free text.</p>
+        <ul>
+          <li>JWT / API key scoped credentials</li>
+          <li>Tenant-keyed caches</li>
+          <li>Automated leak-test CI</li>
+        </ul>
+      </div>
+      <div class="pillar">
+        <div class="pillar-id">PILLAR 02</div>
+        <h3>Multimodal Structure</h3>
+        <p>Parse Ladder: cheap extract → layout-aware → optional VLM/page-vision. TableEvidence preserves headers and cells.</p>
+        <ul>
+          <li>TableRank as hero quality metric</li>
+          <li>parse_confidence on every chunk</li>
+          <li>Tables and charts, not just prose</li>
+        </ul>
+      </div>
+      <div class="pillar">
+        <div class="pillar-id">PILLAR 03</div>
+        <h3>Guarded Agentic</h3>
+        <p>Router defaults to single-pass. Multi-hop only when needed—with hop budgets, circuit breakers, and full traces.</p>
+        <ul>
+          <li>Agentic Readiness gate</li>
+          <li>Cost attribution per request</li>
+          <li>PreferCorrectness over guessing</li>
+        </ul>
+      </div>
+      <div class="pillar">
+        <div class="pillar-id">PILLAR 04</div>
+        <h3>Eval / POC Pack</h3>
+        <p>Sealed bake-off kit: golden set, ACL adversarial suite, multimodal chart pack, and cost simulator.</p>
+        <ul>
+          <li>Self-serve from public docs</li>
+          <li>Faithfulness sampling</li>
+          <li>Deterministic fixture scores</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Differentiation</h2>
+    <table class="compare">
+      <thead>
+        <tr><th>Alternative</th><th>Gap AMKP Closes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Workforce platforms (Glean-class)</td><td>Wrong surface for product backends</td></tr>
+        <tr><td>Commodity RaaS</td><td>Weak on hard tenancy + multimodal structure + eval SKU</td></tr>
+        <tr><td>Hyperscaler KB</td><td>Cloud lock-in; uneven multi-product story</td></tr>
+        <tr><td>DIY LangGraph / LlamaIndex</td><td>Flexibility without packaged guarantees → sprawl returns</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Non-Goals</h2>
+    <ul class="nongoals">
+      <li>Glean-class employee search UI</li>
+      <li>Unbounded agentic-by-default loops</li>
+      <li>Training on customer data</li>
+      <li>Competing as a general vector DB</li>
+      <li>Full connector marketplace (API/MCP first)</li>
+      <li>Air-gapped appliance / VPC as MVP default</li>
+      <li>Primary business of seat-based chat to knowledge workers</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Success Metrics</h2>
+    <div class="metrics-grid">
+      <div class="metric">
+        <div class="metric-id">TARGET 01</div>
+        Time-to-first-retrieve from docs &lt; 60 minutes on free/self-serve path.
+      </div>
+      <div class="metric">
+        <div class="metric-id">TARGET 02</div>
+        Cross-tenant leak tests: zero failures in continuous soak testing for design partners.
+      </div>
+      <div class="metric">
+        <div class="metric-id">TARGET 03</div>
+        Multimodal gold set: material lift on table/chart questions vs text-only baseline.
+      </div>
+      <div class="metric">
+        <div class="metric-id">TARGET 04</div>
+        ≥90% of production queries served via single-pass retrieval; agentic hops within budget caps.
+      </div>
+      <div class="metric">
+        <div class="metric-id">TARGET 05</div>
+        Design partners: ≥2 products on one plane within the first expansion cycle.
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <a href="index.html" style="color: var(--cyan); text-decoration: none;">← Back to Documentation Hub</a>
+    · Freya (WDS) + Sally (UX) · 2026-07-14
+  </footer>
+</div>
+</body>
+</html>

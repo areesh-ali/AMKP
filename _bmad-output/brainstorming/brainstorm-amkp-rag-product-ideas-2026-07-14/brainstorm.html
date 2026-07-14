@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal Fabric — AMKP Brainstorm Keepsake</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0a0e14;--slate:#111827;--panel:#151d2e;--line:#1e3a5f;
+  --cyan:#22d3ee;--amber:#fbbf24;--text:#c8d6e5;--dim:#6b7f99;
+  --display:Georgia,"Iowan Old Style","Palatino Linotype",Palatino,serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--mono);font-size:13px;line-height:1.5;color:var(--text);
+  background:var(--ink);
+  background-image:
+    linear-gradient(rgba(34,211,238,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(34,211,238,.03) 1px,transparent 1px),
+    radial-gradient(ellipse at 20% 0%,rgba(34,211,238,.08),transparent 50%),
+    radial-gradient(ellipse at 80% 100%,rgba(251,191,36,.06),transparent 40%);
+  background-size:24px 24px,24px 24px,100% 100%,100% 100%;
+  min-height:100vh;
+}
+.hero{
+  position:relative;padding:3rem 1.5rem 2rem;max-width:1100px;margin:0 auto;
+  border-bottom:1px solid var(--line);
+}
+.hero::before{
+  content:"";position:absolute;top:1rem;left:1.5rem;width:8px;height:8px;
+  background:var(--cyan);box-shadow:0 0 12px var(--cyan);animation:blink 2s infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.eyebrow{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--cyan);margin-bottom:.5rem;padding-left:1.2rem}
+.hero h1{
+  font-family:var(--display);font-size:clamp(1.8rem,5vw,3.2rem);font-weight:400;
+  color:#e8f4fc;letter-spacing:-.02em;line-height:1.1;margin-bottom:.75rem;
+}
+.hero h1 em{font-style:italic;color:var(--amber)}
+.hero-sub{color:var(--dim);max-width:52ch;font-size:12px;margin-bottom:1.5rem}
+.stats{display:flex;flex-wrap:wrap;gap:1rem}
+.stat{
+  background:var(--panel);border:1px solid var(--line);padding:.6rem 1rem;
+  min-width:120px;
+}
+.stat-val{font-family:var(--display);font-size:1.8rem;color:var(--amber);line-height:1}
+.stat-lbl{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim)}
+.controls{
+  position:sticky;top:0;z-index:100;background:rgba(10,14,20,.92);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+  padding:.75rem 1rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;
+}
+.search-wrap{flex:1;min-width:180px;position:relative}
+.search-wrap input{
+  width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);
+  padding:.5rem .75rem .5rem 2rem;font-family:var(--mono);font-size:12px;
+}
+.search-wrap input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan)}
+.search-wrap::before{content:"⌕";position:absolute;left:.6rem;top:50%;transform:translateY(-50%);color:var(--dim)}
+.filter-btns{display:flex;flex-wrap:wrap;gap:.35rem}
+.nav-btn{
+  background:var(--panel);border:1px solid var(--line);color:var(--dim);
+  padding:.3rem .5rem;font-family:var(--mono);font-size:10px;cursor:pointer;
+  transition:all .15s;display:flex;align-items:center;gap:.3rem;
+}
+.nav-btn:hover,.nav-btn.active{
+  border-color:var(--accent,var(--cyan));color:var(--accent,var(--cyan));
+  box-shadow:0 0 8px color-mix(in srgb,var(--accent,var(--cyan)) 30%,transparent);
+}
+.nav-glyph{font-size:11px}
+.nav-all{border-color:var(--amber);color:var(--amber)}
+main{max-width:1100px;margin:0 auto;padding:1.5rem 1rem 4rem}
+.tech-section{
+  margin-bottom:3rem;padding-top:1rem;scroll-margin-top:5rem;
+  opacity:1;transition:opacity .2s;
+}
+.tech-section.hidden{display:none}
+.tech-section.filtered-out .idea{display:none}
+.section-head{
+  display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;
+}
+.section-glyph{
+  font-size:1.5rem;width:2.5rem;height:2.5rem;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--accent);color:var(--accent);background:rgba(0,0,0,.3);
+}
+.section-head h2{
+  font-family:var(--display);font-size:1.3rem;color:#e8f4fc;font-weight:400;
+}
+.section-count{font-size:10px;color:var(--dim);letter-spacing:.1em}
+.section-line{flex:1;height:1px;background:linear-gradient(90deg,var(--accent),transparent)}
+.idea-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.75rem;
+}
+.idea{
+  background:var(--panel);border:1px solid var(--line);padding:.85rem;position:relative;
+  transition:border-color .15s,transform .15s;
+}
+.idea:hover{border-color:var(--accent);transform:translateY(-1px)}
+.idea.hidden{display:none!important}
+.idea-num{
+  position:absolute;top:.5rem;right:.5rem;font-size:9px;color:var(--dim);letter-spacing:.05em;
+}
+.idea p{font-size:11px;line-height:1.45;color:var(--text);padding-right:2rem}
+
+/* Flip cards */
+.flip-card{perspective:600px;min-height:100px;cursor:pointer}
+.flip-inner{position:relative;transition:transform .5s;transform-style:preserve-3d;min-height:90px}
+.flip-card:hover .flip-inner{transform:rotateY(180deg)}
+.flip-front,.flip-back{
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+}
+.flip-back{
+  position:absolute;inset:0;transform:rotateY(180deg);
+  background:color-mix(in srgb,var(--accent) 12%,var(--panel));
+  border:1px dashed var(--accent);padding:.85rem;
+}
+.flip-back .tag{font-size:9px;color:var(--accent);letter-spacing:.15em}
+
+/* Radar */
+.radar-card{overflow:hidden;min-height:110px}
+.radar-sweep{
+  position:absolute;top:50%;left:50%;width:200%;height:200%;
+  background:conic-gradient(from 0deg,transparent 0deg,color-mix(in srgb,var(--accent) 25%,transparent) 30deg,transparent 60deg);
+  transform:translate(-50%,-50%);animation:radar-spin 4s linear infinite;opacity:.4;pointer-events:none;
+}
+@keyframes radar-spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.radar-ring{
+  position:absolute;border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:50%;
+  top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;
+}
+.r1{width:calc(var(--ring,1)*30px);height:calc(var(--ring,1)*30px)}
+.r2{width:calc(var(--ring,1)*50px);height:calc(var(--ring,1)*50px);opacity:.5}
+
+/* Morph grid */
+.morph-card{display:flex;flex-direction:column;gap:.4rem}
+.morph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.mcell{
+  background:color-mix(in srgb,var(--accent) 15%,var(--ink));padding:.35rem .4rem;
+  font-size:9px;text-align:center;border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);
+}
+.morph-arrow{text-align:center;color:var(--accent);font-size:14px}
+.morph-out{font-size:11px;color:var(--amber)}
+
+/* Provocation pulse */
+.prov-card{overflow:hidden}
+.prov-pulse{
+  position:absolute;inset:-50%;border-radius:50%;
+  background:radial-gradient(circle,color-mix(in srgb,var(--accent) 20%,transparent) 0%,transparent 70%);
+  animation:prov-pulse 2.5s ease-out infinite;pointer-events:none;
+}
+@keyframes prov-pulse{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.2);opacity:0}}
+.prov-label{font-size:9px;color:var(--accent);letter-spacing:.2em;display:block;margin-bottom:.4rem}
+
+/* SCAMPER wheel accent */
+.scamper-card{padding-left:2.5rem}
+.scamper-letter{
+  position:absolute;left:.6rem;top:50%;transform:translateY(-50%);
+  width:1.6rem;height:1.6rem;border-radius:50%;border:2px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--accent);font-weight:bold;
+}
+
+/* Blend venn */
+.blend-card{padding-top:2rem}
+.blend-venn{position:absolute;top:.5rem;left:.85rem;width:2.5rem;height:1.2rem}
+.blend-venn .b1,.blend-venn .b2{
+  position:absolute;width:1.2rem;height:1.2rem;border-radius:50%;
+  border:1px solid var(--accent);opacity:.6;
+}
+.b1{left:0}.b2{left:.8rem;background:color-mix(in srgb,var(--accent) 20%,transparent)}
+.blend-src{font-size:9px;color:var(--accent);display:block;margin-bottom:.3rem}
+
+/* Reverse */
+.reverse-card{display:grid;gap:.3rem}
+.rev-fail{background:rgba(248,113,113,.08);border-left:2px solid #f87171;padding:.4rem}
+.rev-fail span,.rev-fix span{font-size:8px;letter-spacing:.15em}
+.rev-fail span{color:#f87171}.rev-fix span{color:#4ade80}
+.rev-arrow{text-align:center;color:var(--dim);font-size:10px}
+.rev-fix{background:rgba(74,222,128,.08);border-left:2px solid #4ade80;padding:.4rem}
+.rev-fail p,.rev-fix p{font-size:10px;padding-right:0}
+
+/* Job cards */
+.job-card{border-top:3px solid var(--accent)}
+.job-strip{font-size:8px;letter-spacing:.2em;color:var(--accent);margin-bottom:.3rem}
+.job-need{font-family:var(--display);font-size:12px;color:#e8f4fc;margin-bottom:.4rem}
+.job-sol{font-size:10px;color:var(--amber);border-top:1px dashed var(--line);padding-top:.4rem}
+
+/* Worst flip */
+.worst-card{display:grid;grid-template-columns:1fr auto 1fr;gap:.3rem;align-items:center}
+.worst-side,.flip-side{padding:.4rem;font-size:10px}
+.worst-side{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3)}
+.flip-side{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3)}
+.worst-side span{color:#ef4444;font-size:8px}.flip-side span{color:#4ade80;font-size:8px}
+.worst-flip{color:var(--amber);font-size:16px}
+.worst-side p,.flip-side p{padding-right:0;font-size:9px}
+
+/* Bedrock */
+.bedrock-card{border-bottom:3px solid var(--accent)}
+.bedrock-layer{
+  position:absolute;bottom:0;left:0;right:0;height:4px;
+  background:repeating-linear-gradient(90deg,var(--accent) 0 8px,transparent 8px 12px);opacity:.4;
+}
+.bedrock-tag{font-size:8px;letter-spacing:.2em;color:var(--accent)}
+
+/* Force */
+.force-card{text-align:center}
+.force-nodes{display:flex;align-items:center;justify-content:center;gap:.3rem;margin-bottom:.4rem}
+.fn1,.fn2{
+  width:2rem;height:2rem;border:1px solid var(--accent);border-radius:4px;
+  display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--accent);
+}
+.force-link{width:1.5rem;height:1px;background:var(--accent);position:relative}
+.force-link::after{content:"⊗";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:10px;background:var(--panel);padding:0 2px;color:var(--accent)}
+.force-pair{font-size:9px;color:var(--accent);margin-bottom:.3rem}
+
+/* Timeline */
+.section-timeline .idea-grid{display:none}
+.timeline-track{
+  display:flex;overflow-x:auto;gap:0;padding:1rem 0 1.5rem;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+}
+.timeline-track::before{
+  content:"";position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--amber),var(--accent));
+  margin-top:2.8rem;pointer-events:none;opacity:.5;
+}
+.time-card{
+  flex:0 0 220px;scroll-snap-align:start;margin-right:.5rem;
+  border-top:2px solid var(--accent);position:relative;
+}
+.time-year{
+  font-family:var(--display);font-size:1.4rem;color:var(--amber);display:block;margin-bottom:.4rem;
+}
+
+/* Synthesis */
+.synthesis{
+  margin-top:4rem;padding:2rem 0;border-top:2px solid var(--cyan);
+  background:linear-gradient(180deg,rgba(34,211,238,.04),transparent);
+}
+.synthesis h2{
+  font-family:var(--display);font-size:clamp(1.4rem,4vw,2rem);color:var(--cyan);
+  margin-bottom:.5rem;text-align:center;
+}
+.synth-sub{text-align:center;color:var(--dim);font-size:11px;margin-bottom:2rem;letter-spacing:.1em}
+.cluster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.75rem;margin-bottom:2rem}
+.cluster{
+  background:var(--panel);border:1px solid var(--line);padding:1rem;
+  border-left:3px solid var(--accent);position:relative;
+}
+.cluster-id{
+  font-family:var(--display);font-size:2rem;color:var(--accent);opacity:.3;
+  position:absolute;top:.5rem;right:.75rem;
+}
+.cluster h3{font-size:11px;letter-spacing:.12em;color:var(--accent);margin-bottom:.5rem;padding-right:2rem}
+.cluster p{font-size:11px;line-height:1.5}
+
+.chosen{
+  background:linear-gradient(135deg,rgba(34,211,238,.08),rgba(251,191,36,.06));
+  border:2px solid var(--amber);padding:1.5rem;position:relative;
+  box-shadow:0 0 30px rgba(251,191,36,.1);
+}
+.chosen::before{
+  content:"▶ CHOSEN DIRECTION";display:block;font-size:10px;letter-spacing:.25em;
+  color:var(--amber);margin-bottom:1rem;
+}
+.chosen p{
+  font-family:var(--display);font-size:clamp(1rem,2.5vw,1.25rem);
+  color:#e8f4fc;line-height:1.6;white-space:pre-line;
+}
+.footer{
+  text-align:center;padding:2rem 1rem;color:var(--dim);font-size:10px;
+  border-top:1px solid var(--line);letter-spacing:.1em;
+}
+.no-results{
+  display:none;text-align:center;padding:3rem;color:var(--dim);font-size:12px;
+}
+.no-results.visible{display:block}
+@media(max-width:600px){
+  .worst-card{grid-template-columns:1fr}
+  .worst-flip{transform:rotate(90deg);justify-self:center}
+  .controls{padding:.5rem}
+  .nav-btn .nav-label{display:none}
+}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="eyebrow">RAG-Sol · Brainstorm Session · 2026-07-14</div>
+  <h1>Signal <em>Fabric</em> Control</h1>
+  <p class="hero-sub">Agentic Multimodal Knowledge Plane — mission control for a knowledge fabric. Twelve ideation vectors, 144 product signals, one chosen bearing.</p>
+  <div class="stats">
+    <div class="stat"><div class="stat-val">144</div><div class="stat-lbl">Ideas Generated</div></div>
+    <div class="stat"><div class="stat-val">12</div><div class="stat-lbl">Techniques</div></div>
+    <div class="stat"><div class="stat-val">6</div><div class="stat-lbl">Synthesis Clusters</div></div>
+    <div class="stat"><div class="stat-val">1</div><div class="stat-lbl">Chosen Direction</div></div>
+  </div>
+</header>
+
+<nav class="controls">
+  <div class="search-wrap"><input type="search" id="search" placeholder="Filter signals…" autocomplete="off"></div>
+  <div class="filter-btns" id="nav-btns">
+    <button class="nav-btn nav-all active" data-target="all">ALL</button>
+    <button class="nav-btn" data-target="assumption-reversal" style="--accent:#22d3ee"><span class="nav-glyph">⟲</span><span class="nav-label">AR</span></button><button class="nav-btn" data-target="cross-pollination" style="--accent:#fbbf24"><span class="nav-glyph">✦</span><span class="nav-label">CP</span></button><button class="nav-btn" data-target="morphological" style="--accent:#38bdf8"><span class="nav-glyph">▦</span><span class="nav-label">MA</span></button><button class="nav-btn" data-target="provocation" style="--accent:#fb923c"><span class="nav-glyph">⚡</span><span class="nav-label">PV</span></button><button class="nav-btn" data-target="scamper" style="--accent:#2dd4bf"><span class="nav-glyph">◎</span><span class="nav-label">SC</span></button><button class="nav-btn" data-target="concept-blending" style="--accent:#a78bfa"><span class="nav-glyph">◐</span><span class="nav-label">CB</span></button><button class="nav-btn" data-target="reverse-brainstorm" style="--accent:#f87171"><span class="nav-glyph">↯</span><span class="nav-label">RB</span></button><button class="nav-btn" data-target="jtbd" style="--accent:#4ade80"><span class="nav-glyph">▸</span><span class="nav-label">JT</span></button><button class="nav-btn" data-target="worst-idea" style="--accent:#ef4444"><span class="nav-glyph">☠</span><span class="nav-label">WI</span></button><button class="nav-btn" data-target="first-principles" style="--accent:#60a5fa"><span class="nav-glyph">⬡</span><span class="nav-label">FP</span></button><button class="nav-btn" data-target="forced-relationships" style="--accent:#e879f9"><span class="nav-glyph">⊗</span><span class="nav-label">FR</span></button><button class="nav-btn" data-target="time-shifting" style="--accent:#fcd34d"><span class="nav-glyph">⏱</span><span class="nav-label">TS</span></button>
+  </div>
+</nav>
+
+<main>
+  
+<section class="tech-section section-flip" id="assumption-reversal" data-treatment="flip" style="--accent:#22d3ee">
+  <header class="section-head">
+    <span class="section-glyph">⟲</span>
+    <div><h2>Assumption Reversal</h2><span class="section-count">12 signals</span></div>
+    <div class="section-line"></div>
+  </header>
+  <div class="idea-grid"><article class="idea flip-card" data-tech="assumption-reversal" data-idx="1" style="--accent:#22d3ee">
+  <div class="flip-inner"><div class="flip-front"><span class="idea-num">001</span><p>Assume RAG must NOT use vector DBs — graph+keyword+VLM page index only</p></div>
+  <div class="flip-back"><span class="tag">REVERSED</span><p>Assume RAG must NOT use vector DBs — graph+keyword+VLM page index only</p></div></div></article><article class="idea flip-card" data-tech="assumption-reversal" data-idx="2" style="--accent:#22d3ee">
+  <div class="flip-inner"><div class="flip-front"><span class="idea-num">002</span><p>Assume multi-tenancy is physical mini-clusters per product, not namespaces</p></div>
+  <div class="flip-back"><span class="tag">REVERSED</span><p>Assume multi-tenancy is physical mini-clusters per product, not namespaces</p></div></div></article><article class="idea flip-card" data-tech="assumption-reversal" data-idx="3" style="--accent:#22d3ee">
+  <div class="flip-inner"><div class="flip-front"><span class="idea-num">003</span><p>Assume the LLM never sees raw chunks — only hashed structured evidence cards</p></div>
+  <div class="flip-back"><span class="tag">REVERSED</span><p>Assume the LLM never sees raw chunks — only hashed structured evidence cards</p></div></div></article><article class="idea flip-card" data-tech="assumption-reversal" data-idx="4" style="--accent:#22d3ee">
+  <div class="flip-inner"><div class="flip-front"><span class="idea-num">004</span><p>Assume customers refuse cloud — ship AMKP as a sealed RAG appliance</p></div>
+  <div class="flip-back"><span class="tag">REVERSED</span><p>Assume customers refuse cloud — ship AMKP as a sealed RAG appliance</p></div></div></article><article class="idea flip-card" data-tech="assumption-reversal" data-idx="5" style="--accent:#22d3ee">
+  <div class="flip-inner"><div class="flip-front"><span class="idea-num">005</span><p>Assume chat UI is forbidden forever — only tools/MCP/functions</p></div>
+  <div class="flip-back"><span class="tag">REVERSED</span><p>Assume chat UI is forbidden forever — only tools/MCP/functions</p></div></div></article><article class="idea flip-card" data-tech="assumption-reversal" data-idx="6" style="--accent:#22d3ee">
+  <div class="flip-inner"><div class="flip-front"><span class="idea-num">006</span><p>Assume agentic loops are banned — deterministic compiled multi-query planners only</p></div>
+  <div class="flip-back"><span class="tag">REVERSED</span><p>Assume agentic loops are banned — deterministic compiled multi-query planners only</p></div></div></article><article class="idea flip-card" data-tech="assumption-reversal" data-idx="7" style="--accent:#22d3ee">
+  <div class="flip-inner"><div class="flip-front"><span class="idea-num">007</span><p>Assume embeddings regenerate nightly from scratch as a freshness ritual feature</p></div>
+  <div class="flip-back"><span class="tag">REVERSED</span><p>Assume embeddings regenerate nightly from scratch as a freshness ritual feature</p></div></div></article><article class="idea flip-card" data-tech="assumption-reversal" data-idx="8" style="--accent:#22d3ee">
+  <div class="flip-inner"><div class="flip-front"><span class="idea-num">008</span><p>Assume every answer includes a visual receipt screenshot of the source page</p></div>
+  <div class="flip-back"><span class="tag">REVERSED</span><p>Assume every answer includes a visual receipt screenshot of the source page</p></div></div></article><article class="idea flip-card" data-tech="assumption-reversal" data-idx="9" style="--accent:#22d3ee">
+  <div class="flip-inner"><div class="flip-front"><span class="idea-num">009</span><p>Assume tenants can sue on leak — sell insurance-backed tenancy SLA</p></div>
+  <div class="flip-back"><span class="tag">REVERSED</span><p>Assume tenants can sue on leak — sell insurance-backed tenancy SLA</p></div></div></article><article class="idea flip-card" data-tech="assumption-reversal" data-idx="10" style="--accent:#22d3ee">
+  <div class="flip-inner"><div class="flip-front"><span class="idea-num">010</span><p>Assume OCR is banned in product — vision-only retrieval path by default</p></div>
+  <div class="flip-back"><span class="tag">REVERSED</span><p>Assume OCR is banned in product — vision-only retrieval path by default</p></div></div></article><article class="idea flip-card" data-tech="assumption-reversal" data-idx="11" style="--accent:#22d3ee">
+  <div class="flip-inner"><div class="flip-front"><span class="idea-num">011</span><p>Assume pricing is outcome-based (per verified citation) not per token</p></div>
+  <div class="flip-back"><span class="tag">REVERSED</span><p>Assume pricing is outcome-based (per verified citation) not per token</p></div></div></article><article class="idea flip-card" data-tech="assumption-reversal" data-idx="12" style="--accent:#22d3ee">
+  <div class="flip-inner"><div class="flip-front"><span class="idea-num">012</span><p>Assume knowledge plane owns cross-product episodic memory fabric</p></div>
+  <div class="flip-back"><span class="tag">REVERSED</span><p>Assume knowledge plane owns cross-product episodic memory fabric</p></div></div></article></div>
+</section>
+<section class="tech-section section-radar" id="cross-pollination" data-treatment="radar" style="--accent:#fbbf24">
+  <header class="section-head">
+    <span class="section-glyph">✦</span>
+    <div><h2>Cross-Pollination</h2><span class="section-count">12 signals</span></div>
+    <div class="section-line"></div>
+  </header>
+  <div class="idea-grid"><article class="idea radar-card" data-tech="cross-pollination" data-idx="13" style="--accent:#fbbf24;--ring:2">
+  <div class="radar-sweep"></div><div class="radar-ring r1"></div><div class="radar-ring r2"></div>
+  <span class="idea-num">013</span><p>Casino anti-fraud: risk-score every retrieval path; quarantine high-risk agent hops</p></article><article class="idea radar-card" data-tech="cross-pollination" data-idx="14" style="--accent:#fbbf24;--ring:3">
+  <div class="radar-sweep"></div><div class="radar-ring r1"></div><div class="radar-ring r2"></div>
+  <span class="idea-num">014</span><p>ER triage: acuity routing — Level 1 FAQ vs Level 5 multi-hop trauma desk</p></article><article class="idea radar-card" data-tech="cross-pollination" data-idx="15" style="--accent:#fbbf24;--ring:1">
+  <div class="radar-sweep"></div><div class="radar-ring r1"></div><div class="radar-ring r2"></div>
+  <span class="idea-num">015</span><p>Beekeeping: swarm health dashboard for index freshness across product hives</p></article><article class="idea radar-card" data-tech="cross-pollination" data-idx="16" style="--accent:#fbbf24;--ring:2">
+  <div class="radar-sweep"></div><div class="radar-ring r1"></div><div class="radar-ring r2"></div>
+  <span class="idea-num">016</span><p>Air traffic control: conflict detection when product agents query overlapping sensitive corpora</p></article><article class="idea radar-card" data-tech="cross-pollination" data-idx="17" style="--accent:#fbbf24;--ring:3">
+  <div class="radar-sweep"></div><div class="radar-ring r1"></div><div class="radar-ring r2"></div>
+  <span class="idea-num">017</span><p>Bank clearinghouse: double-entry grounding ledger for citations</p></article><article class="idea radar-card" data-tech="cross-pollination" data-idx="18" style="--accent:#fbbf24;--ring:1">
+  <div class="radar-sweep"></div><div class="radar-ring r1"></div><div class="radar-ring r2"></div>
+  <span class="idea-num">018</span><p>Vaccine cold chain: modality packs that expire if parse-confidence drops</p></article><article class="idea radar-card" data-tech="cross-pollination" data-idx="19" style="--accent:#fbbf24;--ring:2">
+  <div class="radar-sweep"></div><div class="radar-ring r1"></div><div class="radar-ring r2"></div>
+  <span class="idea-num">019</span><p>Git for knowledge: branch/merge corpora per product release</p></article><article class="idea radar-card" data-tech="cross-pollination" data-idx="20" style="--accent:#fbbf24;--ring:3">
+  <div class="radar-sweep"></div><div class="radar-ring r1"></div><div class="radar-ring r2"></div>
+  <span class="idea-num">020</span><p>CDN: edge caches of retrieval with tenant-keyed purge</p></article><article class="idea radar-card" data-tech="cross-pollination" data-idx="21" style="--accent:#fbbf24;--ring:1">
+  <div class="radar-sweep"></div><div class="radar-ring r1"></div><div class="radar-ring r2"></div>
+  <span class="idea-num">021</span><p>Compiler: query plans compiled/optimized/cached like SQL</p></article><article class="idea radar-card" data-tech="cross-pollination" data-idx="22" style="--accent:#fbbf24;--ring:2">
+  <div class="radar-sweep"></div><div class="radar-ring r1"></div><div class="radar-ring r2"></div>
+  <span class="idea-num">022</span><p>Passport control: temporary elevated retrieval visas with expiry</p></article><article class="idea radar-card" data-tech="cross-pollination" data-idx="23" style="--accent:#fbbf24;--ring:3">
+  <div class="radar-sweep"></div><div class="radar-ring r1"></div><div class="radar-ring r2"></div>
+  <span class="idea-num">023</span><p>Observatory: continuous crawl sky-survey + transient doc-change alerts</p></article><article class="idea radar-card" data-tech="cross-pollination" data-idx="24" style="--accent:#fbbf24;--ring:1">
+  <div class="radar-sweep"></div><div class="radar-ring r1"></div><div class="radar-ring r2"></div>
+  <span class="idea-num">024</span><p>Kitchen mise-en-place: pre-portioned evidence packs for common product intents</p></article></div>
+</section>
+<section class="tech-section section-grid" id="morphological" data-treatment="grid" style="--accent:#38bdf8">
+  <header class="section-head">
+    <span class="section-glyph">▦</span>
+    <div><h2>Morphological Analysis</h2><span class="section-count">12 signals</span></div>
+    <div class="section-line"></div>
+  </header>
+  <div class="idea-grid"><article class="idea morph-card" data-tech="morphological" data-idx="25" style="--accent:#38bdf8">
+  <div class="morph-grid"><span class="mcell">VPC</span><span class="mcell">multimodal ColPali</span><span class="mcell">guarded agentic</span></div><div class="morph-arrow">→</div>
+  <p class="morph-out">regulated AMKP flagship</p><span class="idea-num">025</span></article><article class="idea morph-card" data-tech="morphological" data-idx="26" style="--accent:#38bdf8">
+  <div class="morph-grid"><span class="mcell">OSS core</span><span class="mcell">commercial control plane</span></div><div class="morph-arrow">→</div>
+  <p class="morph-out">open retrieval, paid tenancy/eval</p><span class="idea-num">026</span></article><article class="idea morph-card" data-tech="morphological" data-idx="27" style="--accent:#38bdf8">
+  <div class="morph-grid"><span class="mcell">OEM SDK</span><span class="mcell">white-label</span><span class="mcell">multi-tenant</span></div><div class="morph-arrow">→</div>
+  <p class="morph-out">embed inside ISV products</p><span class="idea-num">027</span></article><article class="idea morph-card" data-tech="morphological" data-idx="28" style="--accent:#38bdf8">
+  <div class="morph-grid"><span class="mcell">Edge/on-device</span><span class="mcell">caption-index</span><span class="mcell">no-agent</span></div><div class="morph-arrow">→</div>
+  <p class="morph-out">privacy-first mobile RAG</p><span class="idea-num">028</span></article><article class="idea morph-card" data-tech="morphological" data-idx="29" style="--accent:#38bdf8">
+  <div class="morph-grid"><span class="mcell">Vertical finance</span><span class="mcell">table-first parsing</span><span class="mcell">deterministic planner</span></div><div class="morph-arrow">→</div>
+  <p class="morph-out">Filings Plane</p><span class="idea-num">029</span></article><article class="idea morph-card" data-tech="morphological" data-idx="30" style="--accent:#38bdf8">
+  <div class="morph-grid"><span class="mcell">Vertical manufacturing</span><span class="mcell">diagram retrieval</span><span class="mcell">CAD metadata tools</span></div><div class="morph-arrow">→</div>
+  <p class="morph-out"></p><span class="idea-num">030</span></article><article class="idea morph-card" data-tech="morphological" data-idx="31" style="--accent:#38bdf8">
+  <div class="morph-grid"><span class="mcell">Support suite</span><span class="mcell">shared KB</span><span class="mcell">per-brand tenants</span></div><div class="morph-arrow">→</div>
+  <p class="morph-out">Support Fabric</p><span class="idea-num">031</span></article><article class="idea morph-card" data-tech="morphological" data-idx="32" style="--accent:#38bdf8">
+  <div class="morph-grid"><span class="mcell">Agent marketplace</span><span class="mcell">shared knowledge tools</span><span class="mcell">metered MCP</span></div><div class="morph-arrow">→</div>
+  <p class="morph-out">Knowledge MCP Store</p><span class="idea-num">032</span></article><article class="idea morph-card" data-tech="morphological" data-idx="33" style="--accent:#38bdf8">
+  <div class="morph-grid"><span class="mcell">Eval-as-product</span><span class="mcell">golden sets</span><span class="mcell">continuous RAGAS</span></div><div class="morph-arrow">→</div>
+  <p class="morph-out">Quality Plane only</p><span class="idea-num">033</span></article><article class="idea morph-card" data-tech="morphological" data-idx="34" style="--accent:#38bdf8">
+  <div class="morph-grid"><span class="mcell">Ingest-only microservice</span><span class="mcell">structure extract</span><span class="mcell">handoff to any vector DB</span></div><div class="morph-arrow">→</div>
+  <p class="morph-out"></p><span class="idea-num">034</span></article><article class="idea morph-card" data-tech="morphological" data-idx="35" style="--accent:#38bdf8">
+  <div class="morph-grid"><span class="mcell">Policy engine</span><span class="mcell">retrieval ACL DSL</span><span class="mcell">compile-to-filter</span></div><div class="morph-arrow">→</div>
+  <p class="morph-out">Permission Compiler</p><span class="idea-num">035</span></article><article class="idea morph-card" data-tech="morphological" data-idx="36" style="--accent:#38bdf8">
+  <div class="morph-grid"><span class="mcell">SaaS</span><span class="mcell">text-only</span><span class="mcell">single-pass</span></div><div class="morph-arrow">→</div>
+  <p class="morph-out">commodity RaaS clone (explicit non-goal)</p><span class="idea-num">036</span></article></div>
+</section>
+<section class="tech-section section-pulse" id="provocation" data-treatment="pulse" style="--accent:#fb923c">
+  <header class="section-head">
+    <span class="section-glyph">⚡</span>
+    <div><h2>Provocation</h2><span class="section-count">12 signals</span></div>
+    <div class="section-line"></div>
+  </header>
+  <div class="idea-grid"><article class="idea prov-card" data-tech="provocation" data-idx="37" style="--accent:#fb923c">
+  <div class="prov-pulse"></div><span class="prov-label">PROVOCATION</span>
+  <span class="idea-num">037</span><p>Delete the index every Friday — forces continuous re-ingest discipline product</p></article><article class="idea prov-card" data-tech="provocation" data-idx="38" style="--accent:#fb923c">
+  <div class="prov-pulse"></div><span class="prov-label">PROVOCATION</span>
+  <span class="idea-num">038</span><p>Agents must pay users for each hop — invents hop marketplace economics</p></article><article class="idea prov-card" data-tech="provocation" data-idx="39" style="--accent:#fb923c">
+  <div class="prov-pulse"></div><span class="prov-label">PROVOCATION</span>
+  <span class="idea-num">039</span><p>Answers without screenshots are invalid — visual grounding as law</p></article><article class="idea prov-card" data-tech="provocation" data-idx="40" style="--accent:#fb923c">
+  <div class="prov-pulse"></div><span class="prov-label">PROVOCATION</span>
+  <span class="idea-num">040</span><p>One global tenant for all customers — force cryptographic row-level proofs instead</p></article><article class="idea prov-card" data-tech="provocation" data-idx="41" style="--accent:#fb923c">
+  <div class="prov-pulse"></div><span class="prov-label">PROVOCATION</span>
+  <span class="idea-num">041</span><p>No embeddings allowed — only BM25 + human-curated cards</p></article><article class="idea prov-card" data-tech="provocation" data-idx="42" style="--accent:#fb923c">
+  <div class="prov-pulse"></div><span class="prov-label">PROVOCATION</span>
+  <span class="idea-num">042</span><p>Every product ships its own model — knowledge plane only does permissions+eval</p></article><article class="idea prov-card" data-tech="provocation" data-idx="43" style="--accent:#fb923c">
+  <div class="prov-pulse"></div><span class="prov-label">PROVOCATION</span>
+  <span class="idea-num">043</span><p>RAG that refuses to answer more often than it answers — Trust Mode SKU</p></article><article class="idea prov-card" data-tech="provocation" data-idx="44" style="--accent:#fb923c">
+  <div class="prov-pulse"></div><span class="prov-label">PROVOCATION</span>
+  <span class="idea-num">044</span><p>Charge more for simpler queries — invert pricing to kill vanity traffic</p></article><article class="idea prov-card" data-tech="provocation" data-idx="45" style="--accent:#fb923c">
+  <div class="prov-pulse"></div><span class="prov-label">PROVOCATION</span>
+  <span class="idea-num">045</span><p>Open-source the agent, sell the corpus sterilizer (PII/layout cleaner)</p></article><article class="idea prov-card" data-tech="provocation" data-idx="46" style="--accent:#fb923c">
+  <div class="prov-pulse"></div><span class="prov-label">PROVOCATION</span>
+  <span class="idea-num">046</span><p>Make multimodal free and text paid — flip commodity assumption</p></article><article class="idea prov-card" data-tech="provocation" data-idx="47" style="--accent:#fb923c">
+  <div class="prov-pulse"></div><span class="prov-label">PROVOCATION</span>
+  <span class="idea-num">047</span><p>Require two competing retrievers to agree before generation (retrieval consensus)</p></article><article class="idea prov-card" data-tech="provocation" data-idx="48" style="--accent:#fb923c">
+  <div class="prov-pulse"></div><span class="prov-label">PROVOCATION</span>
+  <span class="idea-num">048</span><p>Customer must pass a quiz on their own docs before API keys activate</p></article></div>
+</section>
+<section class="tech-section section-wheel" id="scamper" data-treatment="wheel" style="--accent:#2dd4bf">
+  <header class="section-head">
+    <span class="section-glyph">◎</span>
+    <div><h2>SCAMPER</h2><span class="section-count">12 signals</span></div>
+    <div class="section-line"></div>
+  </header>
+  <div class="idea-grid"><article class="idea scamper-card" data-tech="scamper" data-idx="49" style="--accent:#2dd4bf">
+  <span class="scamper-letter">S</span><span class="idea-num">049</span><p>Substitute vector search with late-interaction page tensors as default index type</p></article><article class="idea scamper-card" data-tech="scamper" data-idx="50" style="--accent:#2dd4bf">
+  <span class="scamper-letter">C</span><span class="idea-num">050</span><p>Combine AMKP with feature-flag service — knowledge rolls out with product flags</p></article><article class="idea scamper-card" data-tech="scamper" data-idx="51" style="--accent:#2dd4bf">
+  <span class="scamper-letter">A</span><span class="idea-num">051</span><p>Adapt Stripe Radar patterns to Retrieval Radar (fraudulent/prompt-injection queries)</p></article><article class="idea scamper-card" data-tech="scamper" data-idx="52" style="--accent:#2dd4bf">
+  <span class="scamper-letter">M</span><span class="idea-num">052</span><p>Modify chunking to be table-cell and figure-region first-class objects</p></article><article class="idea scamper-card" data-tech="scamper" data-idx="53" style="--accent:#2dd4bf">
+  <span class="scamper-letter">P</span><span class="idea-num">053</span><p>Put-to-other-use: use AMKP as regression test oracle for any LLM app (shadow eval)</p></article><article class="idea scamper-card" data-tech="scamper" data-idx="54" style="--accent:#2dd4bf">
+  <span class="scamper-letter">E</span><span class="idea-num">054</span><p>Eliminate the generator — sell retrieval+evidence pack API only (BYO LLM)</p></article><article class="idea scamper-card" data-tech="scamper" data-idx="55" style="--accent:#2dd4bf">
+  <span class="scamper-letter">R</span><span class="idea-num">055</span><p>Reverse: products push embeddings into plane instead of plane pulling docs (push-RAG)</p></article><article class="idea scamper-card" data-tech="scamper" data-idx="56" style="--accent:#2dd4bf">
+  <span class="scamper-letter">S</span><span class="idea-num">056</span><p>Substitute connectors with customer-brought MCP data servers only</p></article><article class="idea scamper-card" data-tech="scamper" data-idx="57" style="--accent:#2dd4bf">
+  <span class="scamper-letter">C</span><span class="idea-num">057</span><p>Combine tenancy + billing: chargeback per product namespace automatically</p></article><article class="idea scamper-card" data-tech="scamper" data-idx="58" style="--accent:#2dd4bf">
+  <span class="scamper-letter">A</span><span class="idea-num">058</span><p>Adapt Kubernetes operators: KnowledgePlane CRDs for corpora, policies, eval suites</p></article><article class="idea scamper-card" data-tech="scamper" data-idx="59" style="--accent:#2dd4bf">
+  <span class="scamper-letter">M</span><span class="idea-num">059</span><p>Modify agent loop into finite-state 'retrieval recipes' YAML customers version</p></article><article class="idea scamper-card" data-tech="scamper" data-idx="60" style="--accent:#2dd4bf">
+  <span class="scamper-letter">P</span><span class="idea-num">060</span><p>Eliminate rerankers via better ingest — sell Perfect Parse guarantee tier</p></article></div>
+</section>
+<section class="tech-section section-blend" id="concept-blending" data-treatment="blend" style="--accent:#a78bfa">
+  <header class="section-head">
+    <span class="section-glyph">◐</span>
+    <div><h2>Concept Blending</h2><span class="section-count">12 signals</span></div>
+    <div class="section-line"></div>
+  </header>
+  <div class="idea-grid"><article class="idea blend-card" data-tech="concept-blending" data-idx="61" style="--accent:#a78bfa">
+  <div class="blend-venn"><span class="b1"></span><span class="b2"></span></div>
+  <span class="blend-src">Datadog + Pinecone</span><p>Observability-native retrieval with RED metrics for RAG</p><span class="idea-num">061</span></article><article class="idea blend-card" data-tech="concept-blending" data-idx="62" style="--accent:#a78bfa">
+  <div class="blend-venn"><span class="b1"></span><span class="b2"></span></div>
+  <span class="blend-src">Figma + RAG</span><p>canvas where evidence snippets are layers designers pin</p><span class="idea-num">062</span></article><article class="idea blend-card" data-tech="concept-blending" data-idx="63" style="--accent:#a78bfa">
+  <div class="blend-venn"><span class="b1"></span><span class="b2"></span></div>
+  <span class="blend-src">TurboRepo + knowledge</span><p>monorepo of corpora with shared packages of policies</p><span class="idea-num">063</span></article><article class="idea blend-card" data-tech="concept-blending" data-idx="64" style="--accent:#a78bfa">
+  <div class="blend-venn"><span class="b1"></span><span class="b2"></span></div>
+  <span class="blend-src">Plaid + RAG</span><p>'knowledge linking' consent flow when products share corpora</p><span class="idea-num">064</span></article><article class="idea blend-card" data-tech="concept-blending" data-idx="65" style="--accent:#a78bfa">
+  <div class="blend-venn"><span class="b1"></span><span class="b2"></span></div>
+  <span class="blend-src">Cloudflare Workers + ColPali</span><p>edge visual retrieve workers</p><span class="idea-num">065</span></article><article class="idea blend-card" data-tech="concept-blending" data-idx="66" style="--accent:#a78bfa">
+  <div class="blend-venn"><span class="b1"></span><span class="b2"></span></div>
+  <span class="blend-src">Unit tests + RAG</span><p>AssertThatAnswer cites X fixture library</p><span class="idea-num">066</span></article><article class="idea blend-card" data-tech="concept-blending" data-idx="67" style="--accent:#a78bfa">
+  <div class="blend-venn"><span class="b1"></span><span class="b2"></span></div>
+  <span class="blend-src">Feature stores + RAG</span><p>Feature+Evidence store for agents</p><span class="idea-num">067</span></article><article class="idea blend-card" data-tech="concept-blending" data-idx="68" style="--accent:#a78bfa">
+  <div class="blend-venn"><span class="b1"></span><span class="b2"></span></div>
+  <span class="blend-src">Password managers + RAG</span><p>vault for secrets-aware retrieval redaction</p><span class="idea-num">068</span></article><article class="idea blend-card" data-tech="concept-blending" data-idx="69" style="--accent:#a78bfa">
+  <div class="blend-venn"><span class="b1"></span><span class="b2"></span></div>
+  <span class="blend-src">Storybook + RAG</span><p>EvidenceBook of golden Q/A components per product</p><span class="idea-num">069</span></article><article class="idea blend-card" data-tech="concept-blending" data-idx="70" style="--accent:#a78bfa">
+  <div class="blend-venn"><span class="b1"></span><span class="b2"></span></div>
+  <span class="blend-src">Terraform + AMKP</span><p>Infra-as-code for knowledge planes</p><span class="idea-num">070</span></article><article class="idea blend-card" data-tech="concept-blending" data-idx="71" style="--accent:#a78bfa">
+  <div class="blend-venn"><span class="b1"></span><span class="b2"></span></div>
+  <span class="blend-src">Sentry + RAG</span><p>error tracking when faithfulness drops in production</p><span class="idea-num">071</span></article><article class="idea blend-card" data-tech="concept-blending" data-idx="72" style="--accent:#a78bfa">
+  <div class="blend-venn"><span class="b1"></span><span class="b2"></span></div>
+  <span class="blend-src">Zapier + AMKP</span><p>no-code multimodal ingest zaps for SMBs</p><span class="idea-num">072</span></article></div>
+</section>
+<section class="tech-section section-invert" id="reverse-brainstorm" data-treatment="invert" style="--accent:#f87171">
+  <header class="section-head">
+    <span class="section-glyph">↯</span>
+    <div><h2>Reverse Brainstorming</h2><span class="section-count">12 signals</span></div>
+    <div class="section-line"></div>
+  </header>
+  <div class="idea-grid"><article class="idea reverse-card" data-tech="reverse-brainstorm" data-idx="73" style="--accent:#f87171">
+  <div class="rev-fail"><span>FAIL</span><p>leak tenant B into A via cache</p></div>
+  <div class="rev-arrow">⇣</div><div class="rev-fix"><span>INVERSE</span><p>cache keys include crypto tenant MAC</p></div>
+  <span class="idea-num">073</span></article><article class="idea reverse-card" data-tech="reverse-brainstorm" data-idx="74" style="--accent:#f87171">
+  <div class="rev-fail"><span>FAIL</span><p>agent burns $10k overnight</p></div>
+  <div class="rev-arrow">⇣</div><div class="rev-fix"><span>INVERSE</span><p>hard circuit breakers + kill switches per API key</p></div>
+  <span class="idea-num">074</span></article><article class="idea reverse-card" data-tech="reverse-brainstorm" data-idx="75" style="--accent:#f87171">
+  <div class="rev-fail"><span>FAIL</span><p>charts misread</p></div>
+  <div class="rev-arrow">⇣</div><div class="rev-fix"><span>INVERSE</span><p>chart-to-dataframe verified extractor with human confirm gate</p></div>
+  <span class="idea-num">075</span></article><article class="idea reverse-card" data-tech="reverse-brainstorm" data-idx="76" style="--accent:#f87171">
+  <div class="rev-fail"><span>FAIL</span><p>stale policy cited</p></div>
+  <div class="rev-arrow">⇣</div><div class="rev-fix"><span>INVERSE</span><p>time-travel queries + effective-dated corpus versions</p></div>
+  <span class="idea-num">076</span></article><article class="idea reverse-card" data-tech="reverse-brainstorm" data-idx="77" style="--accent:#f87171">
+  <div class="rev-fail"><span>FAIL</span><p>POC gaming with vendor demos</p></div>
+  <div class="rev-arrow">⇣</div><div class="rev-fix"><span>INVERSE</span><p>customer-held sealed eval harness</p></div>
+  <span class="idea-num">077</span></article><article class="idea reverse-card" data-tech="reverse-brainstorm" data-idx="78" style="--accent:#f87171">
+  <div class="rev-fail"><span>FAIL</span><p>sprawl returns via shadow LangChain apps</p></div>
+  <div class="rev-arrow">⇣</div><div class="rev-fix"><span>INVERSE</span><p>org gateway that only allows AMKP retrieve tool</p></div>
+  <span class="idea-num">078</span></article><article class="idea reverse-card" data-tech="reverse-brainstorm" data-idx="79" style="--accent:#f87171">
+  <div class="rev-fail"><span>FAIL</span><p>multimodal too expensive</p></div>
+  <div class="rev-arrow">⇣</div><div class="rev-fix"><span>INVERSE</span><p>cascade cheap→expensive parse with budget</p></div>
+  <span class="idea-num">079</span></article><article class="idea reverse-card" data-tech="reverse-brainstorm" data-idx="80" style="--accent:#f87171">
+  <div class="rev-fail"><span>FAIL</span><p>black-box traces</p></div>
+  <div class="rev-arrow">⇣</div><div class="rev-fix"><span>INVERSE</span><p>exportable OpenTelemetry spans as first-class product</p></div>
+  <span class="idea-num">080</span></article><article class="idea reverse-card" data-tech="reverse-brainstorm" data-idx="81" style="--accent:#f87171">
+  <div class="rev-fail"><span>FAIL</span><p>ACL drift from SharePoint</p></div>
+  <div class="rev-arrow">⇣</div><div class="rev-fix"><span>INVERSE</span><p>webhook-forced reindex on permission change</p></div>
+  <span class="idea-num">081</span></article><article class="idea reverse-card" data-tech="reverse-brainstorm" data-idx="82" style="--accent:#f87171">
+  <div class="rev-fail"><span>FAIL</span><p>model swap breaks quality</p></div>
+  <div class="rev-arrow">⇣</div><div class="rev-fix"><span>INVERSE</span><p>pinned retrieval contracts + canary eval gates</p></div>
+  <span class="idea-num">082</span></article><article class="idea reverse-card" data-tech="reverse-brainstorm" data-idx="83" style="--accent:#f87171">
+  <div class="rev-fail"><span>FAIL</span><p>sales oversells agentic</p></div>
+  <div class="rev-arrow">⇣</div><div class="rev-fix"><span>INVERSE</span><p>Agentic Readiness Score before enabling loops</p></div>
+  <span class="idea-num">083</span></article><article class="idea reverse-card" data-tech="reverse-brainstorm" data-idx="84" style="--accent:#f87171">
+  <div class="rev-fail"><span>FAIL</span><p>silent incomplete answers</p></div>
+  <div class="rev-arrow">⇣</div><div class="rev-fix"><span>INVERSE</span><p>mandatory coverage % disclosure in API response</p></div>
+  <span class="idea-num">084</span></article></div>
+</section>
+<section class="tech-section section-job" id="jtbd" data-treatment="job" style="--accent:#4ade80">
+  <header class="section-head">
+    <span class="section-glyph">▸</span>
+    <div><h2>Job to Be Done</h2><span class="section-count">12 signals</span></div>
+    <div class="section-line"></div>
+  </header>
+  <div class="idea-grid"><article class="idea job-card" data-tech="jtbd" data-idx="85" style="--accent:#4ade80">
+  <div class="job-strip">WHEN I NEED TO…</div><p class="job-need">ship AI feature this quarter without hiring 3 ML eng</p>
+  <div class="job-sol">AMKP starter kit</div><span class="idea-num">085</span></article><article class="idea job-card" data-tech="jtbd" data-idx="86" style="--accent:#4ade80">
+  <div class="job-strip">WHEN I NEED TO…</div><p class="job-need">prove to CISO no cross-customer leak</p>
+  <div class="job-sol">Tenancy Attestation Report product</div><span class="idea-num">086</span></article><article class="idea job-card" data-tech="jtbd" data-idx="87" style="--accent:#4ade80">
+  <div class="job-strip">WHEN I NEED TO…</div><p class="job-need">stop rebuilding RAG per squad</p>
+  <div class="job-sol">Platform Mandate package + migration wizard</div><span class="idea-num">087</span></article><article class="idea job-card" data-tech="jtbd" data-idx="88" style="--accent:#4ade80">
+  <div class="job-strip">WHEN I NEED TO…</div><p class="job-need">answer questions about charts in decks</p>
+  <div class="job-sol">SlideBrain modality pack</div><span class="idea-num">088</span></article><article class="idea job-card" data-tech="jtbd" data-idx="89" style="--accent:#4ade80">
+  <div class="job-strip">WHEN I NEED TO…</div><p class="job-need">control token spend</p>
+  <div class="job-sol">Budget Governor sidecar</div><span class="idea-num">089</span></article><article class="idea job-card" data-tech="jtbd" data-idx="90" style="--accent:#4ade80">
+  <div class="job-strip">WHEN I NEED TO…</div><p class="job-need">pass EU AI Act docs</p>
+  <div class="job-sol">Compliance Binder auto-generator from traces</div><span class="idea-num">090</span></article><article class="idea job-card" data-tech="jtbd" data-idx="91" style="--accent:#4ade80">
+  <div class="job-strip">WHEN I NEED TO…</div><p class="job-need">let support, sales, and product share one truth</p>
+  <div class="job-sol">Suite Sync knowledge mesh</div><span class="idea-num">091</span></article><article class="idea job-card" data-tech="jtbd" data-idx="92" style="--accent:#4ade80">
+  <div class="job-strip">WHEN I NEED TO…</div><p class="job-need">OEM my AI into customer environments</p>
+  <div class="job-sol">White-label AMKP</div><span class="idea-num">092</span></article><article class="idea job-card" data-tech="jtbd" data-idx="93" style="--accent:#4ade80">
+  <div class="job-strip">WHEN I NEED TO…</div><p class="job-need">know if last deploy hurt answers</p>
+  <div class="job-sol">RAG Diff on PRs</div><span class="idea-num">093</span></article><article class="idea job-card" data-tech="jtbd" data-idx="94" style="--accent:#4ade80">
+  <div class="job-strip">WHEN I NEED TO…</div><p class="job-need">debug why bot lied</p>
+  <div class="job-sol">Time-travel trace replay UI</div><span class="idea-num">094</span></article><article class="idea job-card" data-tech="jtbd" data-idx="95" style="--accent:#4ade80">
+  <div class="job-strip">WHEN I NEED TO…</div><p class="job-need">onboard new product in a day</p>
+  <div class="job-sol">Product Tenant Wizard</div><span class="idea-num">095</span></article><article class="idea job-card" data-tech="jtbd" data-idx="96" style="--accent:#4ade80">
+  <div class="job-strip">WHEN I NEED TO…</div><p class="job-need">use agents safely</p>
+  <div class="job-sol">Tool ACL + human gates recipe library</div><span class="idea-num">096</span></article></div>
+</section>
+<section class="tech-section section-worst" id="worst-idea" data-treatment="worst" style="--accent:#ef4444">
+  <header class="section-head">
+    <span class="section-glyph">☠</span>
+    <div><h2>Worst Possible Idea</h2><span class="section-count">12 signals</span></div>
+    <div class="section-line"></div>
+  </header>
+  <div class="idea-grid"><article class="idea worst-card" data-tech="worst-idea" data-idx="97" style="--accent:#ef4444">
+  <div class="worst-side"><span>☠ WORST</span><p>store all tenants in one unfiltered index</p></div>
+  <div class="worst-flip">⟳</div><div class="flip-side"><span>✓ FLIP</span><p>silo-default architecture with loud failures</p></div>
+  <span class="idea-num">097</span></article><article class="idea worst-card" data-tech="worst-idea" data-idx="98" style="--accent:#ef4444">
+  <div class="worst-side"><span>☠ WORST</span><p>always use max agent hops</p></div>
+  <div class="worst-flip">⟳</div><div class="flip-side"><span>✓ FLIP</span><p>zero-hop default, earn hops via complexity classifier</p></div>
+  <span class="idea-num">098</span></article><article class="idea worst-card" data-tech="worst-idea" data-idx="99" style="--accent:#ef4444">
+  <div class="worst-side"><span>☠ WORST</span><p>train on customer data</p></div>
+  <div class="worst-flip">⟳</div><div class="flip-side"><span>✓ FLIP</span><p>contractual no-train + verifiable TEE option</p></div>
+  <span class="idea-num">099</span></article><article class="idea worst-card" data-tech="worst-idea" data-idx="100" style="--accent:#ef4444">
+  <div class="worst-side"><span>☠ WORST</span><p>hide citations</p></div>
+  <div class="worst-flip">⟳</div><div class="flip-side"><span>✓ FLIP</span><p>citation- obligatory API (400 if missing)</p></div>
+  <span class="idea-num">100</span></article><article class="idea worst-card" data-tech="worst-idea" data-idx="101" style="--accent:#ef4444">
+  <div class="worst-side"><span>☠ WORST</span><p>one giant prompt template</p></div>
+  <div class="worst-flip">⟳</div><div class="flip-side"><span>✓ FLIP</span><p>typed retrieval recipes per intent</p></div>
+  <span class="idea-num">101</span></article><article class="idea worst-card" data-tech="worst-idea" data-idx="102" style="--accent:#ef4444">
+  <div class="worst-side"><span>☠ WORST</span><p>OCR everything at highest VLM cost</p></div>
+  <div class="worst-flip">⟳</div><div class="flip-side"><span>✓ FLIP</span><p>confidence-tiered parse ladder</p></div>
+  <span class="idea-num">102</span></article><article class="idea worst-card" data-tech="worst-idea" data-idx="103" style="--accent:#ef4444">
+  <div class="worst-side"><span>☠ WORST</span><p>no eval until after launch</p></div>
+  <div class="worst-flip">⟳</div><div class="flip-side"><span>✓ FLIP</span><p>no production key until gold-set passes</p></div>
+  <span class="idea-num">103</span></article><article class="idea worst-card" data-tech="worst-idea" data-idx="104" style="--accent:#ef4444">
+  <div class="worst-side"><span>☠ WORST</span><p>seat-based pricing for API</p></div>
+  <div class="worst-flip">⟳</div><div class="flip-side"><span>✓ FLIP</span><p>usage + tenancy + eval SKUs</p></div>
+  <span class="idea-num">104</span></article><article class="idea worst-card" data-tech="worst-idea" data-idx="105" style="--accent:#ef4444">
+  <div class="worst-side"><span>☠ WORST</span><p>lock to one LLM</p></div>
+  <div class="worst-flip">⟳</div><div class="flip-side"><span>✓ FLIP</span><p>model-agnostic evidence plane</p></div>
+  <span class="idea-num">105</span></article><article class="idea worst-card" data-tech="worst-idea" data-idx="106" style="--accent:#ef4444">
+  <div class="worst-side"><span>☠ WORST</span><p>build workforce chat first</p></div>
+  <div class="worst-flip">⟳</div><div class="flip-side"><span>✓ FLIP</span><p>tools-only until 10 product integrations</p></div>
+  <span class="idea-num">106</span></article><article class="idea worst-card" data-tech="worst-idea" data-idx="107" style="--accent:#ef4444">
+  <div class="worst-side"><span>☠ WORST</span><p>ignore tables</p></div>
+  <div class="worst-flip">⟳</div><div class="flip-side"><span>✓ FLIP</span><p>TableRank as hero benchmark for launch</p></div>
+  <span class="idea-num">107</span></article><article class="idea worst-card" data-tech="worst-idea" data-idx="108" style="--accent:#ef4444">
+  <div class="worst-side"><span>☠ WORST</span><p>silent degradation</p></div>
+  <div class="worst-flip">⟳</div><div class="flip-side"><span>✓ FLIP</span><p>page-the-oncall on faithfulness SLO breach</p></div>
+  <span class="idea-num">108</span></article></div>
+</section>
+<section class="tech-section section-bedrock" id="first-principles" data-treatment="bedrock" style="--accent:#60a5fa">
+  <header class="section-head">
+    <span class="section-glyph">⬡</span>
+    <div><h2>First Principles</h2><span class="section-count">12 signals</span></div>
+    <div class="section-line"></div>
+  </header>
+  <div class="idea-grid"><article class="idea bedrock-card" data-tech="first-principles" data-idx="109" style="--accent:#60a5fa">
+  <div class="bedrock-layer"></div><span class="bedrock-tag">BEDROCK</span>
+  <span class="idea-num">109</span><p>users need trustworthy evidence objects, not chat — Evidence Object API</p></article><article class="idea bedrock-card" data-tech="first-principles" data-idx="110" style="--accent:#60a5fa">
+  <div class="bedrock-layer"></div><span class="bedrock-tag">BEDROCK</span>
+  <span class="idea-num">110</span><p>isolation is a security property not a filter flag — Physical/logical hard boundaries</p></article><article class="idea bedrock-card" data-tech="first-principles" data-idx="111" style="--accent:#60a5fa">
+  <div class="bedrock-layer"></div><span class="bedrock-tag">BEDROCK</span>
+  <span class="idea-num">111</span><p>multimodality is about preserving structure, not adding image embeddings blindly</p></article><article class="idea bedrock-card" data-tech="first-principles" data-idx="112" style="--accent:#60a5fa">
+  <div class="bedrock-layer"></div><span class="bedrock-tag">BEDROCK</span>
+  <span class="idea-num">112</span><p>agents are control systems — need budgets, sensors (eval), actuators (tools)</p></article><article class="idea bedrock-card" data-tech="first-principles" data-idx="113" style="--accent:#60a5fa">
+  <div class="bedrock-layer"></div><span class="bedrock-tag">BEDROCK</span>
+  <span class="idea-num">113</span><p>multi-product means one policy plane, many consumers — Identity+Policy fabric</p></article><article class="idea bedrock-card" data-tech="first-principles" data-idx="114" style="--accent:#60a5fa">
+  <div class="bedrock-layer"></div><span class="bedrock-tag">BEDROCK</span>
+  <span class="idea-num">114</span><p>cost is a first-class output — return costEstimate with every retrieve</p></article><article class="idea bedrock-card" data-tech="first-principles" data-idx="115" style="--accent:#60a5fa">
+  <div class="bedrock-layer"></div><span class="bedrock-tag">BEDROCK</span>
+  <span class="idea-num">115</span><p>freshness is correctness — watermark every chunk with source etag/version</p></article><article class="idea bedrock-card" data-tech="first-principles" data-idx="116" style="--accent:#60a5fa">
+  <div class="bedrock-layer"></div><span class="bedrock-tag">BEDROCK</span>
+  <span class="idea-num">116</span><p>refusal is a feature — PreferCorrectness mode</p></article><article class="idea bedrock-card" data-tech="first-principles" data-idx="117" style="--accent:#60a5fa">
+  <div class="bedrock-layer"></div><span class="bedrock-tag">BEDROCK</span>
+  <span class="idea-num">117</span><p>differentiation = measurable guarantees, not model brands</p></article><article class="idea bedrock-card" data-tech="first-principles" data-idx="118" style="--accent:#60a5fa">
+  <div class="bedrock-layer"></div><span class="bedrock-tag">BEDROCK</span>
+  <span class="idea-num">118</span><p>integration beats UI — MCP/SDK/webhooks as the product surface</p></article><article class="idea bedrock-card" data-tech="first-principles" data-idx="119" style="--accent:#60a5fa">
+  <div class="bedrock-layer"></div><span class="bedrock-tag">BEDROCK</span>
+  <span class="idea-num">119</span><p>tables/charts are relational evidence — return typed TableEvidence schemas</p></article><article class="idea bedrock-card" data-tech="first-principles" data-idx="120" style="--accent:#60a5fa">
+  <div class="bedrock-layer"></div><span class="bedrock-tag">BEDROCK</span>
+  <span class="idea-num">120</span><p>sprawl is an org design failure — product should make sharing cheaper than forking</p></article></div>
+</section>
+<section class="tech-section section-force" id="forced-relationships" data-treatment="force" style="--accent:#e879f9">
+  <header class="section-head">
+    <span class="section-glyph">⊗</span>
+    <div><h2>Forced Relationships</h2><span class="section-count">12 signals</span></div>
+    <div class="section-line"></div>
+  </header>
+  <div class="idea-grid"><article class="idea force-card" data-tech="forced-relationships" data-idx="121" style="--accent:#e879f9">
+  <div class="force-nodes"><span class="fn1">AMKP</span><span class="force-link"></span><span class="fn2">?</span></div>
+  <p class="force-pair">AMKP ⊗ LEGO</p><p>snap-together modality bricks customers assemble per product</p><span class="idea-num">121</span></article><article class="idea force-card" data-tech="forced-relationships" data-idx="122" style="--accent:#e879f9">
+  <div class="force-nodes"><span class="fn1">AMKP</span><span class="force-link"></span><span class="fn2">?</span></div>
+  <p class="force-pair">AMKP ⊗ black box theater</p><p>sealed eval boxes customers ship without revealing gold answers</p><span class="idea-num">122</span></article><article class="idea force-card" data-tech="forced-relationships" data-idx="123" style="--accent:#e879f9">
+  <div class="force-nodes"><span class="fn1">AMKP</span><span class="force-link"></span><span class="fn2">?</span></div>
+  <p class="force-pair">AMKP ⊗ carbon credits</p><p>multimodal compute credits traded across products</p><span class="idea-num">123</span></article><article class="idea force-card" data-tech="forced-relationships" data-idx="124" style="--accent:#e879f9">
+  <div class="force-nodes"><span class="fn1">AMKP</span><span class="force-link"></span><span class="fn2">?</span></div>
+  <p class="force-pair">AMKP ⊗ museum curation</p><p>exhibit galleries of high-value evidence artifacts</p><span class="idea-num">124</span></article><article class="idea force-card" data-tech="forced-relationships" data-idx="125" style="--accent:#e879f9">
+  <div class="force-nodes"><span class="fn1">AMKP</span><span class="force-link"></span><span class="fn2">?</span></div>
+  <p class="force-pair">AMKP ⊗ sports replay</p><p>challenge flags on answers → instant replay of retrieval</p><span class="idea-num">125</span></article><article class="idea force-card" data-tech="forced-relationships" data-idx="126" style="--accent:#e879f9">
+  <div class="force-nodes"><span class="fn1">AMKP</span><span class="force-link"></span><span class="fn2">?</span></div>
+  <p class="force-pair">AMKP ⊗ shipping containers</p><p>standardized Knowledge Containers portable across clouds</p><span class="idea-num">126</span></article><article class="idea force-card" data-tech="forced-relationships" data-idx="127" style="--accent:#e879f9">
+  <div class="force-nodes"><span class="fn1">AMKP</span><span class="force-link"></span><span class="fn2">?</span></div>
+  <p class="force-pair">AMKP ⊗ immune system</p><p>antibodies = detectors for prompt injection in retrieved text</p><span class="idea-num">127</span></article><article class="idea force-card" data-tech="forced-relationships" data-idx="128" style="--accent:#e879f9">
+  <div class="force-nodes"><span class="fn1">AMKP</span><span class="force-link"></span><span class="fn2">?</span></div>
+  <p class="force-pair">AMKP ⊗ city zoning</p><p>corpora zoned residential/commercial/industrial access classes</p><span class="idea-num">128</span></article><article class="idea force-card" data-tech="forced-relationships" data-idx="129" style="--accent:#e879f9">
+  <div class="force-nodes"><span class="fn1">AMKP</span><span class="force-link"></span><span class="fn2">?</span></div>
+  <p class="force-pair">AMKP ⊗ orchestra conductor</p><p>score that schedules retrieval instruments per query</p><span class="idea-num">129</span></article><article class="idea force-card" data-tech="forced-relationships" data-idx="130" style="--accent:#e879f9">
+  <div class="force-nodes"><span class="fn1">AMKP</span><span class="force-link"></span><span class="fn2">?</span></div>
+  <p class="force-pair">AMKP ⊗ 3D printing</p><p>print temporary specialist indexes for a campaign then recycle</p><span class="idea-num">130</span></article><article class="idea force-card" data-tech="forced-relationships" data-idx="131" style="--accent:#e879f9">
+  <div class="force-nodes"><span class="fn1">AMKP</span><span class="force-link"></span><span class="fn2">?</span></div>
+  <p class="force-pair">AMKP ⊗ credit bureaus</p><p>Evidence Score for documents (authority/freshness/ACL health)</p><span class="idea-num">131</span></article><article class="idea force-card" data-tech="forced-relationships" data-idx="132" style="--accent:#e879f9">
+  <div class="force-nodes"><span class="fn1">AMKP</span><span class="force-link"></span><span class="fn2">?</span></div>
+  <p class="force-pair">AMKP ⊗ escape rooms</p><p>progressive disclosure of evidence as agent unlocks puzzles</p><span class="idea-num">132</span></article></div>
+</section>
+<section class="tech-section section-timeline" id="time-shifting" data-treatment="timeline" style="--accent:#fcd34d">
+  <header class="section-head">
+    <span class="section-glyph">⏱</span>
+    <div><h2>Time Shifting</h2><span class="section-count">12 signals</span></div>
+    <div class="section-line"></div>
+  </header>
+  <div class="timeline-track"><article class="idea time-card" data-tech="time-shifting" data-idx="133" data-year="1900" style="--accent:#fcd34d">
+  <span class="time-year">1900</span><p>Artisan: hand-indexed card catalogs — productize Human-in-the-loop card curation UI</p><span class="idea-num">133</span></article><article class="idea time-card" data-tech="time-shifting" data-idx="134" data-year="1920" style="--accent:#fcd34d">
+  <span class="time-year">1920</span><p>Telephone exchange: operators route queries — sell Retrieval Operator as managed service</p><span class="idea-num">134</span></article><article class="idea time-card" data-tech="time-shifting" data-idx="135" data-year="1960" style="--accent:#fcd34d">
+  <span class="time-year">1960</span><p>Mainframe: batch overnight indexing windows as a deliberate cost-save SKU</p><span class="idea-num">135</span></article><article class="idea time-card" data-tech="time-shifting" data-idx="136" data-year="1995" style="--accent:#fcd34d">
+  <span class="time-year">1995</span><p>AltaVista: keyword nostalgia mode for exact SKUs/policy IDs alongside vectors</p><span class="idea-num">136</span></article><article class="idea time-card" data-tech="time-shifting" data-idx="137" data-year="2005" style="--accent:#fcd34d">
+  <span class="time-year">2005</span><p>Google Maps: pan/zoom visual document maps for page-as-image corpora</p><span class="idea-num">137</span></article><article class="idea time-card" data-tech="time-shifting" data-idx="138" data-year="2015" style="--accent:#fcd34d">
+  <span class="time-year">2015</span><p>Docker: Dockerfile for knowledge planes — reproducible corpus builds</p><span class="idea-num">138</span></article><article class="idea time-card" data-tech="time-shifting" data-idx="139" data-year="2030" style="--accent:#fcd34d">
+  <span class="time-year">2030</span><p>Agents are employees — HR system for agent identities+budgets on AMKP</p><span class="idea-num">139</span></article><article class="idea time-card" data-tech="time-shifting" data-idx="140" data-year="2150" style="--accent:#fcd34d">
+  <span class="time-year">2150</span><p>Colony: bandwidth scarce — extreme compression multimodal sketches as retrieve units</p><span class="idea-num">140</span></article><article class="idea time-card" data-tech="time-shifting" data-idx="141" data-year="1999" style="--accent:#fcd34d">
+  <span class="time-year">1999</span><p>Enterprise portal craze: warn/productize anti-portal — thin API not intranet</p><span class="idea-num">141</span></article><article class="idea time-card" data-tech="time-shifting" data-idx="142" data-year="2008" style="--accent:#fcd34d">
+  <span class="time-year">2008</span><p>App Store: Knowledge App Store of vertical packs (10-K, IFC diagrams, IFU manuals)</p><span class="idea-num">142</span></article><article class="idea time-card" data-tech="time-shifting" data-idx="143" data-year="2020" style="--accent:#fcd34d">
+  <span class="time-year">2020</span><p>Zoom era: meeting-video multimodal RAG pack as first vertical</p><span class="idea-num">143</span></article><article class="idea time-card" data-tech="time-shifting" data-idx="144" data-year="2035" style="--accent:#fcd34d">
+  <span class="time-year">2035</span><p>Regulation: proof-carrying answers mandatory — ship early as ProofCarry RAG</p><span class="idea-num">144</span></article></div>
+</section>
+  <p class="no-results" id="no-results">No signals match your filter.</p>
+
+  <section class="synthesis" id="synthesis">
+    <h2>Synthesis Convergence</h2>
+    <p class="synth-sub">SIX CLUSTERS EMERGED FROM 144 SIGNALS</p>
+    <div class="cluster-grid">
+      
+<div class="cluster" style="--accent:#22d3ee">
+  <span class="cluster-id">A</span>
+  <h3>PRODUCTION GUARANTEES</h3>
+  <p>Tenancy MAC/silo-default, insurance SLA, leak tests, OpenTelemetry traces, faithfulness SLO paging — differentiation is measurable guarantees not chat UI</p>
+</div>
+<div class="cluster" style="--accent:#fbbf24">
+  <span class="cluster-id">B</span>
+  <h3>EVIDENCE OBJECTS</h3>
+  <p>Hashed evidence cards, visual receipts, TableEvidence schemas, citation-obligatory API, retrieval consensus, PreferCorrectness refusal mode — sell evidence plane not generator</p>
+</div>
+<div class="cluster" style="--accent:#4ade80">
+  <span class="cluster-id">C</span>
+  <h3>CONTROL SYSTEMS FOR AGENTS</h3>
+  <p>ER triage routing, circuit breakers, hop visas, Retrieval Radar, Agentic Readiness Score, finite-state retrieval recipes YAML — agentic as governed control loop</p>
+</div>
+<div class="cluster" style="--accent:#fb923c">
+  <span class="cluster-id">D</span>
+  <h3>MULTIMODAL STRUCTURE</h3>
+  <p>ColPali default option, parse ladder cheap→VLM, TableRank hero benchmark, chart-to-dataframe gates, modality cold-chain confidence — structure fidelity is the multimodal moat</p>
+</div>
+<div class="cluster" style="--accent:#a78bfa">
+  <span class="cluster-id">E</span>
+  <h3>PLATFORM / ORG</h3>
+  <p>Git for knowledge, Knowledge Containers, CRDs, Feature-flag coupled rollouts, org gateway mandating AMKP tool, monorepo of corpora — make sharing cheaper than sprawl</p>
+</div>
+<div class="cluster" style="--accent:#f472b6">
+  <span class="cluster-id">F</span>
+  <h3>GTM WEDGES</h3>
+  <p>OEM white-label, Eval-as-product, BYO-LLM retrieve-only, Vertical Filings/Manufacturing packs, Knowledge MCP Store, sealed customer-held eval harness POC-in-a-box</p>
+</div>
+    </div>
+    <div class="chosen">
+      <p>Ship AMKP as Evidence+Policy+Tenancy plane (MCP/SDK first) with:
+(1) silo-default multi-product tenancy + leak tests
+(2) structure-aware multimodal parse ladder + TableRank
+(3) guarded router with budgets/traces
+(4) sealed eval/POC harness
+— defer workforce chat; optionally OSS retrieval core + paid control plane</p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">AMKP BRAINSTORM KEEPSAKE · RAG-SOL · EVIDENCE+POLICY+TENANCY</footer>
+
+<script>
+(function(){
+  const search=document.getElementById('search');
+  const navBtns=document.querySelectorAll('.nav-btn');
+  const sections=document.querySelectorAll('.tech-section');
+  const allIdeas=document.querySelectorAll('.idea');
+  const noResults=document.getElementById('no-results');
+  let activeTech='all';
+
+  function filter(){
+    const q=search.value.trim().toLowerCase();
+    let visible=0;
+    sections.forEach(sec=>{
+      const tech=sec.id;
+      const techMatch=activeTech==='all'||activeTech===tech;
+      let secVisible=0;
+      sec.querySelectorAll('.idea').forEach(card=>{
+        const text=card.textContent.toLowerCase();
+        const match=techMatch&&(!q||text.includes(q));
+        card.classList.toggle('hidden',!match);
+        if(match){secVisible++;visible++;}
+      });
+      sec.classList.toggle('filtered-out',techMatch&&secVisible===0);
+      sec.style.display=(activeTech==='all'||activeTech===tech)?'':'none';
+    });
+    noResults.classList.toggle('visible',visible===0);
+  }
+
+  navBtns.forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      navBtns.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      activeTech=btn.dataset.target;
+      if(activeTech!=='all'){
+        const el=document.getElementById(activeTech);
+        if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+      }
+      filter();
+    });
+  });
+
+  search.addEventListener('input',filter);
+  filter();
+})();
+</script>
+</body>
+</html>

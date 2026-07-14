@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMKP Documentation Hub</title>
+<style>
+  :root {
+    --ink: #0b0f14;
+    --slate: #141c26;
+    --slate-mid: #1e2a38;
+    --slate-light: #2a3a4f;
+    --text: #dce4ed;
+    --text-muted: #7d8fa8;
+    --cyan: #22d3ee;
+    --cyan-dim: #0e7490;
+    --amber: #f59e0b;
+    --amber-dim: #b45309;
+    --border: #2d3f55;
+    --glow-cyan: rgba(34, 211, 238, 0.15);
+    --glow-amber: rgba(245, 158, 11, 0.12);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--ink);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      linear-gradient(180deg, transparent 0%, rgba(34,211,238,0.02) 50%, transparent 100%),
+      repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(34,211,238,0.015) 2px, rgba(34,211,238,0.015) 4px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 2rem;
+    margin-bottom: 2.5rem;
+  }
+  .status-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .status-bar span { display: flex; align-items: center; gap: 0.4rem; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+  .dot.amber { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 0.25rem;
+  }
+  h1 .accent { color: var(--cyan); }
+  .subtitle { color: var(--text-muted); font-size: 1rem; }
+  .summary {
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    padding: 1.5rem;
+    margin: 2rem 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .summary p { margin-bottom: 0.75rem; }
+  .summary p:last-child { margin-bottom: 0; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+  .pill {
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--cyan);
+    background: var(--glow-cyan);
+    letter-spacing: 0.03em;
+  }
+  .pill.amber { color: var(--amber); background: var(--glow-amber); border-color: var(--amber-dim); }
+  section { margin-bottom: 2.5rem; }
+  h2 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--amber);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  h2::before { content: "//"; color: var(--text-muted); font-weight: 400; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.25rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  a.card:hover {
+    border-color: var(--cyan-dim);
+    box-shadow: 0 0 20px var(--glow-cyan);
+  }
+  .card .tag {
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+  }
+  .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text); }
+  .card p { font-size: 0.85rem; color: var(--text-muted); }
+  .card .arrow { color: var(--cyan); font-size: 0.85rem; margin-top: 0.75rem; }
+  .card.sibling { border-top: 2px solid var(--cyan); }
+  .card.artifact { border-top: 2px solid var(--amber); }
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  footer .credit { color: var(--cyan); }
+  nav.top { margin-bottom: 1rem; }
+  nav.top a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.8rem;
+    margin-right: 1rem;
+  }
+  nav.top a:hover { color: var(--cyan); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="status-bar">
+      <span><span class="dot"></span> SYS: AMKP</span>
+      <span><span class="dot amber"></span> PLANE: KNOWLEDGE</span>
+      <span>REV: 2026-07-14</span>
+      <span>PACK: WDS-DOCS</span>
+    </div>
+    <h1><span class="accent">AMKP</span> Documentation Hub</h1>
+    <p class="subtitle">Agentic Multimodal Knowledge Plane — RAG-Sol product documentation pack</p>
+  </header>
+
+  <div class="summary">
+    <p><strong>AMKP</strong> is an API / SDK / MCP-first <em>knowledge plane</em> that multiple products share. Platform teams ingest multimodal enterprise documents once, retrieve typed Evidence under hard tenant isolation, and optionally run guarded agentic retrieval with budgets and traces—without rebuilding a RAG stack per product and without adopting a workforce search UI.</p>
+    <p>Core guarantees: structure-aware multimodal ingest, silo/namespace-default multi-product tenancy, citation-obligatory Evidence objects, and a sealed POC-in-a-box for bake-offs. BYO LLM is supported; AMKP owns grounding infrastructure, not the chat surface.</p>
+    <div class="pill-row">
+      <span class="pill">API</span>
+      <span class="pill">SDK</span>
+      <span class="pill">MCP</span>
+      <span class="pill">MULTI-TENANT</span>
+      <span class="pill">MULTIMODAL</span>
+      <span class="pill amber">GUARDED AGENTIC</span>
+    </div>
+  </div>
+
+  <section>
+    <h2>Interactive Docs</h2>
+    <div class="grid">
+      <a class="card sibling" href="product-overview.html">
+        <div class="tag">Stakeholder</div>
+        <h3>Product Overview</h3>
+        <p>Problem, solution pillars, non-goals, and success metrics from the product brief.</p>
+        <div class="arrow">→ Open overview</div>
+      </a>
+      <a class="card sibling" href="ux-journeys.html">
+        <div class="tag">UX / DX</div>
+        <h3>UX Journeys</h3>
+        <p>Maya, Ken, and Priya journeys—API, SDK, docs, MCP, and console surfaces.</p>
+        <div class="arrow">→ Open journeys</div>
+      </a>
+      <a class="card sibling" href="requirements-map.html">
+        <div class="tag">Engineering</div>
+        <h3>Requirements Map</h3>
+        <p>Filterable FR-1–FR-27 map with feature groups, UJ anchors, and success metrics.</p>
+        <div class="arrow">→ Open requirements</div>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Source Artifacts</h2>
+    <div class="grid">
+      <a class="card artifact" href="../../_bmad-output/planning-artifacts/research/market-agentic-multimodal-rag-multi-product-research-2026-07-14.md">
+        <div class="tag">Research</div>
+        <h3>Market Research</h3>
+        <p>Agentic multimodal RAG multi-product landscape analysis, July 2026.</p>
+        <div class="arrow">→ Open markdown</div>
+      </a>
+      <a class="card artifact" href="../../_bmad-output/planning-artifacts/briefs/brief-RAG-Sol-2026-07-14/brief.md">
+        <div class="tag">Planning</div>
+        <h3>Product Brief</h3>
+        <p>Executive summary, scope, differentiation, and success criteria for AMKP.</p>
+        <div class="arrow">→ Open brief</div>
+      </a>
+      <a class="card artifact" href="../../_bmad-output/planning-artifacts/prds/prd-RAG-Sol-2026-07-14/prd.md">
+        <div class="tag">Planning</div>
+        <h3>PRD</h3>
+        <p>Full product requirements: FR-1–FR-27, glossary, journeys, and metrics.</p>
+        <div class="arrow">→ Open PRD</div>
+      </a>
+      <a class="card artifact" href="../../_bmad-output/brainstorming/brainstorm-amkp-rag-product-ideas-2026-07-14/brainstorm.html">
+        <div class="tag">Brainstorm</div>
+        <h3>Brainstorm Keepsake</h3>
+        <p>Interactive ideation session output for AMKP RAG product concepts.</p>
+        <div class="arrow">→ Open brainstorm</div>
+      </a>
+      <a class="card artifact" href="../../_bmad-output/planning-artifacts/architecture/architecture-RAG-Sol-2026-07-14/architecture-walkthrough.html">
+        <div class="tag">Architecture</div>
+        <h3>Architecture Walkthrough</h3>
+        <p>Winston spine tour: paradigm, AD-1–10, stack seed, build order.</p>
+        <div class="arrow">→ Open walkthrough</div>
+      </a>
+      <a class="card artifact" href="../../_bmad-output/specs/spec-amkp/SPEC.md">
+        <div class="tag">Spec</div>
+        <h3>SPEC Kernel</h3>
+        <p>Machine contract: CAP-1–CAP-8, constraints, non-goals, success signal.</p>
+        <div class="arrow">→ Open SPEC.md</div>
+      </a>
+      <a class="card artifact" href="../../_bmad-output/implementation-artifacts/amkp-epics-and-tickets.md">
+        <div class="tag">Build</div>
+        <h3>Epics &amp; Tickets</h3>
+        <p>E1–E8 epics, T-x.y tickets with ACs, and suggested sprint slices.</p>
+        <div class="arrow">→ Open tickets</div>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <span class="credit">Freya (WDS) + Sally (UX) — documentation pack 2026-07-14</span>
+    <span>Project: RAG-Sol / AMKP</span>
+  </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMKP Requirements Map</title>
+<style>
+  :root {
+    --ink: #0b0f14;
+    --slate: #141c26;
+    --slate-mid: #1e2a38;
+    --text: #dce4ed;
+    --text-muted: #7d8fa8;
+    --cyan: #22d3ee;
+    --cyan-dim: #0e7490;
+    --amber: #f59e0b;
+    --border: #2d3f55;
+    --glow-cyan: rgba(34, 211, 238, 0.08);
+    --red-dim: #7f1d1d;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--ink);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  nav { margin-bottom: 2rem; font-size: 0.8rem; }
+  nav a { color: var(--text-muted); text-decoration: none; margin-right: 1.25rem; }
+  nav a:hover { color: var(--cyan); }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+  h1 { font-size: clamp(1.5rem, 3.5vw, 2.25rem); font-weight: 600; }
+  h1 .accent { color: var(--cyan); }
+  .meta { font-family: "SF Mono", "Fira Code", Consolas, monospace; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem; }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+  }
+  .search-wrap { flex: 1; min-width: 220px; position: relative; }
+  .search-wrap input {
+    width: 100%;
+    padding: 0.65rem 1rem 0.65rem 2.25rem;
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+  .search-wrap input:focus { outline: none; border-color: var(--cyan-dim); box-shadow: 0 0 0 2px var(--glow-cyan); }
+  .search-wrap input::placeholder { color: var(--text-muted); }
+  .search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    pointer-events: none;
+  }
+  .filter-group { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .filter-btn {
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.65rem;
+    padding: 0.35rem 0.65rem;
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text-muted);
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--cyan-dim); color: var(--cyan); }
+  .filter-btn.active { background: var(--glow-cyan); border-color: var(--cyan); color: var(--cyan); }
+  .count {
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+  .count span { color: var(--cyan); }
+  .fr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+  }
+  .fr-card {
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem;
+    transition: opacity 0.2s;
+  }
+  .fr-card.hidden { display: none; }
+  .fr-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .fr-id {
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--cyan);
+  }
+  .fr-group {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.45rem;
+    background: var(--slate-mid);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .uj-tags { display: flex; gap: 0.3rem; margin-left: auto; }
+  .uj-tag {
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.6rem;
+    padding: 0.1rem 0.35rem;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 2px;
+  }
+  .fr-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.35rem; }
+  .fr-desc { font-size: 0.78rem; color: var(--text-muted); }
+  .metrics-section { margin-top: 2rem; }
+  h2 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--amber);
+    margin-bottom: 1rem;
+  }
+  h2::before { content: "// "; color: var(--text-muted); }
+  .sm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .sm-card {
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem;
+    font-size: 0.82rem;
+  }
+  .sm-card.primary { border-top: 2px solid var(--cyan); }
+  .sm-card.secondary { border-top: 2px solid var(--amber); }
+  .sm-card.counter { border-top: 2px solid var(--red-dim); opacity: 0.85; }
+  .sm-id {
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.7rem;
+    color: var(--cyan);
+    margin-bottom: 0.35rem;
+  }
+  .sm-card.counter .sm-id { color: #f87171; }
+  .sm-validates { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.5rem; }
+  footer { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.8rem; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a href="index.html">← Hub</a>
+    <a href="product-overview.html">Overview</a>
+    <a href="ux-journeys.html">UX Journeys</a>
+  </nav>
+
+  <header>
+    <h1><span class="accent">Requirements</span> Map</h1>
+    <p class="meta">FR-1 – FR-27 · FILTERABLE · RAG-SOL PRD</p>
+  </header>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search" placeholder="Filter by FR id, keyword, group, or UJ…" autocomplete="off">
+    </div>
+    <div class="filter-group" id="group-filters">
+      <button class="filter-btn active" data-group="all">ALL</button>
+      <button class="filter-btn" data-group="Account & Auth">AUTH</button>
+      <button class="filter-btn" data-group="Ingest & Parse">INGEST</button>
+      <button class="filter-btn" data-group="Retrieve">RETRIEVE</button>
+      <button class="filter-btn" data-group="Agentic & Router">AGENTIC</button>
+      <button class="filter-btn" data-group="Isolation & Leak">ISOLATION</button>
+      <button class="filter-btn" data-group="Observability">OBSERVE</button>
+      <button class="filter-btn" data-group="Eval & POC">EVAL</button>
+      <button class="filter-btn" data-group="Developer Surfaces">DX</button>
+    </div>
+  </div>
+
+  <p class="count">Showing <span id="visible-count">27</span> of 27 requirements</p>
+
+  <div class="fr-grid" id="fr-grid"></div>
+
+  <section class="metrics-section">
+    <h2>Success Metrics</h2>
+    <div class="sm-grid">
+      <div class="sm-card primary">
+        <div class="sm-id">SM-1</div>
+        Time-to-first-Retrieve &lt; 60 minutes on documented happy path (n≥5 design-partner engineers).
+        <div class="sm-validates">Validates FR-24–FR-27</div>
+      </div>
+      <div class="sm-card primary">
+        <div class="sm-id">SM-2</div>
+        Leak Test continuous soak: 0 cross-Tenant disclosures over 14-day window.
+        <div class="sm-validates">Validates FR-16–FR-18</div>
+      </div>
+      <div class="sm-card primary">
+        <div class="sm-id">SM-3</div>
+        ≥90% of production Retrieve requests served single-pass (no agentic hops) after steady state.
+        <div class="sm-validates">Validates FR-12–FR-14</div>
+      </div>
+      <div class="sm-card primary">
+        <div class="sm-id">SM-4</div>
+        TableRank material lift vs text-only ablation on POC multimodal pack.
+        <div class="sm-validates">Validates FR-6, FR-22</div>
+      </div>
+      <div class="sm-card secondary">
+        <div class="sm-id">SM-5</div>
+        Design partners run ≥2 Tenants (Products) in one Account within 30 days of first production traffic.
+        <div class="sm-validates">Validates FR-1, UJ-1</div>
+      </div>
+      <div class="sm-card secondary">
+        <div class="sm-id">SM-6</div>
+        p95 Retrieve latency single-pass ≤ 800ms excluding customer LLM time, at agreed corpus size.
+        <div class="sm-validates">Performance NFR</div>
+      </div>
+    </div>
+
+    <h2>Counter-Metrics (Do Not Optimize)</h2>
+    <div class="sm-grid">
+      <div class="sm-card counter">
+        <div class="sm-id">SM-C1</div>
+        Do not maximize agentic hop rate — counterbalances vanity "agentic usage."
+      </div>
+      <div class="sm-card counter">
+        <div class="sm-id">SM-C2</div>
+        Do not maximize Documents ingested without eval coverage — counterbalances empty scale.
+      </div>
+      <div class="sm-card counter">
+        <div class="sm-id">SM-C3</div>
+        Do not optimize solely for public embedding leaderboard scores — corpus-specific eval wins.
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <a href="index.html" style="color: var(--cyan); text-decoration: none;">← Back to Documentation Hub</a>
+    · Freya (WDS) · 2026-07-14
+  </footer>
+</div>
+
+<script>
+(function () {
+  const requirements = [
+    { id: "FR-1", group: "Account & Auth", title: "Create Account and Tenant", desc: "Platform Admin creates Account and Tenants with unique IDs; credentials scoped per Tenant.", ujs: ["UJ-1"] },
+    { id: "FR-2", group: "Account & Auth", title: "Tenant-bound authentication", desc: "Tenant derived server-side from credential; body cannot override.", ujs: ["UJ-1", "UJ-2"] },
+    { id: "FR-3", group: "Account & Auth", title: "Per-Tenant API keys and rotation", desc: "Create, revoke, rotate API keys per Tenant; revoked keys return 401.", ujs: ["UJ-1"] },
+    { id: "FR-4", group: "Ingest & Parse", title: "Ingest Document", desc: "Upload or register Document into Tenant via API; returns Document ID and async job ID.", ujs: ["UJ-1"] },
+    { id: "FR-5", group: "Ingest & Parse", title: "Parse Ladder execution", desc: "Ordered pipeline: cheap extract → layout → VLM/page-vision; records tier per Chunk.", ujs: ["UJ-1"] },
+    { id: "FR-6", group: "Ingest & Parse", title: "TableEvidence extraction", desc: "Produce TableEvidence with header/cell structure and parse_confidence metadata.", ujs: ["UJ-1", "UJ-2"] },
+    { id: "FR-7", group: "Ingest & Parse", title: "Document versioning / freshness", desc: "Store version/etag/hash on Chunks; re-ingest creates new version; Trace shows version IDs.", ujs: ["UJ-3"] },
+    { id: "FR-8", group: "Retrieve", title: "Hybrid Retrieve", desc: "Lexical + dense hybrid search with optional rerank; returns ranked Evidence with citations.", ujs: ["UJ-1", "UJ-3"] },
+    { id: "FR-9", group: "Retrieve", title: "Citation-obligatory Evidence shape", desc: "Retrieve always returns Evidence schema; generation is out of band (BYO LLM).", ujs: ["UJ-1", "UJ-3"] },
+    { id: "FR-10", group: "Retrieve", title: "PreferCorrectness mode", desc: "Returns insufficient_evidence when scores fall below threshold instead of guessing.", ujs: ["UJ-3"] },
+    { id: "FR-11", group: "Retrieve", title: "CostEstimate on Retrieve", desc: "Every Retrieve response includes CostEstimate fields (may be 0 for cache hits).", ujs: ["UJ-3"] },
+    { id: "FR-12", group: "Agentic & Router", title: "Router decision", desc: "Chooses single-pass vs Guarded Agentic per request; default is single-pass for new Tenants.", ujs: ["UJ-2", "UJ-3"] },
+    { id: "FR-13", group: "Agentic & Router", title: "Agentic Readiness gate", desc: "Agentic mode requires readiness checks pass or audited override; else 403.", ujs: ["UJ-2"] },
+    { id: "FR-14", group: "Agentic & Router", title: "Hop budget and circuit breaker", desc: "Enforces max hops and max cost; terminates with hop_budget or cost_budget reason.", ujs: ["UJ-2", "UJ-3"] },
+    { id: "FR-15", group: "Agentic & Router", title: "Agentic step Traces", desc: "Each hop recorded with tool/query, Evidence IDs, and incremental CostEstimate.", ujs: ["UJ-3"] },
+    { id: "FR-16", group: "Isolation & Leak", title: "Hard Tenant isolation at retrieve", desc: "Namespace-per-Tenant; missing Tenant filter fails closed; cache keys include Tenant ID.", ujs: ["UJ-1", "UJ-2"] },
+    { id: "FR-17", group: "Isolation & Leak", title: "MCP Tenant scoping", desc: "MCP connections bind Tenant from auth; cannot select another Tenant via tool params.", ujs: ["UJ-1", "UJ-2"] },
+    { id: "FR-18", group: "Isolation & Leak", title: "Automated Leak Test suite", desc: "CI/scheduled suite plants A/B Documents; asserts zero cross-Tenant content via Retrieve, cache, MCP.", ujs: ["UJ-1", "UJ-2"] },
+    { id: "FR-19", group: "Observability", title: "Trace retrieve by request ID", desc: "Fetch Trace for own requests: Tenant, router decision, Evidence IDs, CostEstimate, timestamps.", ujs: ["UJ-3"] },
+    { id: "FR-20", group: "Observability", title: "Operational metrics", desc: "Prometheus-compatible metrics: latency, error rate, agentic hop rate, CostEstimate per Tenant.", ujs: ["UJ-3"] },
+    { id: "FR-21", group: "Eval & POC", title: "Golden-set eval runner", desc: "Run eval job from golden question set; machine-readable report with per-question outcomes.", ujs: ["UJ-2"] },
+    { id: "FR-22", group: "Eval & POC", title: "TableRank on multimodal pack", desc: "POC Pack includes chart/table fixtures; report shows TableRank vs text-only ablation.", ujs: ["UJ-2"] },
+    { id: "FR-23", group: "Eval & POC", title: "POC Pack delivery", desc: "Self-serve access to golden set, ACL suite, multimodal pack, cost simulator from public docs.", ujs: ["UJ-2"] },
+    { id: "FR-24", group: "Developer Surfaces", title: "Public Retrieve/Ingest HTTP API", desc: "Versioned HTTP API with published OpenAPI spec; breaking changes require version bump.", ujs: ["UJ-1"] },
+    { id: "FR-25", group: "Developer Surfaces", title: "Official SDK (one language)", desc: "TypeScript/JavaScript SDK: signup → key → ingest → retrieve in < 60 minutes.", ujs: ["UJ-1"] },
+    { id: "FR-26", group: "Developer Surfaces", title: "MCP server for Retrieve", desc: "MCP-compatible agent connects to AMKP Retrieve; documented path for reference clients.", ujs: ["UJ-1"] },
+    { id: "FR-27", group: "Developer Surfaces", title: "Reference multi-Product app", desc: "Repo demo: two Products, two Tenants, one Account; scripted Leak Test invocation.", ujs: ["UJ-1"] }
+  ];
+
+  const grid = document.getElementById("fr-grid");
+  const searchInput = document.getElementById("search");
+  const countEl = document.getElementById("visible-count");
+  let activeGroup = "all";
+
+  function renderCards() {
+    grid.innerHTML = requirements.map(function (r) {
+      const ujHtml = r.ujs.map(function (u) {
+        return '<span class="uj-tag">' + u + '</span>';
+      }).join("");
+      return '<div class="fr-card" data-id="' + r.id + '" data-group="' + r.group + '" data-search="' +
+        (r.id + " " + r.group + " " + r.title + " " + r.desc + " " + r.ujs.join(" ")).toLowerCase() + '">' +
+        '<div class="fr-card-header">' +
+        '<span class="fr-id">' + r.id + '</span>' +
+        '<span class="fr-group">' + r.group + '</span>' +
+        '<div class="uj-tags">' + ujHtml + '</div>' +
+        '</div>' +
+        '<div class="fr-title">' + r.title + '</div>' +
+        '<div class="fr-desc">' + r.desc + '</div>' +
+        '</div>';
+    }).join("");
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const q = searchInput.value.trim().toLowerCase();
+    const cards = grid.querySelectorAll(".fr-card");
+    let visible = 0;
+    cards.forEach(function (card) {
+      const matchGroup = activeGroup === "all" || card.dataset.group === activeGroup;
+      const matchSearch = !q || card.dataset.search.indexOf(q) !== -1;
+      const show = matchGroup && matchSearch;
+      card.classList.toggle("hidden", !show);
+      if (show) visible++;
+    });
+    countEl.textContent = visible;
+  }
+
+  searchInput.addEventListener("input", applyFilters);
+
+  document.getElementById("group-filters").addEventListener("click", function (e) {
+    const btn = e.target.closest(".filter-btn");
+    if (!btn) return;
+    document.querySelectorAll(".filter-btn").forEach(function (b) { b.classList.remove("active"); });
+    btn.classList.add("active");
+    activeGroup = btn.dataset.group;
+    applyFilters();
+  });
+
+  renderCards();
+})();
+</script>
+</body>
+</html>

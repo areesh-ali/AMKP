@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AMKP Architecture Walkthrough</title>
+<style>
+:root{--ink:#0b0f14;--slate:#141c26;--line:#2d3f55;--text:#dce4ed;--mute:#7d8fa8;--cyan:#22d3ee;--amber:#f59e0b}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:var(--ink);color:var(--text);line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:2rem 1.25rem 4rem}
+h1{font-size:1.75rem;margin:0 0 .25rem}h1 span{color:var(--cyan)}
+.sub{color:var(--mute);margin-bottom:1.5rem}
+.card{background:var(--slate);border:1px solid var(--line);border-radius:8px;padding:1.1rem 1.25rem;margin:1rem 0}
+.card h2{margin:0 0 .5rem;font-size:1.05rem;color:var(--cyan)}
+.ad{border-left:3px solid var(--amber);padding-left:.85rem;margin:.65rem 0}
+.ad strong{color:var(--amber)}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85rem}
+pre{background:#0a1018;border:1px solid var(--line);padding:1rem;overflow:auto;border-radius:6px}
+.pill{display:inline-block;background:#0e749033;color:var(--cyan);border:1px solid #0e7490;border-radius:999px;padding:.15rem .55rem;font-size:.7rem;margin-right:.35rem}
+a{color:var(--cyan)}
+ul{margin:.4rem 0 .4rem 1.2rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p><span class="pill">Winston</span><span class="pill">build substrate</span><span class="pill">2026-07-14</span></p>
+  <h1>AMKP <span>Architecture</span> Walkthrough</h1>
+  <p class="sub">For eng team kickoff. Spine is canonical — this page is the tour.</p>
+
+  <div class="card">
+    <h2>1. Paradigm in one line</h2>
+    <p><strong>Hexagonal modular monolith:</strong> REST and MCP are adapters over the same application services. Domain never talks to Postgres directly. Two processes: <code>api</code> + <code>worker</code>.</p>
+  </div>
+
+  <div class="card">
+    <h2>2. Decisions that stop epic drift</h2>
+    <div class="ad"><strong>AD-2 / AD-3</strong> — Tenant only from auth; fail-closed namespace per Tenant; cache keys include tenant_id.</div>
+    <div class="ad"><strong>AD-4</strong> — Retrieve returns <code>EvidenceEnvelope</code> only (no generate API in MVP).</div>
+    <div class="ad"><strong>AD-5 / AD-10</strong> — Heavy parse/eval on BullMQ workers; API stays thin.</div>
+    <div class="ad"><strong>AD-6</strong> — MCP = thin Streamable HTTP facade; same services as REST.</div>
+    <div class="ad"><strong>AD-7 / AD-8</strong> — OTel everywhere agentic; default single-pass; max hops 3.</div>
+    <div class="ad"><strong>AD-9</strong> — Postgres + pgvector is SoR + vectors for MVP.</div>
+  </div>
+
+  <div class="card">
+    <h2>3. Cold-start tree</h2>
+<pre>apps/api  apps/worker
+packages/domain  application  adapters-*  sdk-js
+infra/docker-compose.yml</pre>
+  </div>
+
+  <div class="card">
+    <h2>4. Stack (seed — code owns later)</h2>
+    <ul>
+      <li>Node 24 LTS · NestJS 11 · TypeScript · Prisma</li>
+      <li>PostgreSQL 16 + pgvector · Redis 7 · BullMQ</li>
+      <li>OpenTelemetry · MCP SDK</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>5. Build order (from tickets)</h2>
+    <p>S1: tenancy + namespace isolation + ingest stub → S2: retrieve + TableEvidence → S3: PreferCorrectness + Leak CI + traces → then agentic / eval / SDK.</p>
+  </div>
+
+  <p class="sub">Canonical file: <a href="./ARCHITECTURE-SPINE.md">ARCHITECTURE-SPINE.md</a> · Spec: <a href="../../../specs/spec-amkp/SPEC.md">SPEC-amkp</a> · Hub: <a href="../../../../design-artifacts/amkp-html-docs/index.html">HTML docs hub</a></p>
+</div>
+</body>
+</html>

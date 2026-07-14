@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMKP UX Journeys</title>
+<style>
+  :root {
+    --ink: #0b0f14;
+    --slate: #141c26;
+    --slate-mid: #1e2a38;
+    --text: #dce4ed;
+    --text-muted: #7d8fa8;
+    --cyan: #22d3ee;
+    --cyan-dim: #0e7490;
+    --amber: #f59e0b;
+    --border: #2d3f55;
+    --glow-cyan: rgba(34, 211, 238, 0.1);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--ink);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  nav { margin-bottom: 2rem; font-size: 0.8rem; }
+  nav a { color: var(--text-muted); text-decoration: none; margin-right: 1.25rem; }
+  nav a:hover { color: var(--cyan); }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+  h1 { font-size: clamp(1.5rem, 3.5vw, 2.25rem); font-weight: 600; }
+  h1 .accent { color: var(--cyan); }
+  .meta { font-family: "SF Mono", "Fira Code", Consolas, monospace; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem; }
+  .surface-note {
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    padding: 1rem 1.25rem;
+    margin-bottom: 2.5rem;
+    font-size: 0.9rem;
+    border-radius: 0 4px 4px 0;
+  }
+  .surface-note strong { color: var(--amber); }
+  .surfaces {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+  }
+  .surface {
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    background: var(--glow-cyan);
+    border-radius: 2px;
+  }
+  .journey {
+    margin-bottom: 3rem;
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .journey-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 1rem;
+  }
+  .uj-id {
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.75rem;
+    color: var(--cyan);
+    letter-spacing: 0.08em;
+  }
+  .journey-header h2 { font-size: 1.15rem; font-weight: 600; flex: 1; min-width: 200px; }
+  .persona {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding: 1rem 1.5rem;
+    background: var(--slate-mid);
+    border-bottom: 1px solid var(--border);
+  }
+  .persona strong { color: var(--amber); }
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    padding: 1.5rem;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .beat {
+    flex: 1 1 140px;
+    min-width: 130px;
+    position: relative;
+    padding: 1rem;
+    background: var(--slate-mid);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-right: 1.5rem;
+  }
+  .beat:last-child { margin-right: 0; }
+  .beat::after {
+    content: "→";
+    position: absolute;
+    right: -1.1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--cyan);
+    font-size: 1rem;
+    font-weight: bold;
+  }
+  .beat:last-child::after { display: none; }
+  .beat-label {
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.35rem;
+  }
+  .beat h4 { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.3rem; }
+  .beat p { font-size: 0.75rem; color: var(--text-muted); }
+  .beat.entry { border-top: 2px solid var(--cyan); }
+  .beat.climax { border-top: 2px solid var(--amber); background: rgba(245,158,11,0.06); }
+  .beat.edge { border-top: 2px solid #ef4444; }
+  .sally-notes {
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+  .sally-notes h3 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    margin-bottom: 0.75rem;
+  }
+  .sally-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 640px) {
+    .sally-grid { grid-template-columns: 1fr; }
+    .flow { flex-direction: column; }
+    .beat { margin-right: 0; margin-bottom: 1.5rem; }
+    .beat::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -1.1rem; transform: translateX(-50%); }
+  }
+  .jtbd li, .emo li { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem; margin-left: 1rem; }
+  .jtbd strong, .emo strong { color: var(--text); }
+  footer { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.8rem; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a href="index.html">← Hub</a>
+    <a href="product-overview.html">Overview</a>
+    <a href="requirements-map.html">Requirements</a>
+  </nav>
+
+  <header>
+    <h1><span class="accent">UX</span> Journeys</h1>
+    <p class="meta">UJ-1 · UJ-2 · UJ-3 · DEVELOPER EXPERIENCE FOCUS</p>
+  </header>
+
+  <div class="surface-note">
+    <strong>Surface model:</strong> AMKP is an API/platform product. Primary UX lives in developer surfaces—not a workforce chat UI.
+    <div class="surfaces">
+      <span class="surface">REST API</span>
+      <span class="surface">SDK</span>
+      <span class="surface">DOCS</span>
+      <span class="surface">MCP</span>
+      <span class="surface">CONSOLE</span>
+    </div>
+  </div>
+
+  <!-- UJ-1 -->
+  <article class="journey">
+    <div class="journey-header">
+      <span class="uj-id">UJ-1</span>
+      <h2>Maya stands up a second Product Tenant in a day</h2>
+    </div>
+    <div class="persona">
+      <strong>Persona:</strong> Maya — platform engineer at a mid-market SaaS. Support and Docs bots are forking the same RAG stack. She needs one shared knowledge plane for both products.
+    </div>
+    <div class="flow">
+      <div class="beat entry">
+        <div class="beat-label">Entry</div>
+        <h4>Account setup</h4>
+        <p>Creates Account via console; provisions API keys for two Tenants: <code>support</code> and <code>docs</code>.</p>
+      </div>
+      <div class="beat">
+        <div class="beat-label">Ingest</div>
+        <h4>Corpus upload</h4>
+        <p>Uploads PDF corpus to each Tenant via Ingest API. SDK sample from docs accelerates first call.</p>
+      </div>
+      <div class="beat">
+        <div class="beat-label">Retrieve</div>
+        <h4>Evidence check</h4>
+        <p>Calls Retrieve on both Tenants. Responses return citation-obligatory Evidence objects.</p>
+      </div>
+      <div class="beat">
+        <div class="beat-label">Integrate</div>
+        <h4>MCP wiring</h4>
+        <p>Connects MCP <code>retrieve</code> tool into both Product agents (Cursor / Claude Desktop config).</p>
+      </div>
+      <div class="beat climax">
+        <div class="beat-label">Climax</div>
+        <h4>Isolation verified</h4>
+        <p>Both Products return Evidence with citations. Leak-test job from docs shows zero cross-Tenant hits.</p>
+      </div>
+      <div class="beat edge">
+        <div class="beat-label">Edge case</div>
+        <h4>Parse escalation</h4>
+        <p>Scanned deck triggers Parse Ladder escalation. Maya sees <code>parse_confidence</code> on returned Evidence.</p>
+      </div>
+    </div>
+    <div class="sally-notes">
+      <h3>Sally UX Notes</h3>
+      <div class="sally-grid">
+        <div class="jtbd">
+          <strong>Jobs to be done</strong>
+          <ul>
+            <li><strong>Functional:</strong> Ship grounded AI across ≥2 Products without a three-person ML platform team.</li>
+            <li><strong>Functional:</strong> Prove Tenant A never retrieves Tenant B's Evidence.</li>
+            <li><strong>Social:</strong> Become the internal platform other squads adopt instead of forking LangChain apps.</li>
+          </ul>
+        </div>
+        <div class="emo">
+          <strong>Emotional outcomes</strong>
+          <ul>
+            <li>Confidence that tenancy is <em>hard</em>, not filter-based.</li>
+            <li>Relief from duplicated RAG maintenance across products.</li>
+            <li>Pride in shipping both bots in one day from docs alone.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- UJ-2 -->
+  <article class="journey">
+    <div class="journey-header">
+      <span class="uj-id">UJ-2</span>
+      <h2>Ken survives a security bake-off</h2>
+    </div>
+    <div class="persona">
+      <strong>Persona:</strong> Ken — staff engineer and security liaison. Must convince AI CoE and security reviewers that AMKP meets production governance bar.
+    </div>
+    <div class="flow">
+      <div class="beat entry">
+        <div class="beat-label">Entry</div>
+        <h4>POC Pack</h4>
+        <p>Downloads sealed POC pack from public docs: golden questions, ACL adversarial suite, multimodal chart pack.</p>
+      </div>
+      <div class="beat">
+        <div class="beat-label">ACL suite</div>
+        <h4>Adversarial run</h4>
+        <p>Runs ACL adversarial suite via API/scripts. Plants Documents in Tenant A and B; asserts zero cross-leak.</p>
+      </div>
+      <div class="beat">
+        <div class="beat-label">Eval</div>
+        <h4>Golden set</h4>
+        <p>Executes golden-set eval job. Reviews faithfulness sampling and TableRank vs text-only ablation.</p>
+      </div>
+      <div class="beat">
+        <div class="beat-label">Load</div>
+        <h4>Cost caps</h4>
+        <p>Runs cost simulator under load. Verifies hop/cost caps hold; agentic mode respects budgets.</p>
+      </div>
+      <div class="beat climax">
+        <div class="beat-label">Climax</div>
+        <h4>Bake-off report</h4>
+        <p>Report shows faithfulness, TableRank lift vs text-only baseline, and hop/cost caps under load.</p>
+      </div>
+      <div class="beat edge">
+        <div class="beat-label">Edge case</div>
+        <h4>Readiness gate</h4>
+        <p>Agentic mode disabled until Agentic Readiness gate passes. Ken documents override audit trail if needed.</p>
+      </div>
+    </div>
+    <div class="sally-notes">
+      <h3>Sally UX Notes</h3>
+      <div class="sally-grid">
+        <div class="jtbd">
+          <strong>Jobs to be done</strong>
+          <ul>
+            <li><strong>Functional:</strong> Prove to security that Tenant isolation holds including cache and MCP paths.</li>
+            <li><strong>Functional:</strong> Answer table/chart questions with measurable quality lift.</li>
+            <li><strong>Functional:</strong> Use multi-hop retrieval only when needed, with predictable cost.</li>
+          </ul>
+        </div>
+        <div class="emo">
+          <strong>Emotional outcomes</strong>
+          <ul>
+            <li>Stop fearing the next "confident wrong answer" incident or leak review.</li>
+            <li>Trust through sealed, reproducible bake-off artifacts—not slide decks.</li>
+            <li>Authority to sign off production with evidence, not promises.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- UJ-3 -->
+  <article class="journey">
+    <div class="journey-header">
+      <span class="uj-id">UJ-3</span>
+      <h2>Priya debugs a bad answer without guessing</h2>
+    </div>
+    <div class="persona">
+      <strong>Persona:</strong> Priya — product engineer on Support. A customer-facing bot returned a wrong answer; she needs root cause, not vibes.
+    </div>
+    <div class="flow">
+      <div class="beat entry">
+        <div class="beat-label">Entry</div>
+        <h4>Wrong answer</h4>
+        <p>Support bot returns incorrect policy detail. Priya captures request ID from Product logs.</p>
+      </div>
+      <div class="beat">
+        <div class="beat-label">Trace</div>
+        <h4>Open trace</h4>
+        <p>Fetches Trace via API/SDK. Sees retrieved Evidence IDs, parse path, router decision, CostEstimate.</p>
+      </div>
+      <div class="beat">
+        <div class="beat-label">Diagnose</div>
+        <h4>Root cause</h4>
+        <p>Identifies stale Document version in index. Trace shows old version ID on returned Evidence.</p>
+      </div>
+      <div class="beat">
+        <div class="beat-label">Fix</div>
+        <h4>Re-ingest</h4>
+        <p>Re-ingests updated Document. Confirms new version watermark on subsequent Retrieve.</p>
+      </div>
+      <div class="beat climax">
+        <div class="beat-label">Climax</div>
+        <h4>Regression caught</h4>
+        <p>Regression eval catches the case. Golden-set fixture now passes for the corrected policy question.</p>
+      </div>
+      <div class="beat edge">
+        <div class="beat-label">Edge case</div>
+        <h4>PreferCorrectness</h4>
+        <p>On a low-coverage query, PreferCorrectness mode would have refused instead of guessing.</p>
+      </div>
+    </div>
+    <div class="sally-notes">
+      <h3>Sally UX Notes</h3>
+      <div class="sally-grid">
+        <div class="jtbd">
+          <strong>Jobs to be done</strong>
+          <ul>
+            <li><strong>Functional:</strong> Debug retrieval failures with full observability—not log archaeology.</li>
+            <li><strong>Functional:</strong> Fix stale content and prevent recurrence via eval regression.</li>
+            <li><strong>Functional:</strong> Understand router choice (single-pass vs agentic) per request.</li>
+          </ul>
+        </div>
+        <div class="emo">
+          <strong>Emotional outcomes</strong>
+          <ul>
+            <li>Agency: every bad answer has a traceable chain of Evidence.</li>
+            <li>Reduced anxiety about shipping AI features to customers.</li>
+            <li>Speed: minutes to root cause, not days of guesswork.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <footer>
+    <a href="index.html" style="color: var(--cyan); text-decoration: none;">← Back to Documentation Hub</a>
+    · Sally (UX) · 2026-07-14
+  </footer>
+</div>
+</body>
+</html>
