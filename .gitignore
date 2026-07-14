@@ -9,3 +9,4 @@ coverage/
 .turbo/
 .prisma/
 *.tsbuildinfo
+packages/adapters-postgres/src/generated/

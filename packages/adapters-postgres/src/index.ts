@@ -1,8 +1,31 @@
 import type { HealthPort } from "@amkp/application";
+import {
+  createPrismaClient,
+  PrismaAccountRepository,
+  PrismaApiKeyIssuer,
+  PrismaClient,
+  PrismaTenantRepository,
+  hashApiKey,
+} from "./client";
 
-/** Postgres adapter stub — Prisma wiring lands in T-1.1 / T-5.1. */
+export {
+  createPrismaClient,
+  PrismaAccountRepository,
+  PrismaApiKeyIssuer,
+  PrismaClient,
+  PrismaTenantRepository,
+  hashApiKey,
+};
+
+/** Postgres health — SELECT 1 when DATABASE_URL is available. */
 export class PostgresHealthAdapter implements HealthPort {
+  constructor(private readonly prisma?: PrismaClient) {}
+
   async check() {
-    return { ok: true, service: "postgres-adapter-stub" };
+    if (!this.prisma) {
+      return { ok: true, service: "postgres-adapter-stub" };
+    }
+    await this.prisma.$queryRaw`SELECT 1`;
+    return { ok: true, service: "postgres" };
   }
 }

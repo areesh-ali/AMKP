@@ -1,9 +1,26 @@
 /** Domain types — EvidenceEnvelope is the public Retrieve contract (AD-4). */
 
+export type AccountId = string;
 export type TenantId = string;
 export type DocumentId = string;
 export type EvidenceId = string;
 export type RequestId = string;
+export type ApiKeyId = string;
+
+export interface Account {
+  id: AccountId;
+  name: string;
+  createdAt: string; // UTC ISO-8601
+}
+
+export interface Tenant {
+  id: TenantId;
+  accountId: AccountId;
+  name: string;
+  /** AD-8: new Tenants default single-pass only */
+  agenticEnabled: boolean;
+  createdAt: string; // UTC ISO-8601
+}
 
 export interface Citation {
   documentId: DocumentId;

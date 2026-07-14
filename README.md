@@ -65,7 +65,7 @@ Starts:
 
 | Service | Image | Port | Credentials |
 | --- | --- | --- | --- |
-| Postgres + pgvector | `pgvector/pgvector:pg16` | `5432` | user/pass/db: `amkp` |
+| Postgres + pgvector | `pgvector/pgvector:pg16` | `5433` | user/pass/db: `amkp` |
 | Redis | `redis:7-alpine` | `6379` | — |
 
 Stop with `pnpm docker:down`.
@@ -123,7 +123,7 @@ Currently a process stub that logs BullMQ queue names (`ingest`, `parse`, `eval`
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `PORT` | `3000` | API listen port |
-| `DATABASE_URL` | `postgresql://amkp:amkp@localhost:5432/amkp` | Postgres |
+| `DATABASE_URL` | `postgresql://amkp:amkp@localhost:5433/amkp` | Postgres |
 | `REDIS_URL` | `redis://localhost:6379` | Redis / BullMQ |
 | `NODE_ENV` | `development` | Runtime mode |
 

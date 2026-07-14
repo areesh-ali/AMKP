@@ -12,16 +12,26 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "prisma generate && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "echo \"lint: stub\"",
-    "test": "echo \"test: stub\""
+    "test": "vitest run",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:migrate:dev": "prisma migrate dev"
   },
   "dependencies": {
     "@amkp/application": "workspace:*",
-    "@amkp/domain": "workspace:*"
+    "@amkp/domain": "workspace:*",
+    "@prisma/adapter-pg": "7.8.0",
+    "@prisma/client": "7.8.0",
+    "pg": "^8.16.3",
+    "ulid": "^2.3.0"
   },
   "devDependencies": {
-    "typescript": "5.8.3"
+    "@types/pg": "^8.15.4",
+    "prisma": "7.8.0",
+    "typescript": "5.8.3",
+    "vitest": "^3.2.4"
   }
 }

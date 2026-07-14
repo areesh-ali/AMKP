@@ -1,8 +1,11 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
   title: AMKP API
-  version: 0.0.1
-  description: Agentic Multimodal Knowledge Plane — Evidence + Policy + Tenancy
+  version: 0.1.0
+  description: Agentic Multimodal Knowledge Plane — Account & Tenant APIs (T-1.1)
+servers:
+  - url: http://localhost:3000
+    description: Local
 paths:
   /health:
     get:
@@ -21,3 +24,180 @@ paths:
                     type: boolean
                   service:
                     type: string
+  /v1/accounts:
+    post:
+      summary: Create Account
+      operationId: createAccount
+      security:
+        - PlatformAdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  example: Acme Corp
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /v1/accounts/{accountId}/tenants:
+    post:
+      summary: Create Tenant under Account
+      operationId: createTenant
+      security:
+        - PlatformAdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/AccountId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  example: support
+      responses:
+        "201":
+          description: Tenant created with one-time API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateTenantResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      summary: List Tenants for Account
+      operationId: listTenants
+      security:
+        - PlatformAdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/AccountId"
+      responses:
+        "200":
+          description: Account-scoped tenant list (never includes apiKey)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  securitySchemes:
+    PlatformAdminBearer:
+      type: http
+      scheme: bearer
+      description: PLATFORM_ADMIN_TOKEN from environment
+  parameters:
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: acc_01HZY...
+  schemas:
+    AccountResponse:
+      type: object
+      required: [accountId, name, createdAt]
+      properties:
+        accountId:
+          type: string
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CreateTenantResponse:
+      type: object
+      required:
+        [tenantId, accountId, name, agenticEnabled, apiKey, createdAt]
+      properties:
+        tenantId:
+          type: string
+        accountId:
+          type: string
+        name:
+          type: string
+        agenticEnabled:
+          type: boolean
+          example: false
+        apiKey:
+          type: string
+          description: Plaintext returned once on create; stored hashed only
+        createdAt:
+          type: string
+          format: date-time
+    TenantSummary:
+      type: object
+      required: [tenantId, accountId, name, agenticEnabled, createdAt]
+      properties:
+        tenantId:
+          type: string
+        accountId:
+          type: string
+        name:
+          type: string
+        agenticEnabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    TenantListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TenantSummary"
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, request_id]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            request_id:
+              type: string

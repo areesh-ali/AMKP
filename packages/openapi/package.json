@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "echo \"openapi artifacts exported from api\"",
+    "build": "node ./scripts/validate.mjs",
     "typecheck": "echo \"ok\"",
     "lint": "echo \"lint: stub\"",
-    "test": "echo \"test: stub\""
+    "test": "node ./scripts/validate.mjs"
   }
 }
