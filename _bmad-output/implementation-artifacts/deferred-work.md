@@ -9,7 +9,7 @@
 ## Deferred from: code review of T-2.1/T-2.2 (2026-07-15)
 
 - ~~**Worker process uses a separate InMemoryVectorIndex from API**~~ — **done** (both use `PostgresVectorIndex` by default)
-- **Object storage for Document bytes** — BYTEA in Postgres is MVP; move to S3-compatible store before large corpora
+- ~~**Object storage for Document bytes**~~ — **done** (`ObjectStoragePort` + `LocalFsObjectStorage` via `AMKP_OBJECT_STORAGE_DIR`; BYTEA default remains; S3 adapter next)
 - **Full PDF engine** — Tj/TJ text-layer extractor is intentional cheap tier; richer layout/PDF libs deferred with page-vision (T-2.4)
 - **Real embedding provider** — `EmbeddingProvider` port + `StubEmbeddingProvider` wired; swap in OpenAI/Cohere/etc. without changing retrieve
 - ~~**In-memory Trace / audit only**~~ — **done** (`PrismaTraceRepository` + `PrismaAuditLog`; memory for tests)

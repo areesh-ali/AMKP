@@ -1,5 +1,6 @@
 export * from "./ports";
 export * from "./parse-ports";
+export * from "./object-storage";
 export * from "./table-evidence";
 export * from "./ingest-document";
 export * from "./list-documents";

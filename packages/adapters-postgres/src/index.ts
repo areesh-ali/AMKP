@@ -19,3 +19,4 @@ export {
   PrismaTraceRepository,
   PrismaAuditLog,
 } from "./trace.repository";
+export { LocalFsObjectStorage } from "./local-fs-object-storage";

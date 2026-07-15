@@ -47,6 +47,8 @@ model Document {
   contentType String   @map("content_type")
   byteSize    Int      @map("byte_size")
   content     Bytes
+  /** When set, bytes live in ObjectStorage at this key; content column may be empty. */
+  storageKey  String?  @map("storage_key")
   status      String   @default("pending")
   createdAt   DateTime @default(now()) @map("created_at")
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)

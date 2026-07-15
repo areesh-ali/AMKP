@@ -12,6 +12,7 @@ import {
 import {
   createPrismaClient,
   InMemoryVectorIndex,
+  LocalFsObjectStorage,
   PostgresVectorIndex,
   PrismaChunkRepository,
   PrismaDocumentRepository,
@@ -38,7 +39,12 @@ async function main() {
   const prisma = createPrismaClient(databaseUrl);
   await prisma.$connect();
 
-  const documents: DocumentRepository = new PrismaDocumentRepository(prisma);
+  const documents: DocumentRepository = new PrismaDocumentRepository(
+    prisma,
+    process.env.AMKP_OBJECT_STORAGE_DIR
+      ? new LocalFsObjectStorage(process.env.AMKP_OBJECT_STORAGE_DIR)
+      : undefined,
+  );
   const chunks: ChunkRepository = new PrismaChunkRepository(prisma);
   const tenants = new PrismaTenantRepository(prisma);
   const jobs: JobQueuePort = new BullMqJobQueue(redisUrl);

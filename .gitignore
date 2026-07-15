@@ -11,3 +11,4 @@ coverage/
 *.tsbuildinfo
 .pnpm-store/
 packages/adapters-postgres/src/generated/
+.data/

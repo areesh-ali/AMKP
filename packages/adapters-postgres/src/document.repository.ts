@@ -8,16 +8,39 @@ import type {
 import type {
   CreateDocumentInput,
   DocumentRepository,
+  ObjectStoragePort,
 } from "@amkp/application";
-import { DocumentNotFoundError } from "@amkp/application";
+import {
+  DocumentNotFoundError,
+  documentObjectKey,
+} from "@amkp/application";
 import type { PrismaClient } from "./prisma";
 import { toIso } from "./crypto";
 
+/**
+ * Document SoR. When ObjectStorage is provided, bytes are stored off-DB
+ * and `storage_key` points at the blob; otherwise BYTEA `content` is used.
+ */
 export class PrismaDocumentRepository implements DocumentRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly storage?: ObjectStoragePort,
+  ) {}
 
   async create(input: CreateDocumentInput): Promise<Document> {
     const id = `doc_${ulid()}`;
+    const storageKey = this.storage
+      ? documentObjectKey(input.tenantId, id)
+      : null;
+
+    if (this.storage && storageKey) {
+      await this.storage.put({
+        key: storageKey,
+        bytes: input.content,
+        contentType: input.contentType,
+      });
+    }
+
     const row = await this.prisma.document.create({
       data: {
         id,
@@ -25,7 +48,8 @@ export class PrismaDocumentRepository implements DocumentRepository {
         filename: input.filename,
         contentType: input.contentType,
         byteSize: input.content.length,
-        content: input.content,
+        content: this.storage ? Buffer.alloc(0) : input.content,
+        storageKey,
         sourceKey: input.sourceKey,
         version: input.version,
         contentHash: input.contentHash,
@@ -64,9 +88,19 @@ export class PrismaDocumentRepository implements DocumentRepository {
   ): Promise<Buffer | null> {
     const row = await this.prisma.document.findFirst({
       where: { id: documentId, tenantId },
-      select: { content: true },
+      select: { content: true, storageKey: true },
     });
     if (!row) return null;
+
+    if (row.storageKey) {
+      if (!this.storage) {
+        throw new Error(
+          `Document ${documentId} has storage_key but ObjectStorage is not configured`,
+        );
+      }
+      return this.storage.get(row.storageKey);
+    }
+
     return Buffer.from(row.content);
   }
 

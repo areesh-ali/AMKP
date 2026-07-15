@@ -132,6 +132,7 @@ Currently a process stub that logs BullMQ queue names (`ingest`, `parse`, `eval`
 | `NODE_ENV` | `development` | Runtime mode |
 | `AMKP_JOB_QUEUE` | _(unset)_ | Set `memory` for in-process jobs (tests) |
 | `AMKP_VECTOR_INDEX` | _(unset → postgres)_ | Set `memory` for in-process index (tests) |
+| `AMKP_OBJECT_STORAGE_DIR` | _(unset → BYTEA)_ | Local FS root for Document bytes |
 
 ---
 
