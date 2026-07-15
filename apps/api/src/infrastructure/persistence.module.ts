@@ -7,6 +7,7 @@ import {
   DOCUMENT_REPOSITORY,
   JOB_QUEUE,
   PARSE_LADDER,
+  RETRIEVE_CACHE,
   TENANT_REPOSITORY,
   VECTOR_INDEX,
 } from "@amkp/application";
@@ -24,6 +25,7 @@ import { LocalParseLadder, createPageVisionLedger } from "@amkp/adapters-provide
 import {
   createJobQueue,
   InMemoryJobQueue,
+  InMemoryTenantRetrieveCache,
 } from "@amkp/adapters-redis";
 import { PRISMA } from "../tenancy/tenancy.tokens";
 import { PrismaModule } from "./prisma.module";
@@ -38,6 +40,9 @@ export const sharedVectorIndex = new InMemoryVectorIndex();
  * AMKP_JOB_QUEUE !== "memory", BullMQ is used instead.
  */
 export const sharedMemoryJobQueue = new InMemoryJobQueue();
+
+/** Shared tenant-keyed retrieve cache (T-5.2). */
+export const sharedRetrieveCache = new InMemoryTenantRetrieveCache();
 
 /** Shared VLM spend ledger for asserting page-vision opt-in (T-2.4). */
 export const sharedPageVisionLedger = createPageVisionLedger();
@@ -84,6 +89,10 @@ export const sharedParseLadder = new LocalParseLadder(sharedPageVisionLedger);
       useValue: sharedVectorIndex,
     },
     {
+      provide: RETRIEVE_CACHE,
+      useValue: sharedRetrieveCache,
+    },
+    {
       provide: JOB_QUEUE,
       useFactory: () => {
         if (
@@ -106,6 +115,7 @@ export const sharedParseLadder = new LocalParseLadder(sharedPageVisionLedger);
     CHUNK_REPOSITORY,
     PARSE_LADDER,
     VECTOR_INDEX,
+    RETRIEVE_CACHE,
     JOB_QUEUE,
   ],
 })

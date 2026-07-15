@@ -12,7 +12,10 @@ import {
   createPrismaClient,
   type PrismaClient,
 } from "@amkp/adapters-postgres";
-import { sharedVectorIndex } from "../infrastructure/persistence.module";
+import {
+  sharedRetrieveCache,
+  sharedVectorIndex,
+} from "../infrastructure/persistence.module";
 
 const DATABASE_URL =
   process.env.DATABASE_URL ?? "postgresql://amkp:amkp@localhost:5433/amkp";
@@ -42,6 +45,7 @@ describe("PreferCorrectness threshold (T-3.3)", () => {
 
   beforeEach(async () => {
     sharedVectorIndex.clear();
+    sharedRetrieveCache.clear();
     await prisma.chunk.deleteMany();
     await prisma.document.deleteMany();
     await prisma.apiKey.deleteMany();

@@ -14,6 +14,7 @@ import {
   ValidationError,
   type TenantRepository,
 } from "../tenancy/ports";
+import { buildRetrieveCostEstimate } from "./cost-estimate";
 
 export interface RetrieveQuery {
   query: string;
@@ -52,16 +53,41 @@ export interface VectorIndexPort {
 
 export const VECTOR_INDEX = Symbol("VECTOR_INDEX");
 
+/**
+ * Optional retrieve response cache (T-5.2). Keys must include tenantId.
+ * Cache hits still return CostEstimate with estimatedUsd 0 (FR-11 / T-3.4).
+ */
+export interface RetrieveCachePort {
+  get(input: {
+    tenantId: TenantId;
+    query: string;
+    preferCorrectness: boolean;
+    /** Included when preferCorrectness so threshold edits cannot stale-serve. */
+    preferCorrectnessThreshold?: number;
+  }): Promise<EvidenceEnvelope | null>;
+  set(input: {
+    tenantId: TenantId;
+    query: string;
+    preferCorrectness: boolean;
+    preferCorrectnessThreshold?: number;
+    envelope: EvidenceEnvelope;
+  }): Promise<void>;
+}
+
+export const RETRIEVE_CACHE = Symbol("RETRIEVE_CACHE");
+
 export class RetrieveUseCase {
   constructor(
     private readonly index: VectorIndexPort,
     private readonly tenants?: TenantRepository,
+    private readonly cache?: RetrieveCachePort,
   ) {}
 
   /**
    * Fail-closed retrieve (AD-3 / FR-16).
    * Prefers latest Document version per sourceKey by default (FR-7 / T-2.5).
    * PreferCorrectness (FR-10 / T-3.3) refuses when top score < Tenant threshold.
+   * CostEstimate always present (FR-11 / T-3.4); cache hits are $0.
    */
   async execute(
     ctx: TenantContext | undefined | null,
@@ -75,6 +101,31 @@ export class RetrieveUseCase {
     const query = input.query?.trim();
     if (!query) {
       throw new ValidationError("query is required");
+    }
+
+    const preferCorrectness = input.preferCorrectness === true;
+    const threshold = preferCorrectness
+      ? await this.resolvePreferCorrectnessThreshold(ctx.tenantId)
+      : undefined;
+
+    if (this.cache) {
+      const cached = await this.cache.get({
+        tenantId: ctx.tenantId,
+        query,
+        preferCorrectness,
+        preferCorrectnessThreshold: threshold,
+      });
+      if (cached) {
+        return {
+          ...cached,
+          requestId: options.requestId,
+          tenantId: ctx.tenantId,
+          costEstimate: buildRetrieveCostEstimate({
+            source: "cache_hit",
+            query,
+          }),
+        };
+      }
     }
 
     const preferLatest = input.preferLatestVersion !== false;
@@ -94,7 +145,6 @@ export class RetrieveUseCase {
       ? preferLatestVersions(safe)
       : safe;
 
-    // Hybrid rerank (T-3.1): sort by score desc, then take top-k.
     const reranked = [...preferred]
       .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
       .slice(0, 10);
@@ -115,13 +165,19 @@ export class RetrieveUseCase {
       return item;
     });
 
-    if (input.preferCorrectness === true) {
-      const threshold = await this.resolvePreferCorrectnessThreshold(
-        ctx.tenantId,
-      );
+    const costEstimate = buildRetrieveCostEstimate({
+      source: "live",
+      query,
+      hitCount: items.length,
+    });
+
+    let envelope: EvidenceEnvelope;
+
+    if (preferCorrectness) {
       const topScore = items[0]?.score ?? 0;
-      if (items.length === 0 || topScore < threshold) {
-        return {
+      const thr = threshold ?? DEFAULT_PREFER_CORRECTNESS_THRESHOLD;
+      if (items.length === 0 || topScore < thr) {
+        envelope = {
           schemaVersion: "1",
           requestId: options.requestId,
           tenantId: ctx.tenantId,
@@ -129,22 +185,43 @@ export class RetrieveUseCase {
             kind: "insufficient_evidence",
             reason:
               items.length === 0 ? "no_matches" : "below_threshold",
-            threshold,
+            threshold: thr,
           },
-          costEstimate: { currency: "USD", estimatedUsd: 0 },
+          costEstimate,
+          routerDecision: { mode: "single_pass", reasonCode: "default" },
+        };
+      } else {
+        envelope = {
+          schemaVersion: "1",
+          requestId: options.requestId,
+          tenantId: ctx.tenantId,
+          outcome: { kind: "evidence", items },
+          costEstimate,
           routerDecision: { mode: "single_pass", reasonCode: "default" },
         };
       }
+    } else {
+      envelope = {
+        schemaVersion: "1",
+        requestId: options.requestId,
+        tenantId: ctx.tenantId,
+        outcome: { kind: "evidence", items },
+        costEstimate,
+        routerDecision: { mode: "single_pass", reasonCode: "default" },
+      };
     }
 
-    return {
-      schemaVersion: "1",
-      requestId: options.requestId,
-      tenantId: ctx.tenantId,
-      outcome: { kind: "evidence", items },
-      costEstimate: { currency: "USD", estimatedUsd: 0 },
-      routerDecision: { mode: "single_pass", reasonCode: "default" },
-    };
+    if (this.cache) {
+      await this.cache.set({
+        tenantId: ctx.tenantId,
+        query,
+        preferCorrectness,
+        preferCorrectnessThreshold: threshold,
+        envelope,
+      });
+    }
+
+    return envelope;
   }
 
   private async resolvePreferCorrectnessThreshold(

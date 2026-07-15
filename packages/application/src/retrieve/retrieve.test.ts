@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PREFER_CORRECTNESS_THRESHOLD,
   tenantVectorNamespace,
+  type EvidenceEnvelope,
   type Tenant,
 } from "@amkp/domain";
 import {
   MissingTenantContextError,
   RetrieveUseCase,
   type IndexedChunk,
+  type RetrieveCachePort,
   type VectorIndexPort,
 } from "./retrieve";
 import { ValidationError, type TenantRepository } from "../tenancy/ports";
@@ -251,5 +253,98 @@ describe("RetrieveUseCase fail-closed isolation", () => {
       expect(envelope.outcome.items[0]?.id).toBe("high");
       expect(envelope.outcome.items[1]?.id).toBe("low");
     }
+  });
+
+  it("always includes CostEstimate on live retrieve (T-3.4)", async () => {
+    const ten = "ten_A";
+    const ns = tenantVectorNamespace(ten);
+    const uc = new RetrieveUseCase(
+      new FakeIndex([
+        {
+          id: "ev_1",
+          tenantId: ten,
+          namespace: ns,
+          documentId: "d1",
+          content: "policy",
+          score: 0.9,
+        },
+      ]),
+    );
+    const hit = await uc.execute(
+      { tenantId: ten, accountId: "acc_1" },
+      { query: "policy" },
+      { requestId: "req_cost" },
+    );
+    expect(hit.costEstimate.currency).toBe("USD");
+    expect(hit.costEstimate.estimatedUsd).toBeGreaterThan(0);
+
+    const miss = await uc.execute(
+      { tenantId: ten, accountId: "acc_1" },
+      { query: "zzzz-no-match", preferCorrectness: true },
+      { requestId: "req_cost_empty" },
+    );
+    expect(miss.costEstimate.currency).toBe("USD");
+    expect(miss.costEstimate.estimatedUsd).toBeGreaterThan(0);
+  });
+
+  it("cache hit returns CostEstimate estimatedUsd 0 (T-3.4)", async () => {
+    const ten = "ten_A";
+    const ns = tenantVectorNamespace(ten);
+    let searches = 0;
+    const index: VectorIndexPort = {
+      async upsert() {},
+      async search() {
+        searches += 1;
+        return [
+          {
+            id: "ev_1",
+            tenantId: ten,
+            namespace: ns,
+            documentId: "d1",
+            content: "policy",
+            score: 0.9,
+          },
+        ];
+      },
+    };
+    const store = new Map<string, EvidenceEnvelope>();
+    const cache: RetrieveCachePort = {
+      async get({ tenantId, query, preferCorrectness, preferCorrectnessThreshold }) {
+        const thr = preferCorrectnessThreshold ?? "-";
+        return (
+          store.get(`${tenantId}|${preferCorrectness}|${thr}|${query}`) ?? null
+        );
+      },
+      async set({
+        tenantId,
+        query,
+        preferCorrectness,
+        preferCorrectnessThreshold,
+        envelope,
+      }) {
+        const thr = preferCorrectnessThreshold ?? "-";
+        store.set(
+          `${tenantId}|${preferCorrectness}|${thr}|${query}`,
+          envelope,
+        );
+      },
+    };
+    const uc = new RetrieveUseCase(index, undefined, cache);
+    const first = await uc.execute(
+      { tenantId: ten, accountId: "acc_1" },
+      { query: "policy" },
+      { requestId: "req_1" },
+    );
+    expect(first.costEstimate.estimatedUsd).toBeGreaterThan(0);
+    expect(searches).toBe(1);
+
+    const second = await uc.execute(
+      { tenantId: ten, accountId: "acc_1" },
+      { query: "policy" },
+      { requestId: "req_2" },
+    );
+    expect(searches).toBe(1);
+    expect(second.costEstimate.estimatedUsd).toBe(0);
+    expect(second.requestId).toBe("req_2");
   });
 });

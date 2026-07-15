@@ -1,8 +1,10 @@
 import { Module } from "@nestjs/common";
 import {
   RetrieveUseCase,
+  RETRIEVE_CACHE,
   TENANT_REPOSITORY,
   VECTOR_INDEX,
+  type RetrieveCachePort,
   type TenantRepository,
   type VectorIndexPort,
 } from "@amkp/application";
@@ -17,9 +19,12 @@ import { RETRIEVE_UC } from "../tenancy/tenancy.tokens";
   providers: [
     {
       provide: RETRIEVE_UC,
-      useFactory: (index: VectorIndexPort, tenants: TenantRepository) =>
-        new RetrieveUseCase(index, tenants),
-      inject: [VECTOR_INDEX, TENANT_REPOSITORY],
+      useFactory: (
+        index: VectorIndexPort,
+        tenants: TenantRepository,
+        cache: RetrieveCachePort,
+      ) => new RetrieveUseCase(index, tenants, cache),
+      inject: [VECTOR_INDEX, TENANT_REPOSITORY, RETRIEVE_CACHE],
     },
   ],
   exports: [RETRIEVE_UC],

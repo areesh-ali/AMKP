@@ -15,7 +15,8 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "echo \"lint: stub\"",
-    "test": "vitest run"
+    "test": "vitest run",
+    "harness:p95": "vitest run src/retrieve/latency-p95.harness.test.ts"
   },
   "dependencies": {
     "@amkp/domain": "workspace:*"

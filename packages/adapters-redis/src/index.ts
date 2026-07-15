@@ -78,3 +78,5 @@ export function createJobQueue(redisUrl?: string): JobQueuePort {
   }
   return new InMemoryJobQueue();
 }
+
+export { InMemoryTenantRetrieveCache } from "./retrieve-cache";
