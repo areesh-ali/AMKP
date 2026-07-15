@@ -1,5 +1,8 @@
 import { Module } from "@nestjs/common";
 import {
+  ACCOUNT_REPOSITORY,
+  API_KEY_ISSUER,
+  API_KEY_REPOSITORY,
   CreateAccountUseCase,
   CreateApiKeyUseCase,
   CreateTenantUseCase,
@@ -8,14 +11,13 @@ import {
   ResolveTenantContextUseCase,
   RevokeApiKeyUseCase,
   RotateApiKeyUseCase,
+  TENANT_REPOSITORY,
+  type AccountRepository,
+  type ApiKeyIssuer,
+  type ApiKeyRepository,
+  type TenantRepository,
 } from "@amkp/application";
-import {
-  createPrismaClient,
-  PrismaAccountRepository,
-  PrismaApiKeyIssuer,
-  PrismaApiKeyRepository,
-  PrismaTenantRepository,
-} from "@amkp/adapters-postgres";
+import { PersistenceModule } from "../infrastructure/persistence.module";
 import { TenancyController } from "./tenancy.controller";
 import { ApiKeysController } from "./api-keys.controller";
 import { MeController } from "./me.controller";
@@ -28,121 +30,71 @@ import {
   CREATE_TENANT_UC,
   LIST_API_KEYS_UC,
   LIST_TENANTS_UC,
-  PRISMA,
   RESOLVE_TENANT_UC,
   REVOKE_API_KEY_UC,
   ROTATE_API_KEY_UC,
 } from "./tenancy.tokens";
 
 @Module({
+  imports: [PersistenceModule],
   controllers: [TenancyController, ApiKeysController, MeController],
   providers: [
     PlatformAdminGuard,
     TenantApiKeyGuard,
     TenantContextInterceptor,
     {
-      provide: PRISMA,
-      useFactory: () => {
-        const url = process.env.DATABASE_URL;
-        if (!url) {
-          throw new Error("DATABASE_URL is required");
-        }
-        return createPrismaClient(url);
-      },
-    },
-    {
-      provide: PrismaAccountRepository,
-      useFactory: (prisma: ReturnType<typeof createPrismaClient>) =>
-        new PrismaAccountRepository(prisma),
-      inject: [PRISMA],
-    },
-    {
-      provide: PrismaTenantRepository,
-      useFactory: (prisma: ReturnType<typeof createPrismaClient>) =>
-        new PrismaTenantRepository(prisma),
-      inject: [PRISMA],
-    },
-    {
-      provide: PrismaApiKeyIssuer,
-      useFactory: (prisma: ReturnType<typeof createPrismaClient>) =>
-        new PrismaApiKeyIssuer(prisma),
-      inject: [PRISMA],
-    },
-    {
-      provide: PrismaApiKeyRepository,
-      useFactory: (prisma: ReturnType<typeof createPrismaClient>) =>
-        new PrismaApiKeyRepository(prisma),
-      inject: [PRISMA],
-    },
-    {
       provide: CREATE_ACCOUNT_UC,
-      useFactory: (accounts: PrismaAccountRepository) =>
+      useFactory: (accounts: AccountRepository) =>
         new CreateAccountUseCase(accounts),
-      inject: [PrismaAccountRepository],
+      inject: [ACCOUNT_REPOSITORY],
     },
     {
       provide: CREATE_TENANT_UC,
       useFactory: (
-        accounts: PrismaAccountRepository,
-        tenants: PrismaTenantRepository,
-        keys: PrismaApiKeyIssuer,
+        accounts: AccountRepository,
+        tenants: TenantRepository,
+        keys: ApiKeyIssuer,
       ) => new CreateTenantUseCase(accounts, tenants, keys),
-      inject: [
-        PrismaAccountRepository,
-        PrismaTenantRepository,
-        PrismaApiKeyIssuer,
-      ],
+      inject: [ACCOUNT_REPOSITORY, TENANT_REPOSITORY, API_KEY_ISSUER],
     },
     {
       provide: LIST_TENANTS_UC,
-      useFactory: (
-        accounts: PrismaAccountRepository,
-        tenants: PrismaTenantRepository,
-      ) => new ListTenantsByAccountUseCase(accounts, tenants),
-      inject: [PrismaAccountRepository, PrismaTenantRepository],
+      useFactory: (accounts: AccountRepository, tenants: TenantRepository) =>
+        new ListTenantsByAccountUseCase(accounts, tenants),
+      inject: [ACCOUNT_REPOSITORY, TENANT_REPOSITORY],
     },
     {
       provide: CREATE_API_KEY_UC,
-      useFactory: (
-        tenants: PrismaTenantRepository,
-        keys: PrismaApiKeyIssuer,
-      ) => new CreateApiKeyUseCase(tenants, keys),
-      inject: [PrismaTenantRepository, PrismaApiKeyIssuer],
+      useFactory: (tenants: TenantRepository, keys: ApiKeyIssuer) =>
+        new CreateApiKeyUseCase(tenants, keys),
+      inject: [TENANT_REPOSITORY, API_KEY_ISSUER],
     },
     {
       provide: LIST_API_KEYS_UC,
-      useFactory: (
-        tenants: PrismaTenantRepository,
-        keys: PrismaApiKeyRepository,
-      ) => new ListApiKeysUseCase(tenants, keys),
-      inject: [PrismaTenantRepository, PrismaApiKeyRepository],
+      useFactory: (tenants: TenantRepository, keys: ApiKeyRepository) =>
+        new ListApiKeysUseCase(tenants, keys),
+      inject: [TENANT_REPOSITORY, API_KEY_REPOSITORY],
     },
     {
       provide: REVOKE_API_KEY_UC,
-      useFactory: (
-        tenants: PrismaTenantRepository,
-        keys: PrismaApiKeyRepository,
-      ) => new RevokeApiKeyUseCase(tenants, keys),
-      inject: [PrismaTenantRepository, PrismaApiKeyRepository],
+      useFactory: (tenants: TenantRepository, keys: ApiKeyRepository) =>
+        new RevokeApiKeyUseCase(tenants, keys),
+      inject: [TENANT_REPOSITORY, API_KEY_REPOSITORY],
     },
     {
       provide: ROTATE_API_KEY_UC,
       useFactory: (
-        tenants: PrismaTenantRepository,
-        keys: PrismaApiKeyRepository,
-        issuer: PrismaApiKeyIssuer,
+        tenants: TenantRepository,
+        keys: ApiKeyRepository,
+        issuer: ApiKeyIssuer,
       ) => new RotateApiKeyUseCase(tenants, keys, issuer),
-      inject: [
-        PrismaTenantRepository,
-        PrismaApiKeyRepository,
-        PrismaApiKeyIssuer,
-      ],
+      inject: [TENANT_REPOSITORY, API_KEY_REPOSITORY, API_KEY_ISSUER],
     },
     {
       provide: RESOLVE_TENANT_UC,
-      useFactory: (keys: PrismaApiKeyRepository) =>
+      useFactory: (keys: ApiKeyRepository) =>
         new ResolveTenantContextUseCase(keys),
-      inject: [PrismaApiKeyRepository],
+      inject: [API_KEY_REPOSITORY],
     },
   ],
 })

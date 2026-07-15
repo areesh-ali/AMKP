@@ -63,6 +63,7 @@ export class ApiKeysController {
   }
 
   @Post(":apiKeyId/revoke")
+  @HttpCode(HttpStatus.OK)
   async revoke(
     @Param("tenantId") tenantId: string,
     @Param("apiKeyId") apiKeyId: string,

@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: amkp
+          POSTGRES_PASSWORD: amkp
+          POSTGRES_DB: amkp
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U amkp -d amkp"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://amkp:amkp@localhost:5433/amkp
+      PLATFORM_ADMIN_TOKEN: ci-admin-token
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.18.0"
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: |
+          pnpm --filter @amkp/domain build
+          pnpm --filter @amkp/application build
+          pnpm --filter @amkp/adapters-postgres build
+          pnpm --filter @amkp/api build
+          pnpm --filter @amkp/openapi build
+
+      - name: Migrate
+        run: pnpm --filter @amkp/adapters-postgres exec prisma migrate deploy
+
+      - name: Unit + OpenAPI
+        run: |
+          pnpm --filter @amkp/application test
+          pnpm --filter @amkp/openapi test
+
+      - name: Auth CI suite (T-1.3)
+        run: pnpm --filter @amkp/api test

@@ -10,7 +10,8 @@
     "dev:api": "pnpm --filter @amkp/api dev",
     "dev:worker": "pnpm --filter @amkp/worker dev",
     "lint": "pnpm -r run lint",
-    "test": "pnpm -r run test",
+    "test": "pnpm --filter @amkp/application test && pnpm --filter @amkp/openapi test && pnpm --filter @amkp/api test",
+    "test:auth": "pnpm --filter @amkp/api test",
     "typecheck": "pnpm -r run typecheck",
     "docker:up": "docker compose -f infra/docker-compose.yml up -d",
     "docker:down": "docker compose -f infra/docker-compose.yml down"
