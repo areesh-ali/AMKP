@@ -67,6 +67,17 @@ export class IngestDocumentUseCase {
 
     const contentType =
       input.contentType?.trim() || "application/octet-stream";
+    const allowed = process.env.AMKP_ALLOWED_CONTENT_TYPES?.trim();
+    if (allowed) {
+      const set = new Set(
+        allowed.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean),
+      );
+      if (!set.has(contentType.toLowerCase())) {
+        throw new ValidationError(
+          `contentType ${contentType} is not allowed`,
+        );
+      }
+    }
     const sourceKey = (input.sourceKey?.trim() || filename).trim();
     if (!sourceKey) {
       throw new ValidationError("sourceKey is required");

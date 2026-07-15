@@ -181,6 +181,24 @@ describe("IngestDocumentUseCase", () => {
     expect(String(second.jobId)).toMatch(/^noop_/);
     expect(queue.jobs).toHaveLength(1);
   });
+
+  it("rejects disallowed content types when allowlist is set", async () => {
+    const prev = process.env.AMKP_ALLOWED_CONTENT_TYPES;
+    process.env.AMKP_ALLOWED_CONTENT_TYPES = "text/plain,application/pdf";
+    try {
+      const uc = new IngestDocumentUseCase(new FakeDocs(), new FakeQueue());
+      await expect(
+        uc.execute(ctx, {
+          filename: "x.bin",
+          contentType: "application/octet-stream",
+          content: Buffer.from("x"),
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+    } finally {
+      if (prev === undefined) delete process.env.AMKP_ALLOWED_CONTENT_TYPES;
+      else process.env.AMKP_ALLOWED_CONTENT_TYPES = prev;
+    }
+  });
 });
 
 describe("ListDocumentsUseCase isolation", () => {
