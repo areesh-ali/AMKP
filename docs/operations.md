@@ -106,7 +106,7 @@ Worker and API must share the same `DATABASE_URL`, vector mode, object storage, 
 
 ## Document list pagination
 
-`GET /v1/documents` supports `limit` (default 50, max 500), legacy `offset`, opaque `cursor` / `nextCursor`, and optional `status` filter (e.g. `parsed`).
+`GET /v1/documents` supports `limit` (default 50, max 500), legacy `offset`, opaque `cursor` / `nextCursor`, and optional `status` / `sourceKey` filters.
 
 ## Multipart ingest
 
