@@ -60,6 +60,24 @@ describe("Tenancy API (integration)", () => {
     expect(res.body).toMatchObject({ ok: true, database: "up" });
   });
 
+  it("GET /v1/tenants/:id returns settings for admin", async () => {
+    const auth = { Authorization: `Bearer ${ADMIN}` };
+    const aRes = await request(app.getHttpServer())
+      .post("/v1/accounts")
+      .set(auth)
+      .send({ name: "GetTen Acct" });
+    const tRes = await request(app.getHttpServer())
+      .post(`/v1/accounts/${aRes.body.accountId}/tenants`)
+      .set(auth)
+      .send({ name: "t1" });
+    const got = await request(app.getHttpServer())
+      .get(`/v1/tenants/${tRes.body.tenantId}`)
+      .set(auth);
+    expect(got.status).toBe(200);
+    expect(got.body.tenantId).toBe(tRes.body.tenantId);
+    expect(got.body.vectorNamespace).toMatch(/^ns_/);
+  });
+
   it("rejects missing admin token with 401 error shape", async () => {
     const res = await request(app.getHttpServer())
       .post("/v1/accounts")
