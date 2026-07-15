@@ -50,6 +50,17 @@ Retrieve spans use `TracerPort` → `@opentelemetry/api` when OTel is enabled.
 
 Default path uses `unpdf` and falls back to the cheap extractor on empty/failed parse.
 
+## Page-vision (tier3 VLM)
+
+Set `AMKP_PAGE_VISION_URL` to an HTTP endpoint that accepts:
+
+```json
+{ "filename": "...", "contentType": "...", "contentBase64": "..." }
+```
+
+and returns `{ "text": "...", "confidence": 0.8, "spendUsd": 0.02 }`.
+Without it, tier3 uses the deterministic stub (still only when Tenant `pageVisionEnabled`).
+
 ## Access logs
 
 Set `AMKP_ACCESS_LOG=1` for one JSON line per HTTP request (`method`, `path`, `status`, `duration_ms`, `request_id`).

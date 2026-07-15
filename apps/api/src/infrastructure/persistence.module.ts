@@ -35,6 +35,7 @@ import {
 import {
   createAmkpTracerFromEnv,
   createEmbeddingProviderFromEnv,
+  createPageVisionProviderFromEnv,
   LocalParseLadder,
   createPageVisionLedger,
 } from "@amkp/adapters-providers";
@@ -75,7 +76,11 @@ export const sharedTracer = createAmkpTracerFromEnv();
 
 /** Shared VLM spend ledger for asserting page-vision opt-in (T-2.4). */
 export const sharedPageVisionLedger = createPageVisionLedger();
-export const sharedParseLadder = new LocalParseLadder(sharedPageVisionLedger);
+export const sharedPageVisionProvider = createPageVisionProviderFromEnv();
+export const sharedParseLadder = new LocalParseLadder(
+  sharedPageVisionLedger,
+  sharedPageVisionProvider,
+);
 export const sharedEmbeddingProvider = createEmbeddingProviderFromEnv();
 
 function useEphemeralAdapters(): boolean {

@@ -77,4 +77,22 @@ export interface PageVisionSpendLedger {
 
 export const PAGE_VISION_LEDGER = Symbol("PAGE_VISION_LEDGER");
 
+/**
+ * Optional external page-vision / VLM vendor (T-2.4).
+ * When unset, LocalParseLadder uses the deterministic stub.
+ */
+export interface PageVisionProvider {
+  extract(input: {
+    filename: string;
+    contentType: string;
+    content: Buffer;
+  }): Promise<{
+    text: string;
+    confidence: number;
+    spendUsd: number;
+  }>;
+}
+
+export const PAGE_VISION_PROVIDER = Symbol("PAGE_VISION_PROVIDER");
+
 export type { ChunkId };

@@ -6,6 +6,7 @@
 import { inflateSync } from "node:zlib";
 import { extractText as unpdfExtractText } from "unpdf";
 import type {
+  PageVisionProvider,
   PageVisionSpendLedger,
   ParseLadderPort,
   ParsedText,
@@ -14,7 +15,10 @@ import type {
 const TIER3_SPEND_USD = 0.02;
 
 export class LocalParseLadder implements ParseLadderPort {
-  constructor(private readonly ledger?: PageVisionSpendLedger) {}
+  constructor(
+    private readonly ledger?: PageVisionSpendLedger,
+    private readonly pageVision?: PageVisionProvider,
+  ) {}
 
   async extractTier1(input: {
     filename: string;
@@ -50,6 +54,20 @@ export class LocalParseLadder implements ParseLadderPort {
     contentType: string;
     content: Buffer;
   }): Promise<ParsedText> {
+    if (this.pageVision) {
+      const out = await this.pageVision.extract(input);
+      if (this.ledger) {
+        this.ledger.calls += 1;
+        this.ledger.spendUsd += out.spendUsd;
+      }
+      return {
+        text: out.text,
+        confidence: out.confidence,
+        usedVlm: true,
+        spendUsd: out.spendUsd,
+      };
+    }
+
     if (this.ledger) {
       this.ledger.calls += 1;
       this.ledger.spendUsd += TIER3_SPEND_USD;

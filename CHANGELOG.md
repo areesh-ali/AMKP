@@ -17,6 +17,7 @@
 - **OpenTelemetry** OTLP HTTP exporter (`OTEL_EXPORTER_OTLP_ENDPOINT` / `AMKP_OTEL`)
 - Admin audit **tenantId** filter, SDK `updateTenant`, optional `AMKP_ACCESS_LOG`
 - PDF parse via **unpdf** (PDF.js) by default; `AMKP_PDF_ENGINE=cheap` fallback
+- HTTP **page-vision** vendor via `AMKP_PAGE_VISION_URL` (tier3)
 - Ops guide: `docs/operations.md`
 
 ### Epics E1–E8

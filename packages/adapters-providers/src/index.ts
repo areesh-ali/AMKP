@@ -12,6 +12,10 @@ export {
   OpenAiEmbeddingProvider,
   createEmbeddingProviderFromEnv,
 } from "./openai-embedding-provider";
+export {
+  HttpPageVisionProvider,
+  createPageVisionProviderFromEnv,
+} from "./http-page-vision";
 export { OtelApiTracer } from "./otel-tracer";
 export { startAmkpOtel } from "./otel-bootstrap";
 export { createAmkpTracerFromEnv } from "./create-tracer";

@@ -22,6 +22,7 @@ import {
 import {
   LocalParseLadder,
   createEmbeddingProviderFromEnv,
+  createPageVisionProviderFromEnv,
   startAmkpOtel,
 } from "@amkp/adapters-providers";
 import { BullMqJobQueue, QUEUE_NAMES } from "@amkp/adapters-redis";
@@ -53,7 +54,10 @@ async function main() {
   const chunks: ChunkRepository = new PrismaChunkRepository(prisma);
   const tenants = new PrismaTenantRepository(prisma);
   const jobs: JobQueuePort = new BullMqJobQueue(redisUrl);
-  const ladder: ParseLadderPort = new LocalParseLadder();
+  const ladder: ParseLadderPort = new LocalParseLadder(
+    undefined,
+    createPageVisionProviderFromEnv(),
+  );
   const embedder = createEmbeddingProviderFromEnv();
   const index: VectorIndexPort =
     process.env.AMKP_VECTOR_INDEX === "memory"
