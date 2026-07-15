@@ -254,6 +254,13 @@ export class AmkpAdminClient {
     return this.request("POST", "/v1/accounts", { name });
   }
 
+  async listAccounts(limit = 100): Promise<{ items: unknown[] }> {
+    return this.request(
+      "GET",
+      `/v1/accounts?limit=${encodeURIComponent(String(limit))}`,
+    );
+  }
+
   async createTenant(
     accountId: string,
     name: string,

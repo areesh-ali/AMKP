@@ -9,6 +9,7 @@ import type {
 export interface AccountRepository {
   create(input: { name: string }): Promise<Account>;
   findById(accountId: AccountId): Promise<Account | null>;
+  list(limit?: number): Promise<Account[]>;
 }
 
 export interface TenantRepository {

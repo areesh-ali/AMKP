@@ -23,6 +23,7 @@ const required = [
   "PlatformAdminBearer:",
   "TenantApiKeyBearer:",
   "createAccount",
+  "listAccounts",
   "createTenant",
   "listTenants",
   "getTenant",

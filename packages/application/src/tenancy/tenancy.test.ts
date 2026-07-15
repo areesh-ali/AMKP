@@ -37,6 +37,9 @@ function createFakes() {
     async findById(id) {
       return accounts.get(id) ?? null;
     },
+    async list(limit = 100) {
+      return [...accounts.values()].slice(0, limit);
+    },
   };
 
   const tenantRepo: TenantRepository = {

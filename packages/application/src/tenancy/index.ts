@@ -3,6 +3,7 @@ export * from "./types";
 export * from "./tokens";
 export * from "./tenant-context";
 export * from "./create-account";
+export * from "./list-accounts";
 export * from "./create-tenant";
 export * from "./list-tenants";
 export * from "./create-api-key";

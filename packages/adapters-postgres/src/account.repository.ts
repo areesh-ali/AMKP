@@ -32,4 +32,16 @@ export class PrismaAccountRepository implements AccountRepository {
       createdAt: toIso(row.createdAt),
     };
   }
+
+  async list(limit = 100): Promise<Account[]> {
+    const rows = await this.prisma.account.findMany({
+      orderBy: { createdAt: "asc" },
+      take: Math.min(Math.max(limit, 1), 500),
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      createdAt: toIso(row.createdAt),
+    }));
+  }
 }

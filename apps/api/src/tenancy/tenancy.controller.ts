@@ -8,12 +8,14 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import type {
   CreateAccountUseCase,
   CreateTenantUseCase,
   GetTenantUseCase,
+  ListAccountsUseCase,
   ListTenantsByAccountUseCase,
   UpdateTenantSettingsUseCase,
 } from "@amkp/application";
@@ -22,6 +24,7 @@ import {
   CREATE_ACCOUNT_UC,
   CREATE_TENANT_UC,
   GET_TENANT_UC,
+  LIST_ACCOUNTS_UC,
   LIST_TENANTS_UC,
   UPDATE_TENANT_UC,
 } from "./tenancy.tokens";
@@ -48,6 +51,8 @@ export class TenancyController {
   constructor(
     @Inject(CREATE_ACCOUNT_UC)
     private readonly createAccount: CreateAccountUseCase,
+    @Inject(LIST_ACCOUNTS_UC)
+    private readonly listAccounts: ListAccountsUseCase,
     @Inject(CREATE_TENANT_UC)
     private readonly createTenant: CreateTenantUseCase,
     @Inject(LIST_TENANTS_UC)
@@ -67,6 +72,20 @@ export class TenancyController {
       accountId: account.id,
       name: account.name,
       createdAt: account.createdAt,
+    };
+  }
+
+  @Get("accounts")
+  @UseGuards(PlatformAdminGuard)
+  async listAccountsHandler(@Query("limit") limitRaw?: string) {
+    const limit = limitRaw ? Number(limitRaw) : 100;
+    const items = await this.listAccounts.execute(limit);
+    return {
+      items: items.map((a) => ({
+        accountId: a.id,
+        name: a.name,
+        createdAt: a.createdAt,
+      })),
     };
   }
 
