@@ -48,7 +48,8 @@ if (envelope.requestId) {
 | `health()` / `ready()` | `GET /health`, `GET /ready` |
 | `me()` | `GET /v1/me` |
 | `ingest(...)` | `POST /v1/ingest` |
-| `listDocuments()` / `deleteDocument(id)` | documents |
+| `ingestUpload(...)` | `POST /v1/ingest/upload` (multipart) |
+| `listDocuments({ limit, cursor })` / `getDocument` / `waitForDocument` / `deleteDocument` / `reparseDocument` | documents |
 | `retrieve(...)` | `POST /v1/retrieve` |
 | `getTrace(requestId)` | `GET /v1/traces/:requestId` |
 | `listMcpTools()` / `mcpRetrieve(...)` | MCP facade |
@@ -65,6 +66,10 @@ const admin = new AmkpAdminClient({
 });
 
 const { accountId } = await admin.createAccount("Acme");
+await admin.listAccounts();
+await admin.getAccount(accountId);
 const { apiKey } = await admin.createTenant(accountId, "support");
-const { items } = await admin.listAudit();
+await admin.getTenant(/* tenantId */);
+await admin.updateTenant(/* tenantId */, { pageVisionEnabled: true });
+const { items } = await admin.listAudit(50, { tenantId: "ten_..." });
 ```

@@ -16,22 +16,24 @@ All planned epic stories (T-1.x through T-8.4) have implementation artifacts and
 | API key pepper (HMAC) | done |
 | `/ready` + adapter `/health` | done |
 | Worker `/health` + `/ready` | done |
-| Per-Tenant rate limit | done |
-| Admin audit list | done |
+| Per-Tenant rate limit + response headers | done |
+| Admin audit list (+ tenant filter) | done |
 | Document delete + index + cache cleanup | done |
 | Request IDs + security headers | done |
 | Soft request timeout + graceful shutdown | done |
 | Large ingest body limit | done |
-| TracerPort stub | done |
-| Ops checklist | `docs/operations.md` |
-| PDF FlateDecode inflate | improved (full PDF.js still open) |
-| Document list cursor pagination | done |
 | OpenTelemetry OTLP export | done |
 | Access log (`AMKP_ACCESS_LOG`) | done |
-| Audit list tenant filter | done |
+| Document list cursor pagination | done |
+| PDF via unpdf (cheap fallback) | done |
+| HTTP page-vision vendor | done |
+| Multipart ingest upload | done |
+| Document status webhooks (+ HMAC + failed) | done |
+| Admin list/get Account | done |
+| Ops checklist | `docs/operations.md` |
 
 ## Still open (optional)
 
-- Full PDF.js / layout engine — **improved** via `unpdf` default (`AMKP_PDF_ENGINE=cheap` for legacy regex path)
 - Argon2 for API keys (deferred — incompatible with hash-indexed lookup; use peppered HMAC)
-- Real VLM page-vision vendor — **HTTP adapter done** (`AMKP_PAGE_VISION_URL`); real commercial VLM still optional
+- Commercial VLM vendor beyond the HTTP adapter contract
+- Richer layout/PDF page-vision pipelines

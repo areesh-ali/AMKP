@@ -7,13 +7,14 @@ status: in_progress
 
 Running unattended until the user asks to stop.
 
-## Latest on `main` (local, not pushed)
+## Latest on `main` (local)
 
-~55 commits ahead of `origin/main` covering E8 + continuous hardening
-(pagination, OTel, unpdf, page-vision HTTP, multipart ingest, rate-limit
-headers, admin polish, …).
+Continuous hardening continues on tip of `main` (see `git log`). Recent
+slices: pagination, OTel, unpdf, page-vision HTTP, multipart ingest,
+rate-limit headers, webhooks (+ HMAC + failed), admin account list/get.
 
-## Next candidates
+## Still optional
 
-- ~~Cursor pagination / OTel / unpdf / page-vision / multipart / rate headers / webhooks / list accounts~~ — done
-- Further DX (SDK examples, CI badges) as needed
+- Commercial VLM beyond HTTP contract
+- Argon2 (intentionally deferred for high-entropy keyed lookup)
+- Richer layout/PDF page-vision pipelines
