@@ -26,6 +26,20 @@ async function bootstrap() {
     app.enableCors({
       origin: origins.split(",").map((o) => o.trim()).filter(Boolean),
       credentials: true,
+      allowedHeaders: [
+        "Authorization",
+        "Content-Type",
+        "Idempotency-Key",
+        "x-request-id",
+      ],
+      exposedHeaders: [
+        "Idempotent-Replayed",
+        "x-request-id",
+        "X-RateLimit-Limit",
+        "X-RateLimit-Remaining",
+        "X-RateLimit-Reset",
+        "Retry-After",
+      ],
     });
   }
 

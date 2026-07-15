@@ -36,8 +36,10 @@ When rate limiting is on, retrieve/MCP/**ingest** responses include `X-RateLimit
 
 | Concern | Env | Default |
 | --- | --- | --- |
-| CORS origins | `AMKP_CORS_ORIGINS` | reflect request origin when unset (dev) |
-| JSON/body limit | `AMKP_BODY_LIMIT` | Nest/Express default unless set |
+| CORS origins | `AMKP_CORS_ORIGINS` | off when unset; comma-separated allowlist when set |
+| JSON/body limit | `AMKP_BODY_LIMIT` | `25mb` |
+
+When CORS is enabled, `Idempotency-Key` / `x-request-id` are allowed and `Idempotent-Replayed` / rate-limit headers are exposed.
 
 ## Tracing (OpenTelemetry)
 
