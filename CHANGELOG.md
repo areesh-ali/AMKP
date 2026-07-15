@@ -32,6 +32,7 @@
 - SDK **`listDocumentChunks`**, admin API-key helpers, `AmkpApiError.requestId`
 - Redis **PING** on API/worker `/ready` when Redis is required
 - Object-storage **orphan compensation** if Document DB insert fails after put
+- Content-hash **unique index** + ingest retry for concurrent identical uploads
 - Ops guide: `docs/operations.md`
 
 ### Epics E1–E8

@@ -14,6 +14,7 @@ import type {
 } from "@amkp/application";
 import {
   DocumentNotFoundError,
+  DocumentUniqueConflictError,
   clampDocumentListLimit,
   decodeDocumentCursor,
   documentObjectKey,
@@ -72,6 +73,9 @@ export class PrismaDocumentRepository implements DocumentRepository {
           // best-effort; surface the original DB error
         }
       }
+      if (isPrismaUniqueViolation(err)) {
+        throw new DocumentUniqueConflictError();
+      }
       throw err;
     }
   }
@@ -94,6 +98,18 @@ export class PrismaDocumentRepository implements DocumentRepository {
     const row = await this.prisma.document.findFirst({
       where: { tenantId, sourceKey },
       orderBy: { version: "desc" },
+    });
+    if (!row) return null;
+    return mapDocument(row);
+  }
+
+  async findBySourceKeyAndContentHash(
+    tenantId: TenantId,
+    sourceKey: string,
+    contentHash: string,
+  ): Promise<Document | null> {
+    const row = await this.prisma.document.findFirst({
+      where: { tenantId, sourceKey, contentHash },
     });
     if (!row) return null;
     return mapDocument(row);
@@ -284,4 +300,13 @@ function mapDocument(row: {
     contentHash: row.contentHash,
     createdAt: toIso(row.createdAt),
   };
+}
+
+function isPrismaUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code?: string }).code === "P2002"
+  );
 }

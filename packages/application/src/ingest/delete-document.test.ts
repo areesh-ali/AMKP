@@ -19,6 +19,9 @@ class FakeDocs implements DocumentRepository {
   async findLatestBySourceKey() {
     return null;
   }
+  async findBySourceKeyAndContentHash() {
+    return null;
+  }
   async getContentForTenant() {
     return null;
   }

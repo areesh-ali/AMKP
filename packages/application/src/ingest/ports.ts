@@ -34,6 +34,12 @@ export interface DocumentRepository {
     tenantId: TenantId,
     sourceKey: string,
   ): Promise<Document | null>;
+  /** Exact content-hash match for tenant+sourceKey (idempotent ingest). */
+  findBySourceKeyAndContentHash(
+    tenantId: TenantId,
+    sourceKey: string,
+    contentHash: string,
+  ): Promise<Document | null>;
   /** Load stored bytes for parse workers (tenant-scoped). */
   getContentForTenant(
     tenantId: TenantId,
@@ -91,5 +97,15 @@ export class DocumentNotFoundError extends Error {
   constructor(documentId: DocumentId) {
     super(`Document not found: ${documentId}`);
     this.name = "DocumentNotFoundError";
+  }
+}
+
+/** Thrown when tenant+sourceKey+version or contentHash unique constraint fires. */
+export class DocumentUniqueConflictError extends Error {
+  readonly code = "DOCUMENT_UNIQUE_CONFLICT";
+
+  constructor(message = "Document unique constraint conflict") {
+    super(message);
+    this.name = "DocumentUniqueConflictError";
   }
 }

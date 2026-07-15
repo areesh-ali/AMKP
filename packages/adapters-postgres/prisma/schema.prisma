@@ -55,6 +55,7 @@ model Document {
   chunks      Chunk[]
 
   @@unique([tenantId, sourceKey, version])
+  @@unique([tenantId, sourceKey, contentHash])
   @@index([tenantId])
   @@index([tenantId, sourceKey])
   @@map("documents")

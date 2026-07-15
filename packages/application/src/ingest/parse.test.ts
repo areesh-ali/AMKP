@@ -53,6 +53,20 @@ class FakeDocs implements DocumentRepository {
     return rows[0] ? omitContent(rows[0]) : null;
   }
 
+  async findBySourceKeyAndContentHash(
+    tenantId: TenantId,
+    sourceKey: string,
+    contentHash: string,
+  ) {
+    const row = [...this.store.values()].find(
+      (d) =>
+        d.tenantId === tenantId &&
+        d.sourceKey === sourceKey &&
+        d.contentHash === contentHash,
+    );
+    return row ? omitContent(row) : null;
+  }
+
   async findByIdForTenant(tenantId: TenantId, documentId: DocumentId) {
     const row = this.store.get(`${tenantId}:${documentId}`);
     return row ? omitContent(row) : null;

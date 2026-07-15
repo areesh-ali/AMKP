@@ -5,6 +5,7 @@ import { GetDocumentUseCase } from "./get-document";
 import { paginateDocumentList } from "./document-list-page";
 import {
   DocumentNotFoundError,
+  DocumentUniqueConflictError,
   type DocumentRepository,
   type JobQueuePort,
   type EnqueueResult,
@@ -24,6 +25,15 @@ class FakeDocs implements DocumentRepository {
     contentHash: string;
     version: number;
   }): Promise<Document> {
+    for (const row of this.store.values()) {
+      if (
+        row.tenantId === input.tenantId &&
+        row.sourceKey === input.sourceKey &&
+        (row.version === input.version || row.contentHash === input.contentHash)
+      ) {
+        throw new DocumentUniqueConflictError();
+      }
+    }
     const id = `doc_${this.store.size + 1}`;
     const doc: Document & { content: Buffer } = {
       id,
@@ -59,6 +69,22 @@ class FakeDocs implements DocumentRepository {
       .sort((a, b) => b.version - a.version);
     if (!rows[0]) return null;
     const { content: _c, ...doc } = rows[0];
+    return doc;
+  }
+
+  async findBySourceKeyAndContentHash(
+    tenantId: TenantId,
+    sourceKey: string,
+    contentHash: string,
+  ) {
+    const row = [...this.store.values()].find(
+      (d) =>
+        d.tenantId === tenantId &&
+        d.sourceKey === sourceKey &&
+        d.contentHash === contentHash,
+    );
+    if (!row) return null;
+    const { content: _c, ...doc } = row;
     return doc;
   }
 
@@ -190,6 +216,30 @@ describe("IngestDocumentUseCase", () => {
     expect(second.document.id).toBe(first.document.id);
     expect(second.document.version).toBe(1);
     expect(String(second.jobId)).toMatch(/^noop_/);
+    expect(queue.jobs).toHaveLength(1);
+  });
+
+  it("dedupes concurrent identical ingests via unique conflict retry", async () => {
+    const docs = new FakeDocs();
+    const queue = new FakeQueue();
+    const uc = new IngestDocumentUseCase(docs, queue);
+    const bytes = Buffer.from("race payload");
+    const input = {
+      filename: "race.txt",
+      sourceKey: "race",
+      content: bytes,
+    };
+
+    const [a, b] = await Promise.all([
+      uc.execute(ctx, input),
+      uc.execute(ctx, input),
+    ]);
+
+    expect(a.document.id).toBe(b.document.id);
+    const noopCount = [a, b].filter((r) =>
+      String(r.jobId).startsWith("noop_"),
+    ).length;
+    expect(noopCount).toBe(1);
     expect(queue.jobs).toHaveLength(1);
   });
 

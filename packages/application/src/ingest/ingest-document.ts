@@ -6,6 +6,7 @@ import {
   ValidationError,
 } from "../tenancy/ports";
 import type { DocumentRepository, JobQueuePort } from "./ports";
+import { DocumentUniqueConflictError } from "./ports";
 
 export interface IngestDocumentInput {
   filename: string;
@@ -25,6 +26,7 @@ export interface IngestDocumentResult {
 }
 
 const DEFAULT_MAX_BYTES = 10 * 1024 * 1024; // 10 MiB MVP soft limit
+const CREATE_RETRY_LIMIT = 3;
 
 export function maxDocumentBytes(): number {
   const raw = process.env.AMKP_MAX_DOCUMENT_BYTES;
@@ -84,36 +86,73 @@ export class IngestDocumentUseCase {
     }
 
     const contentHash = hashDocumentContent(input.content);
-    const latest = await this.documents.findLatestBySourceKey(
+    const existing = await this.documents.findBySourceKeyAndContentHash(
       ctx.tenantId,
       sourceKey,
+      contentHash,
     );
-    if (latest && latest.contentHash === contentHash) {
-      // Idempotent re-ingest of identical bytes — return existing Document, no new job.
+    if (existing) {
       return {
-        document: latest,
+        document: existing,
         jobId: `noop_${randomUUID()}` as JobId,
       };
     }
-    const version = (latest?.version ?? 0) + 1;
 
-    const document = await this.documents.create({
-      tenantId: ctx.tenantId,
-      filename,
-      contentType,
-      content: input.content,
-      sourceKey,
-      contentHash,
-      version,
-    });
+    let lastError: unknown;
+    for (let attempt = 0; attempt < CREATE_RETRY_LIMIT; attempt++) {
+      const latest = await this.documents.findLatestBySourceKey(
+        ctx.tenantId,
+        sourceKey,
+      );
+      if (latest && latest.contentHash === contentHash) {
+        return {
+          document: latest,
+          jobId: `noop_${randomUUID()}` as JobId,
+        };
+      }
+      const version = (latest?.version ?? 0) + 1;
 
-    const jobId = `job_${randomUUID().replace(/-/g, "")}`;
-    const enqueued = await this.jobs.enqueue(
-      "ingest",
-      { tenantId: ctx.tenantId, documentId: document.id },
-      { jobId },
-    );
+      try {
+        const document = await this.documents.create({
+          tenantId: ctx.tenantId,
+          filename,
+          contentType,
+          content: input.content,
+          sourceKey,
+          contentHash,
+          version,
+        });
 
-    return { document, jobId: enqueued.jobId };
+        const jobId = `job_${randomUUID().replace(/-/g, "")}`;
+        const enqueued = await this.jobs.enqueue(
+          "ingest",
+          { tenantId: ctx.tenantId, documentId: document.id },
+          { jobId },
+        );
+
+        return { document, jobId: enqueued.jobId };
+      } catch (err) {
+        lastError = err;
+        if (!(err instanceof DocumentUniqueConflictError)) {
+          throw err;
+        }
+        // Concurrent create — another writer won; re-check hash or bump version.
+        const raced = await this.documents.findBySourceKeyAndContentHash(
+          ctx.tenantId,
+          sourceKey,
+          contentHash,
+        );
+        if (raced) {
+          return {
+            document: raced,
+            jobId: `noop_${randomUUID()}` as JobId,
+          };
+        }
+      }
+    }
+
+    throw lastError instanceof Error
+      ? lastError
+      : new DocumentUniqueConflictError("ingest create retries exhausted");
   }
 }
