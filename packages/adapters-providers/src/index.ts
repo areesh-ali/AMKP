@@ -3,4 +3,8 @@ export interface EmbeddingProvider {
   embed(texts: string[]): Promise<number[][]>;
 }
 
-export { LocalParseLadder, extractPdfTextLayer } from "./local-parse-ladder";
+export {
+  LocalParseLadder,
+  extractPdfTextLayer,
+  createPageVisionLedger,
+} from "./local-parse-ladder";

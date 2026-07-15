@@ -36,6 +36,8 @@ export interface ParsedText {
   /** Confidence that this tier recovered usable text ∈ [0,1] */
   confidence: number;
   usedVlm: boolean;
+  /** USD spend attributed to this extraction (0 for tiers 1–2). */
+  spendUsd?: number;
 }
 
 export interface ParseLadderPort {
@@ -52,8 +54,26 @@ export interface ParseLadderPort {
     contentType: string;
     content: Buffer;
   }): Promise<ParsedText>;
+
+  /**
+   * Page-vision / VLM tier (tier3). May spend; only called when Tenant
+   * pageVisionEnabled is true (T-2.4).
+   */
+  extractTier3(input: {
+    filename: string;
+    contentType: string;
+    content: Buffer;
+  }): Promise<ParsedText>;
 }
 
 export const PARSE_LADDER = Symbol("PARSE_LADDER");
+
+/** Test double / accounting for VLM calls. */
+export interface PageVisionSpendLedger {
+  calls: number;
+  spendUsd: number;
+}
+
+export const PAGE_VISION_LEDGER = Symbol("PAGE_VISION_LEDGER");
 
 export type { ChunkId };

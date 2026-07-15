@@ -10,6 +10,7 @@ import {
   ListTenantsByAccountUseCase,
   RevokeApiKeyUseCase,
   RotateApiKeyUseCase,
+  UpdateTenantSettingsUseCase,
   TENANT_REPOSITORY,
   type AccountRepository,
   type ApiKeyIssuer,
@@ -30,6 +31,7 @@ import {
   LIST_TENANTS_UC,
   REVOKE_API_KEY_UC,
   ROTATE_API_KEY_UC,
+  UPDATE_TENANT_UC,
 } from "./tenancy.tokens";
 
 @Module({
@@ -57,6 +59,12 @@ import {
       useFactory: (accounts: AccountRepository, tenants: TenantRepository) =>
         new ListTenantsByAccountUseCase(accounts, tenants),
       inject: [ACCOUNT_REPOSITORY, TENANT_REPOSITORY],
+    },
+    {
+      provide: UPDATE_TENANT_UC,
+      useFactory: (tenants: TenantRepository) =>
+        new UpdateTenantSettingsUseCase(tenants),
+      inject: [TENANT_REPOSITORY],
     },
     {
       provide: CREATE_API_KEY_UC,

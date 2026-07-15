@@ -20,7 +20,7 @@ import {
   PrismaDocumentRepository,
   PrismaTenantRepository,
 } from "@amkp/adapters-postgres";
-import { LocalParseLadder } from "@amkp/adapters-providers";
+import { LocalParseLadder, createPageVisionLedger } from "@amkp/adapters-providers";
 import {
   createJobQueue,
   InMemoryJobQueue,
@@ -39,6 +39,9 @@ export const sharedVectorIndex = new InMemoryVectorIndex();
  */
 export const sharedMemoryJobQueue = new InMemoryJobQueue();
 
+/** Shared VLM spend ledger for asserting page-vision opt-in (T-2.4). */
+export const sharedPageVisionLedger = createPageVisionLedger();
+export const sharedParseLadder = new LocalParseLadder(sharedPageVisionLedger);
 @Module({
   imports: [PrismaModule],
   providers: [
@@ -74,7 +77,7 @@ export const sharedMemoryJobQueue = new InMemoryJobQueue();
     },
     {
       provide: PARSE_LADDER,
-      useValue: new LocalParseLadder(),
+      useValue: sharedParseLadder,
     },
     {
       provide: VECTOR_INDEX,

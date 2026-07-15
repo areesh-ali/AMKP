@@ -8,6 +8,7 @@ import type {
 } from "@amkp/domain";
 import { tenantVectorNamespace } from "@amkp/domain";
 import type { VectorIndexPort } from "../retrieve/retrieve";
+import type { TenantRepository } from "../tenancy/ports";
 import { DocumentNotFoundError, type DocumentRepository } from "./ports";
 import type { ChunkRepository, ParseLadderPort } from "./parse-ports";
 import {
@@ -23,12 +24,13 @@ export interface ProcessParseJobResult {
   parseTier: ParseTier;
   chunkCount: number;
   tableChunkCount: number;
-  usedVlm: false;
+  usedVlm: boolean;
+  vlmSpendUsd: number;
 }
 
 /**
- * Worker-side Parse Ladder (tiers 1–2 only). Never invokes VLM (T-2.4).
- * Emits TableEvidence chunks when tables are recoverable (FR-6 / T-2.3).
+ * Worker-side Parse Ladder.
+ * Tiers 1–2 never use VLM. Tier3 page-vision only when Tenant.pageVisionEnabled.
  */
 export class ProcessParseJobUseCase {
   constructor(
@@ -36,12 +38,16 @@ export class ProcessParseJobUseCase {
     private readonly chunks: ChunkRepository,
     private readonly ladder: ParseLadderPort,
     private readonly index: VectorIndexPort,
+    private readonly tenants: TenantRepository,
   ) {}
 
   async execute(input: {
     tenantId: TenantId;
     documentId: DocumentId;
   }): Promise<ProcessParseJobResult> {
+    const tenant = await this.tenants.findById(input.tenantId);
+    const pageVisionEnabled = tenant?.pageVisionEnabled === true;
+
     const doc = await this.documents.findByIdForTenant(
       input.tenantId,
       input.documentId,
@@ -69,6 +75,8 @@ export class ProcessParseJobUseCase {
 
     let parseTier: ParseTier = "tier1_text";
     let chosen = tier1;
+    let usedVlm = false;
+    let vlmSpendUsd = 0;
 
     if (tier1.text.trim().length < TIER1_MIN_CHARS) {
       const tier2 = await this.ladder.extractTier2({
@@ -82,6 +90,23 @@ export class ProcessParseJobUseCase {
       if (tier2.text.trim().length > tier1.text.trim().length) {
         parseTier = "tier2_layout";
         chosen = tier2;
+      }
+
+      if (
+        chosen.text.trim().length < TIER1_MIN_CHARS &&
+        pageVisionEnabled
+      ) {
+        const tier3 = await this.ladder.extractTier3({
+          filename: doc.filename,
+          contentType: doc.contentType,
+          content,
+        });
+        usedVlm = tier3.usedVlm;
+        vlmSpendUsd = tier3.spendUsd ?? 0;
+        if (tier3.text.trim().length > chosen.text.trim().length) {
+          parseTier = "tier3_page_vision";
+          chosen = tier3;
+        }
       }
     }
 
@@ -155,7 +180,8 @@ export class ProcessParseJobUseCase {
       parseTier,
       chunkCount: created.length,
       tableChunkCount: created.filter((c) => c.table).length,
-      usedVlm: false,
+      usedVlm,
+      vlmSpendUsd,
     };
   }
 }
@@ -179,7 +205,10 @@ export class ListChunksUseCase {
 }
 
 function splitIntoChunks(text: string, size: number): string[] {
-  const normalized = text.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+  const normalized = text
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
   if (!normalized) return [];
   const out: string[] = [];
   for (let i = 0; i < normalized.length; i += size) {

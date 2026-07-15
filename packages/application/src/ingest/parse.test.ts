@@ -133,6 +133,38 @@ class FakeLadder implements ParseLadderPort {
   async extractTier2(): Promise<ParsedText> {
     return { text: this.text, confidence: 0.95, usedVlm: false };
   }
+  async extractTier3(): Promise<ParsedText> {
+    return {
+      text: "should not be called",
+      confidence: 0.1,
+      usedVlm: true,
+      spendUsd: 0.02,
+    };
+  }
+}
+
+class FakeTenants {
+  pageVisionEnabled = false;
+  async findById(id: string) {
+    return {
+      id,
+      accountId: "acc_a",
+      name: "t",
+      agenticEnabled: false,
+      pageVisionEnabled: this.pageVisionEnabled,
+      vectorNamespace: `ns_${id}`,
+      createdAt: new Date().toISOString(),
+    };
+  }
+  async create() {
+    throw new Error("unused");
+  }
+  async listByAccountId() {
+    return [];
+  }
+  async updateSettings() {
+    throw new Error("unused");
+  }
 }
 
 const ctx = {
@@ -158,6 +190,7 @@ describe("ProcessParseJobUseCase", () => {
       chunks,
       new FakeLadder("Hello knowledge plane parse ladder tier one"),
       index,
+      new FakeTenants(),
     );
     const result = await parse.execute({
       tenantId: ctx.tenantId,
@@ -165,6 +198,7 @@ describe("ProcessParseJobUseCase", () => {
     });
 
     expect(result.usedVlm).toBe(false);
+    expect(result.vlmSpendUsd).toBe(0);
     expect(result.parseTier).toBe("tier1_text");
     expect(result.chunkCount).toBeGreaterThan(0);
     expect(chunks.rows.every((c) => c.parseTier === "tier1_text")).toBe(true);
@@ -188,6 +222,14 @@ describe("ProcessParseJobUseCase", () => {
           usedVlm: false,
         };
       },
+      async extractTier3() {
+        return {
+          text: "vlm",
+          confidence: 0.5,
+          usedVlm: true,
+          spendUsd: 0.02,
+        };
+      },
     };
     const ingest = new IngestDocumentUseCase(docs, new FakeQueue());
     const created = await ingest.execute(ctx, {
@@ -201,12 +243,105 @@ describe("ProcessParseJobUseCase", () => {
       chunks,
       ladder,
       new FakeIndex(),
+      new FakeTenants(),
     );
     const result = await parse.execute({
       tenantId: ctx.tenantId,
       documentId: created.document.id,
     });
     expect(result.parseTier).toBe("tier2_layout");
+    expect(result.usedVlm).toBe(false);
     expect(chunks.rows[0]?.parseTier).toBe("tier2_layout");
+  });
+
+  it("does not call VLM when pageVision disabled on scanned deck", async () => {
+    let tier3Calls = 0;
+    const docs = new FakeDocs();
+    const ladder: ParseLadderPort = {
+      async extractTier1() {
+        return { text: "", confidence: 0, usedVlm: false };
+      },
+      async extractTier2() {
+        return { text: "", confidence: 0, usedVlm: false };
+      },
+      async extractTier3() {
+        tier3Calls += 1;
+        return {
+          text: "ocr text from vision",
+          confidence: 0.6,
+          usedVlm: true,
+          spendUsd: 0.02,
+        };
+      },
+    };
+    const ingest = new IngestDocumentUseCase(docs, new FakeQueue());
+    const created = await ingest.execute(ctx, {
+      filename: "scanned-deck.pdf",
+      contentType: "application/pdf",
+      content: Buffer.from("%PDF-1.4\n% binary scan"),
+    });
+    const tenants = new FakeTenants();
+    tenants.pageVisionEnabled = false;
+    const parse = new ProcessParseJobUseCase(
+      docs,
+      new FakeChunks(),
+      ladder,
+      new FakeIndex(),
+      tenants,
+    );
+    const result = await parse.execute({
+      tenantId: ctx.tenantId,
+      documentId: created.document.id,
+    });
+    expect(tier3Calls).toBe(0);
+    expect(result.usedVlm).toBe(false);
+    expect(result.vlmSpendUsd).toBe(0);
+  });
+
+  it("escalates to tier3 when pageVision enabled and cheap tiers empty", async () => {
+    let tier3Calls = 0;
+    const docs = new FakeDocs();
+    const chunks = new FakeChunks();
+    const ladder: ParseLadderPort = {
+      async extractTier1() {
+        return { text: "", confidence: 0, usedVlm: false };
+      },
+      async extractTier2() {
+        return { text: "", confidence: 0, usedVlm: false };
+      },
+      async extractTier3() {
+        tier3Calls += 1;
+        return {
+          text: "ocr recovered slide content from scanned deck",
+          confidence: 0.6,
+          usedVlm: true,
+          spendUsd: 0.02,
+        };
+      },
+    };
+    const ingest = new IngestDocumentUseCase(docs, new FakeQueue());
+    const created = await ingest.execute(ctx, {
+      filename: "scanned-deck.pdf",
+      contentType: "application/pdf",
+      content: Buffer.from("%PDF-1.4\n% binary scan"),
+    });
+    const tenants = new FakeTenants();
+    tenants.pageVisionEnabled = true;
+    const parse = new ProcessParseJobUseCase(
+      docs,
+      chunks,
+      ladder,
+      new FakeIndex(),
+      tenants,
+    );
+    const result = await parse.execute({
+      tenantId: ctx.tenantId,
+      documentId: created.document.id,
+    });
+    expect(tier3Calls).toBe(1);
+    expect(result.usedVlm).toBe(true);
+    expect(result.vlmSpendUsd).toBe(0.02);
+    expect(result.parseTier).toBe("tier3_page_vision");
+    expect(chunks.rows[0]?.parseTier).toBe("tier3_page_vision");
   });
 });

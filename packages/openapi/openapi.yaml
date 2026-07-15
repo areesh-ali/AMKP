@@ -118,6 +118,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /v1/tenants/{tenantId}:
+    patch:
+      summary: Update Tenant settings (page-vision / agentic flags)
+      operationId: updateTenantSettings
+      security:
+        - PlatformAdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pageVisionEnabled:
+                  type: boolean
+                agenticEnabled:
+                  type: boolean
+      responses:
+        "200":
+          description: Updated tenant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantSummary"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /v1/tenants/{tenantId}/api-keys:
     post:
       summary: Create API key for Tenant
@@ -426,7 +462,15 @@ components:
     CreateTenantResponse:
       type: object
       required:
-        [tenantId, accountId, name, agenticEnabled, apiKey, createdAt]
+        [
+          tenantId,
+          accountId,
+          name,
+          agenticEnabled,
+          pageVisionEnabled,
+          apiKey,
+          createdAt,
+        ]
       properties:
         tenantId:
           type: string
@@ -437,6 +481,10 @@ components:
         agenticEnabled:
           type: boolean
           example: false
+        pageVisionEnabled:
+          type: boolean
+          example: false
+          description: Opt-in Parse Ladder page-vision / VLM tier (T-2.4)
         apiKey:
           type: string
           description: Plaintext returned once on create; stored hashed only
@@ -445,7 +493,15 @@ components:
           format: date-time
     TenantSummary:
       type: object
-      required: [tenantId, accountId, name, agenticEnabled, createdAt]
+      required:
+        [
+          tenantId,
+          accountId,
+          name,
+          agenticEnabled,
+          pageVisionEnabled,
+          createdAt,
+        ]
       properties:
         tenantId:
           type: string
@@ -454,6 +510,8 @@ components:
         name:
           type: string
         agenticEnabled:
+          type: boolean
+        pageVisionEnabled:
           type: boolean
         createdAt:
           type: string
@@ -599,7 +657,7 @@ components:
           type: string
         parseTier:
           type: string
-          enum: [tier1_text, tier2_layout]
+          enum: [tier1_text, tier2_layout, tier3_page_vision]
         parseConfidence:
           type: number
           minimum: 0

@@ -14,6 +14,7 @@ import {
   InMemoryVectorIndex,
   PrismaChunkRepository,
   PrismaDocumentRepository,
+  PrismaTenantRepository,
 } from "@amkp/adapters-postgres";
 import { LocalParseLadder } from "@amkp/adapters-providers";
 import { BullMqJobQueue, QUEUE_NAMES } from "@amkp/adapters-redis";
@@ -38,6 +39,7 @@ async function main() {
 
   const documents: DocumentRepository = new PrismaDocumentRepository(prisma);
   const chunks: ChunkRepository = new PrismaChunkRepository(prisma);
+  const tenants = new PrismaTenantRepository(prisma);
   const jobs: JobQueuePort = new BullMqJobQueue(redisUrl);
   const ladder: ParseLadderPort = new LocalParseLadder();
   const index: VectorIndexPort = new InMemoryVectorIndex();
@@ -48,6 +50,7 @@ async function main() {
     chunks,
     ladder,
     index,
+    tenants,
   );
 
   const connection = connectionFromUrl(redisUrl);

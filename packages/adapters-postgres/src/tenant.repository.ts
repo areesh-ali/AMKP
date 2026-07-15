@@ -1,7 +1,7 @@
 import { ulid } from "ulid";
 import type { AccountId, Tenant, TenantId } from "@amkp/domain";
 import { tenantVectorNamespace } from "@amkp/domain";
-import type { TenantRepository } from "@amkp/application";
+import { TenantNotFoundError, type TenantRepository } from "@amkp/application";
 import type { PrismaClient } from "./prisma";
 import { toIso } from "./crypto";
 
@@ -12,6 +12,7 @@ export class PrismaTenantRepository implements TenantRepository {
     accountId: AccountId;
     name: string;
     agenticEnabled?: boolean;
+    pageVisionEnabled?: boolean;
   }): Promise<Tenant> {
     const id = `ten_${ulid()}`;
     const row = await this.prisma.tenant.create({
@@ -20,6 +21,7 @@ export class PrismaTenantRepository implements TenantRepository {
         accountId: input.accountId,
         name: input.name,
         agenticEnabled: input.agenticEnabled ?? false,
+        pageVisionEnabled: input.pageVisionEnabled ?? false,
         vectorNamespace: tenantVectorNamespace(id),
       },
     });
@@ -41,6 +43,33 @@ export class PrismaTenantRepository implements TenantRepository {
     if (!row) return null;
     return mapTenant(row);
   }
+
+  async updateSettings(
+    tenantId: TenantId,
+    patch: {
+      pageVisionEnabled?: boolean;
+      agenticEnabled?: boolean;
+    },
+  ): Promise<Tenant> {
+    const existing = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+    });
+    if (!existing) {
+      throw new TenantNotFoundError(tenantId);
+    }
+    const row = await this.prisma.tenant.update({
+      where: { id: tenantId },
+      data: {
+        ...(patch.pageVisionEnabled !== undefined
+          ? { pageVisionEnabled: patch.pageVisionEnabled }
+          : {}),
+        ...(patch.agenticEnabled !== undefined
+          ? { agenticEnabled: patch.agenticEnabled }
+          : {}),
+      },
+    });
+    return mapTenant(row);
+  }
 }
 
 function mapTenant(row: {
@@ -48,6 +77,7 @@ function mapTenant(row: {
   accountId: string;
   name: string;
   agenticEnabled: boolean;
+  pageVisionEnabled: boolean;
   vectorNamespace: string;
   createdAt: Date;
 }): Tenant {
@@ -56,6 +86,7 @@ function mapTenant(row: {
     accountId: row.accountId,
     name: row.name,
     agenticEnabled: row.agenticEnabled,
+    pageVisionEnabled: row.pageVisionEnabled,
     vectorNamespace: row.vectorNamespace,
     createdAt: toIso(row.createdAt),
   };

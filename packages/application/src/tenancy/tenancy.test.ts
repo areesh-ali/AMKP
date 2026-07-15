@@ -10,6 +10,7 @@ import {
   ResolveTenantContextUseCase,
   RevokeApiKeyUseCase,
   RotateApiKeyUseCase,
+  UpdateTenantSettingsUseCase,
   type AccountRepository,
   type ApiKeyIssuer,
   type ApiKeyRepository,
@@ -38,13 +39,14 @@ function createFakes() {
   };
 
   const tenantRepo: TenantRepository = {
-    async create({ accountId, name, agenticEnabled = false }) {
+    async create({ accountId, name, agenticEnabled = false, pageVisionEnabled = false }) {
       seq += 1;
       const tenant: Tenant = {
         id: `ten_TEST${seq}`,
         accountId,
         name,
         agenticEnabled,
+        pageVisionEnabled,
         vectorNamespace: `ns_ten_TEST${seq}`,
         createdAt: new Date().toISOString(),
       };
@@ -56,6 +58,21 @@ function createFakes() {
     },
     async findById(id) {
       return tenants.get(id) ?? null;
+    },
+    async updateSettings(tenantId, patch) {
+      const t = tenants.get(tenantId);
+      if (!t) throw new Error("missing");
+      const next = {
+        ...t,
+        ...(patch.pageVisionEnabled !== undefined
+          ? { pageVisionEnabled: patch.pageVisionEnabled }
+          : {}),
+        ...(patch.agenticEnabled !== undefined
+          ? { agenticEnabled: patch.agenticEnabled }
+          : {}),
+      };
+      tenants.set(tenantId, next);
+      return next;
     },
   };
 
@@ -248,5 +265,36 @@ describe("API key lifecycle", () => {
     );
     const ctx2 = await resolve.execute(rotated.issued.plaintext);
     expect(ctx2.tenantId).toBe(tenant.id);
+  });
+
+  it("updates pageVisionEnabled via UpdateTenantSettingsUseCase", async () => {
+    const { accountRepo, tenantRepo } = createFakes();
+    const createAccount = new CreateAccountUseCase(accountRepo);
+    const createTenant = new CreateTenantUseCase(
+      accountRepo,
+      tenantRepo,
+      {
+        async issueForTenant(tenantId) {
+          return {
+            apiKeyId: `key_${tenantId}`,
+            plaintext: `amkp_${tenantId}`,
+            tenantId,
+          };
+        },
+      },
+    );
+    const account = await createAccount.execute({ name: "A" });
+    const { tenant } = await createTenant.execute({
+      accountId: account.id,
+      name: "docs",
+    });
+    expect(tenant.pageVisionEnabled).toBe(false);
+
+    const update = new UpdateTenantSettingsUseCase(tenantRepo);
+    const next = await update.execute({
+      tenantId: tenant.id,
+      pageVisionEnabled: true,
+    });
+    expect(next.pageVisionEnabled).toBe(true);
   });
 });

@@ -169,6 +169,14 @@ describe("TableEvidence parse → retrieve gold fixture", () => {
       async extractTier2(): Promise<ParsedText> {
         return { text: GOLD_MD, confidence: 0.9, usedVlm: false };
       },
+      async extractTier3(): Promise<ParsedText> {
+        return {
+          text: "unused",
+          confidence: 0.1,
+          usedVlm: true,
+          spendUsd: 0.02,
+        };
+      },
     };
 
     const ingest = new IngestDocumentUseCase(docs, new FakeQueue());
@@ -178,7 +186,36 @@ describe("TableEvidence parse → retrieve gold fixture", () => {
       content: Buffer.from(GOLD_MD),
     });
 
-    const parse = new ProcessParseJobUseCase(docs, chunks, ladder, index);
+    const tenants = {
+      async findById(id: string) {
+        return {
+          id,
+          accountId: ctx.accountId,
+          name: "docs",
+          agenticEnabled: false,
+          pageVisionEnabled: false,
+          vectorNamespace: `ns_${id}`,
+          createdAt: new Date().toISOString(),
+        };
+      },
+      async create() {
+        throw new Error("unused");
+      },
+      async listByAccountId() {
+        return [];
+      },
+      async updateSettings() {
+        throw new Error("unused");
+      },
+    };
+
+    const parse = new ProcessParseJobUseCase(
+      docs,
+      chunks,
+      ladder,
+      index,
+      tenants,
+    );
     const parsed = await parse.execute({
       tenantId: ctx.tenantId,
       documentId: created.document.id,

@@ -10,3 +10,4 @@ export * from "./revoke-api-key";
 export * from "./rotate-api-key";
 export * from "./list-api-keys";
 export * from "./resolve-tenant-context";
+export * from "./update-tenant-settings";

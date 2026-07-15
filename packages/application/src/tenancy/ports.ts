@@ -16,9 +16,17 @@ export interface TenantRepository {
     accountId: AccountId;
     name: string;
     agenticEnabled?: boolean;
+    pageVisionEnabled?: boolean;
   }): Promise<Tenant>;
   listByAccountId(accountId: AccountId): Promise<Tenant[]>;
   findById(tenantId: TenantId): Promise<Tenant | null>;
+  updateSettings(
+    tenantId: TenantId,
+    patch: {
+      pageVisionEnabled?: boolean;
+      agenticEnabled?: boolean;
+    },
+  ): Promise<Tenant>;
 }
 
 export interface IssuedApiKey {

@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Inject,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from "@nestjs/common";
@@ -13,12 +14,14 @@ import type {
   CreateAccountUseCase,
   CreateTenantUseCase,
   ListTenantsByAccountUseCase,
+  UpdateTenantSettingsUseCase,
 } from "@amkp/application";
 import { PlatformAdminGuard } from "./platform-admin.guard";
 import {
   CREATE_ACCOUNT_UC,
   CREATE_TENANT_UC,
   LIST_TENANTS_UC,
+  UPDATE_TENANT_UC,
 } from "./tenancy.tokens";
 
 class CreateAccountDto {
@@ -29,8 +32,12 @@ class CreateTenantDto {
   name!: string;
 }
 
-@Controller("v1/accounts")
-@UseGuards(PlatformAdminGuard)
+class UpdateTenantDto {
+  pageVisionEnabled?: boolean;
+  agenticEnabled?: boolean;
+}
+
+@Controller("v1")
 export class TenancyController {
   constructor(
     @Inject(CREATE_ACCOUNT_UC)
@@ -39,9 +46,12 @@ export class TenancyController {
     private readonly createTenant: CreateTenantUseCase,
     @Inject(LIST_TENANTS_UC)
     private readonly listTenants: ListTenantsByAccountUseCase,
+    @Inject(UPDATE_TENANT_UC)
+    private readonly updateTenant: UpdateTenantSettingsUseCase,
   ) {}
 
-  @Post()
+  @Post("accounts")
+  @UseGuards(PlatformAdminGuard)
   @HttpCode(HttpStatus.CREATED)
   async createAccountHandler(@Body() body: CreateAccountDto) {
     const account = await this.createAccount.execute({ name: body.name });
@@ -52,7 +62,8 @@ export class TenancyController {
     };
   }
 
-  @Post(":accountId/tenants")
+  @Post("accounts/:accountId/tenants")
+  @UseGuards(PlatformAdminGuard)
   @HttpCode(HttpStatus.CREATED)
   async createTenantHandler(
     @Param("accountId") accountId: string,
@@ -67,12 +78,14 @@ export class TenancyController {
       accountId: result.tenant.accountId,
       name: result.tenant.name,
       agenticEnabled: result.tenant.agenticEnabled,
+      pageVisionEnabled: result.tenant.pageVisionEnabled,
       apiKey: result.apiKey,
       createdAt: result.tenant.createdAt,
     };
   }
 
-  @Get(":accountId/tenants")
+  @Get("accounts/:accountId/tenants")
+  @UseGuards(PlatformAdminGuard)
   async listTenantsHandler(@Param("accountId") accountId: string) {
     const items = await this.listTenants.execute(accountId);
     return {
@@ -81,8 +94,30 @@ export class TenancyController {
         accountId: t.accountId,
         name: t.name,
         agenticEnabled: t.agenticEnabled,
+        pageVisionEnabled: t.pageVisionEnabled,
         createdAt: t.createdAt,
       })),
+    };
+  }
+
+  @Patch("tenants/:tenantId")
+  @UseGuards(PlatformAdminGuard)
+  async updateTenantHandler(
+    @Param("tenantId") tenantId: string,
+    @Body() body: UpdateTenantDto,
+  ) {
+    const tenant = await this.updateTenant.execute({
+      tenantId,
+      pageVisionEnabled: body.pageVisionEnabled,
+      agenticEnabled: body.agenticEnabled,
+    });
+    return {
+      tenantId: tenant.id,
+      accountId: tenant.accountId,
+      name: tenant.name,
+      agenticEnabled: tenant.agenticEnabled,
+      pageVisionEnabled: tenant.pageVisionEnabled,
+      createdAt: tenant.createdAt,
     };
   }
 }

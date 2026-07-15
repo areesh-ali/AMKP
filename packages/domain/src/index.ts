@@ -15,8 +15,8 @@ export type DocumentStatus =
   | "parsed"
   | "failed";
 
-/** Parse Ladder tiers — VLM/page-vision is opt-in later (T-2.4). */
-export type ParseTier = "tier1_text" | "tier2_layout";
+/** Parse Ladder tiers — page-vision (tier3) is opt-in per Tenant (T-2.4). */
+export type ParseTier = "tier1_text" | "tier2_layout" | "tier3_page_vision";
 
 export type ChunkId = string;
 
@@ -55,6 +55,11 @@ export interface Tenant {
   name: string;
   /** AD-8: new Tenants default single-pass only */
   agenticEnabled: boolean;
+  /**
+   * Opt-in Parse Ladder page-vision / VLM tier (FR-5 assumption / T-2.4).
+   * Default false — scanned decks must not spend VLM when disabled.
+   */
+  pageVisionEnabled: boolean;
   /** AD-3: dedicated vector namespace/collection for this Tenant */
   vectorNamespace: string;
   createdAt: string; // UTC ISO-8601

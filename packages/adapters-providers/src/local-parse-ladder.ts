@@ -1,10 +1,18 @@
 /**
- * Cheap + layout-aware extractors with zero VLM calls (T-2.2).
- * Text-layer PDFs: recover strings from PDF content operators.
+ * Parse Ladder extractors.
+ * Tiers 1–2: never VLM. Tier3: stub page-vision with recorded spend (T-2.4).
  */
-import type { ParseLadderPort, ParsedText } from "@amkp/application";
+import type {
+  PageVisionSpendLedger,
+  ParseLadderPort,
+  ParsedText,
+} from "@amkp/application";
+
+const TIER3_SPEND_USD = 0.02;
 
 export class LocalParseLadder implements ParseLadderPort {
+  constructor(private readonly ledger?: PageVisionSpendLedger) {}
+
   async extractTier1(input: {
     filename: string;
     contentType: string;
@@ -12,7 +20,7 @@ export class LocalParseLadder implements ParseLadderPort {
   }): Promise<ParsedText> {
     const text = extractText(input);
     const confidence = scoreConfidence(text, input.content.length);
-    return { text, confidence, usedVlm: false };
+    return { text, confidence, usedVlm: false, spendUsd: 0 };
   }
 
   async extractTier2(input: {
@@ -20,8 +28,6 @@ export class LocalParseLadder implements ParseLadderPort {
     contentType: string;
     content: Buffer;
   }): Promise<ParsedText> {
-    // Layout-aware: prefer page/paragraph segmentation of recovered text.
-    // Still no VLM — page-vision is T-2.4.
     const raw = extractText(input);
     const layoutAware = raw
       .split(/\f|(?:\r?\n){2,}/)
@@ -33,7 +39,27 @@ export class LocalParseLadder implements ParseLadderPort {
       1,
       scoreConfidence(text, input.content.length) + 0.05,
     );
-    return { text, confidence, usedVlm: false };
+    return { text, confidence, usedVlm: false, spendUsd: 0 };
+  }
+
+  async extractTier3(input: {
+    filename: string;
+    contentType: string;
+    content: Buffer;
+  }): Promise<ParsedText> {
+    if (this.ledger) {
+      this.ledger.calls += 1;
+      this.ledger.spendUsd += TIER3_SPEND_USD;
+    }
+    // Stub page-vision: fabricate OCR text from filename so tests can assert spend.
+    const label = input.filename.replace(/\.[^.]+$/, "") || "scanned";
+    const text = `page-vision ocr: ${label} recovered slide content`;
+    return {
+      text,
+      confidence: 0.55,
+      usedVlm: true,
+      spendUsd: TIER3_SPEND_USD,
+    };
   }
 }
 
@@ -58,7 +84,6 @@ function extractText(input: {
     return extractPdfTextLayer(input.content);
   }
 
-  // Fallback: try UTF-8 if mostly printable
   const asUtf8 = input.content.toString("utf8");
   const printable = asUtf8.replace(/[^\x09\x0a\x0d\x20-\x7e]/g, "");
   if (printable.trim().length >= 20) return printable;
@@ -69,10 +94,6 @@ function isPdf(buf: Buffer): boolean {
   return buf.length >= 5 && buf.subarray(0, 5).toString("ascii") === "%PDF-";
 }
 
-/**
- * Minimal text-layer extractor: pulls Tj / TJ string operands.
- * Sufficient for synthetic text PDFs in CI; not a full PDF engine.
- */
 export function extractPdfTextLayer(buf: Buffer): string {
   const src = buf.toString("latin1");
   const parts: string[] = [];
@@ -115,7 +136,10 @@ function scoreConfidence(text: string, byteSize: number): number {
   if (len === 0) return 0;
   if (byteSize <= 0) return Math.min(1, len / 100);
   const ratio = len / Math.max(byteSize, 1);
-  const raw =
-    0.4 + ratio * 4 + Math.min(len, 200) / 400;
+  const raw = 0.4 + ratio * 4 + Math.min(len, 200) / 400;
   return Math.min(1, Math.max(0.35, raw));
+}
+
+export function createPageVisionLedger(): PageVisionSpendLedger {
+  return { calls: 0, spendUsd: 0 };
 }

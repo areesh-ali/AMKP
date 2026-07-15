@@ -57,4 +57,19 @@ describe("LocalParseLadder", () => {
     });
     expect(result.usedVlm).toBe(false);
   });
+
+  it("tier3 records VLM spend when invoked", async () => {
+    const { createPageVisionLedger } = await import("./local-parse-ladder");
+    const ledger = createPageVisionLedger();
+    const withLedger = new LocalParseLadder(ledger);
+    const result = await withLedger.extractTier3({
+      filename: "scan.pdf",
+      contentType: "application/pdf",
+      content: Buffer.from("%PDF-1.4"),
+    });
+    expect(result.usedVlm).toBe(true);
+    expect(result.spendUsd).toBeGreaterThan(0);
+    expect(ledger.calls).toBe(1);
+    expect(ledger.spendUsd).toBeGreaterThan(0);
+  });
 });
