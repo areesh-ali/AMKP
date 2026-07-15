@@ -248,6 +248,27 @@ describe("Ingest API (T-2.1)", () => {
     ]);
   });
 
+  it("filters document list by status", async () => {
+    const { keyA } = await twoTenants();
+    const created = await request(app.getHttpServer())
+      .post("/v1/ingest")
+      .set({ Authorization: `Bearer ${keyA}` })
+      .send({
+        filename: "pending.txt",
+        contentBase64: Buffer.from("p").toString("base64"),
+      });
+    expect(created.status).toBe(202);
+    const pending = await request(app.getHttpServer())
+      .get("/v1/documents?status=pending")
+      .set({ Authorization: `Bearer ${keyA}` });
+    expect(pending.status).toBe(200);
+    expect(pending.body.items.some((i: { documentId: string }) => i.documentId === created.body.documentId)).toBe(true);
+    const parsed = await request(app.getHttpServer())
+      .get("/v1/documents?status=parsed")
+      .set({ Authorization: `Bearer ${keyA}` });
+    expect(parsed.body.items.every((i: { status: string }) => i.status === "parsed")).toBe(true);
+  });
+
   it("worker ProcessIngestJobUseCase enqueues parse queue", async () => {
     const { keyA, tenantA } = await twoTenants();
     const created = await request(app.getHttpServer())
