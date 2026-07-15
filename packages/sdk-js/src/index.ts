@@ -221,6 +221,10 @@ export class AmkpAdminClient {
     return this.request("GET", `/v1/audit?limit=${encodeURIComponent(String(limit))}`);
   }
 
+  async getTenant(tenantId: string): Promise<unknown> {
+    return this.request("GET", `/v1/tenants/${encodeURIComponent(tenantId)}`);
+  }
+
   private async request<T>(
     method: string,
     path: string,

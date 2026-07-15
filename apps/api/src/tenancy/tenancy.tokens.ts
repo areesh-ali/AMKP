@@ -20,3 +20,4 @@ export const REPARSE_DOCUMENT_UC = Symbol("REPARSE_DOCUMENT_UC");
 export const LIST_CHUNKS_UC = Symbol("LIST_CHUNKS_UC");
 export const PROCESS_PARSE_UC = Symbol("PROCESS_PARSE_UC");
 export const UPDATE_TENANT_UC = Symbol("UPDATE_TENANT_UC");
+export const GET_TENANT_UC = Symbol("GET_TENANT_UC");

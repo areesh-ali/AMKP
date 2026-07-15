@@ -148,6 +148,24 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
   /v1/tenants/{tenantId}:
+    get:
+      summary: Get Tenant settings (platform admin)
+      operationId: getTenant
+      security:
+        - PlatformAdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Tenant settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
     patch:
       summary: Update Tenant settings (page-vision / agentic / PreferCorrectness)
       operationId: updateTenantSettings

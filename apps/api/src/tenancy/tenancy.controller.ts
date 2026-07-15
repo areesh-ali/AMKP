@@ -13,6 +13,7 @@ import {
 import type {
   CreateAccountUseCase,
   CreateTenantUseCase,
+  GetTenantUseCase,
   ListTenantsByAccountUseCase,
   UpdateTenantSettingsUseCase,
 } from "@amkp/application";
@@ -20,6 +21,7 @@ import { PlatformAdminGuard } from "./platform-admin.guard";
 import {
   CREATE_ACCOUNT_UC,
   CREATE_TENANT_UC,
+  GET_TENANT_UC,
   LIST_TENANTS_UC,
   UPDATE_TENANT_UC,
 } from "./tenancy.tokens";
@@ -52,6 +54,8 @@ export class TenancyController {
     private readonly listTenants: ListTenantsByAccountUseCase,
     @Inject(UPDATE_TENANT_UC)
     private readonly updateTenant: UpdateTenantSettingsUseCase,
+    @Inject(GET_TENANT_UC)
+    private readonly getTenant: GetTenantUseCase,
   ) {}
 
   @Post("accounts")
@@ -105,6 +109,25 @@ export class TenancyController {
         agenticReadinessPassed: t.agenticReadinessPassed,
         createdAt: t.createdAt,
       })),
+    };
+  }
+
+  @Get("tenants/:tenantId")
+  @UseGuards(PlatformAdminGuard)
+  async getTenantHandler(@Param("tenantId") tenantId: string) {
+    const tenant = await this.getTenant.execute(tenantId);
+    return {
+      tenantId: tenant.id,
+      accountId: tenant.accountId,
+      name: tenant.name,
+      agenticEnabled: tenant.agenticEnabled,
+      pageVisionEnabled: tenant.pageVisionEnabled,
+      preferCorrectnessThreshold: tenant.preferCorrectnessThreshold,
+      agenticReadinessPassed: tenant.agenticReadinessPassed,
+      agenticMaxHops: tenant.agenticMaxHops,
+      agenticMaxCostUsd: tenant.agenticMaxCostUsd,
+      vectorNamespace: tenant.vectorNamespace,
+      createdAt: tenant.createdAt,
     };
   }
 

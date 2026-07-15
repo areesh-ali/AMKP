@@ -6,6 +6,7 @@ import {
   CreateAccountUseCase,
   CreateApiKeyUseCase,
   CreateTenantUseCase,
+  GetTenantUseCase,
   ListApiKeysUseCase,
   ListTenantsByAccountUseCase,
   RevokeApiKeyUseCase,
@@ -29,6 +30,7 @@ import {
   CREATE_ACCOUNT_UC,
   CREATE_API_KEY_UC,
   CREATE_TENANT_UC,
+  GET_TENANT_UC,
   LIST_API_KEYS_UC,
   LIST_TENANTS_UC,
   REVOKE_API_KEY_UC,
@@ -67,6 +69,11 @@ import {
       useFactory: (tenants: TenantRepository, audit: AuditLogPort) =>
         new UpdateTenantSettingsUseCase(tenants, audit),
       inject: [TENANT_REPOSITORY, AUDIT_LOG],
+    },
+    {
+      provide: GET_TENANT_UC,
+      useFactory: (tenants: TenantRepository) => new GetTenantUseCase(tenants),
+      inject: [TENANT_REPOSITORY],
     },
     {
       provide: CREATE_API_KEY_UC,
