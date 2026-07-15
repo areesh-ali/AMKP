@@ -45,6 +45,13 @@ export class InMemoryTenantRetrieveCache implements RetrieveCachePort {
     this.store.clear();
   }
 
+  async clearTenant(tenantId: TenantId): Promise<void> {
+    const prefix = `tenant:${tenantId}|`;
+    for (const k of [...this.store.keys()]) {
+      if (k.startsWith(prefix)) this.store.delete(k);
+    }
+  }
+
   /** Test helper — count entries for a Tenant. */
   sizeForTenant(tenantId: TenantId): number {
     const prefix = `tenant:${tenantId}|`;

@@ -7,11 +7,13 @@ import {
 } from "../tenancy/ports";
 import { DocumentNotFoundError, type DocumentRepository } from "./ports";
 import type { VectorIndexPort } from "../retrieve/retrieve";
+import type { RetrieveCachePort } from "../retrieve/retrieve";
 
 export class DeleteDocumentUseCase {
   constructor(
     private readonly documents: DocumentRepository,
     private readonly index?: VectorIndexPort,
+    private readonly cache?: RetrieveCachePort,
   ) {}
 
   async execute(
@@ -39,6 +41,9 @@ export class DeleteDocumentUseCase {
     }
 
     await this.documents.deleteForTenant(ctx.tenantId, id);
+    if (this.cache?.clearTenant) {
+      await this.cache.clearTenant(ctx.tenantId);
+    }
     return { documentId: id, deleted: true };
   }
 }

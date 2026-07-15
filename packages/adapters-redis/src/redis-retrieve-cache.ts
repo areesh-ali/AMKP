@@ -65,4 +65,22 @@ export class RedisTenantRetrieveCache implements RetrieveCachePort {
   async close(): Promise<void> {
     await this.redis.quit();
   }
+
+  async clearTenant(tenantId: TenantId): Promise<void> {
+    const pattern = `${this.prefix}tenant:${tenantId}|*`;
+    let cursor = "0";
+    do {
+      const [next, keys] = await this.redis.scan(
+        cursor,
+        "MATCH",
+        pattern,
+        "COUNT",
+        100,
+      );
+      cursor = next;
+      if (keys.length > 0) {
+        await this.redis.del(...keys);
+      }
+    } while (cursor !== "0");
+  }
 }

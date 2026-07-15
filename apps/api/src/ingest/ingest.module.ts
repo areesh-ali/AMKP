@@ -11,11 +11,13 @@ import {
   PARSE_LADDER,
   ProcessParseJobUseCase,
   TENANT_REPOSITORY,
+  RETRIEVE_CACHE,
   VECTOR_INDEX,
   type ChunkRepository,
   type DocumentRepository,
   type JobQueuePort,
   type ParseLadderPort,
+  type RetrieveCachePort,
   type TenantRepository,
   type VectorIndexPort,
 } from "@amkp/application";
@@ -53,9 +55,12 @@ import {
     },
     {
       provide: DELETE_DOCUMENT_UC,
-      useFactory: (docs: DocumentRepository, index: VectorIndexPort) =>
-        new DeleteDocumentUseCase(docs, index),
-      inject: [DOCUMENT_REPOSITORY, VECTOR_INDEX],
+      useFactory: (
+        docs: DocumentRepository,
+        index: VectorIndexPort,
+        cache: RetrieveCachePort,
+      ) => new DeleteDocumentUseCase(docs, index, cache),
+      inject: [DOCUMENT_REPOSITORY, VECTOR_INDEX, RETRIEVE_CACHE],
     },
     {
       provide: LIST_CHUNKS_UC,

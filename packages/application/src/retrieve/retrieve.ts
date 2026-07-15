@@ -82,6 +82,8 @@ export interface RetrieveCachePort {
     preferCorrectnessThreshold?: number;
     envelope: EvidenceEnvelope;
   }): Promise<void>;
+  /** Drop all cached retrieves for a Tenant (e.g. after Document delete). */
+  clearTenant?(tenantId: TenantId): Promise<void>;
 }
 
 export const RETRIEVE_CACHE = Symbol("RETRIEVE_CACHE");
