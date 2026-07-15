@@ -86,6 +86,48 @@ export class AmkpClient {
     );
   }
 
+  async getDocument(documentId: string): Promise<{
+    documentId: string;
+    status: string;
+    version: number;
+  }> {
+    return this.request(
+      "GET",
+      `/v1/documents/${encodeURIComponent(documentId)}`,
+    );
+  }
+
+  /** Poll until Document status is terminal or timeout. */
+  async waitForDocument(
+    documentId: string,
+    options?: {
+      intervalMs?: number;
+      timeoutMs?: number;
+      terminal?: string[];
+    },
+  ): Promise<{ documentId: string; status: string; version: number }> {
+    const intervalMs = options?.intervalMs ?? 500;
+    const timeoutMs = options?.timeoutMs ?? 30_000;
+    const terminal = new Set(
+      options?.terminal ?? ["parsed", "failed", "error"],
+    );
+    const deadline = Date.now() + timeoutMs;
+    for (;;) {
+      const doc = await this.getDocument(documentId);
+      if (terminal.has(doc.status)) return doc;
+      if (Date.now() >= deadline) {
+        throw new AmkpApiError(408, {
+          error: {
+            code: "DOCUMENT_WAIT_TIMEOUT",
+            message: `Document ${documentId} still ${doc.status}`,
+            request_id: documentId,
+          },
+        });
+      }
+      await new Promise((r) => setTimeout(r, intervalMs));
+    }
+  }
+
   async listMcpTools(): Promise<unknown> {
     return this.request("GET", "/v1/mcp/tools");
   }
