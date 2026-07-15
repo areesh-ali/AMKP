@@ -80,6 +80,24 @@ describe("RetrieveUseCase fail-closed isolation", () => {
     ).rejects.toBeInstanceOf(ValidationError);
   });
 
+  it("rejects oversized query when AMKP_MAX_QUERY_CHARS is set", async () => {
+    const prev = process.env.AMKP_MAX_QUERY_CHARS;
+    process.env.AMKP_MAX_QUERY_CHARS = "8";
+    try {
+      const uc = new RetrieveUseCase(new FakeIndex());
+      await expect(
+        uc.execute(
+          { tenantId: "ten_A", accountId: "acc_1" },
+          { query: "123456789" },
+          { requestId: "req_long" },
+        ),
+      ).rejects.toBeInstanceOf(ValidationError);
+    } finally {
+      if (prev === undefined) delete process.env.AMKP_MAX_QUERY_CHARS;
+      else process.env.AMKP_MAX_QUERY_CHARS = prev;
+    }
+  });
+
   it("never returns cross-Tenant content", async () => {
     const tenA = "ten_A";
     const tenB = "ten_B";
