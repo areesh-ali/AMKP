@@ -17,4 +17,18 @@ describe("TenantRateLimiter", () => {
     expect(lim.allow("ten_b", t0 + 2)).toBe(true);
     expect(lim.allow("ten_a", t0 + 60_000)).toBe(true);
   });
+
+  it("exposes remaining and reset via take()", () => {
+    const lim = new TenantRateLimiter(2, 60_000);
+    const t0 = 5_000_000;
+    const first = lim.take("ten_a", t0);
+    expect(first.allowed).toBe(true);
+    expect(first.remaining).toBe(1);
+    expect(first.resetAt).toBe(t0 + 60_000);
+
+    lim.take("ten_a", t0 + 1);
+    const blocked = lim.take("ten_a", t0 + 2);
+    expect(blocked.allowed).toBe(false);
+    expect(blocked.remaining).toBe(0);
+  });
 });

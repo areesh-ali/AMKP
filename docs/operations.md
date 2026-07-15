@@ -21,6 +21,8 @@
 | Ingest size cap | `AMKP_MAX_DOCUMENT_BYTES` | 10 MiB |
 | Rate limit | `AMKP_RATE_LIMIT_PER_MINUTE` | off |
 
+When rate limiting is on, retrieve/MCP responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` (unix seconds). Over-limit responses also set `Retry-After`.
+
 **Note:** `AMKP_EMBEDDING_DIMS` must match the `vector(64)` column unless you migrate.
 
 ## Probes
