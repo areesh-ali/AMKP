@@ -26,7 +26,8 @@
 - Enriched **`/health` adapters** (pdf/embeddings/webhook/otel)
 - Admin **`GET /v1/tenants`** (optional `accountId`)
 - Document list **`?status=`** filter
-- Optional **HSTS** (`AMKP_HSTS=1`) + CORP header
+- Optional **HSTS** (`AMKP_HSTS=1`) + CORP + `Cache-Control: no-store`
+- Document list **`?sourceKey=`** exact filter
 - Ops guide: `docs/operations.md`
 
 ### Epics E1–E8
