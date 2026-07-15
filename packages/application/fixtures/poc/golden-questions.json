@@ -1,0 +1,17 @@
+{
+  "pack": "amkp-poc-v1",
+  "judge": { "kind": "lexical_stub" },
+  "questions": [
+    {
+      "id": "poc_q1",
+      "question": "refund",
+      "expectedKeywords": ["refund"]
+    },
+    {
+      "id": "poc_q2",
+      "question": "revenue",
+      "expectedKeywords": ["revenue"]
+    }
+  ],
+  "tableRankQueries": ["revenue q1", "quarter revenue"]
+}

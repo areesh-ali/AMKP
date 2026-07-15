@@ -4,6 +4,8 @@
 
 Platform teams ingest multimodal documents once, retrieve typed Evidence under hard Tenant isolation, and optionally run Guarded Agentic Retrieval with budgets and traces — without rebuilding a RAG stack per product and without a workforce search UI.
 
+**Self-serve POC Pack:** [docs/poc-pack.md](docs/poc-pack.md) — fixtures, eval APIs, Leak/ACL suite, and documented pass criteria (no sales gate).
+
 ## About (GitHub)
 
 Use this for the repository **About** panel:
