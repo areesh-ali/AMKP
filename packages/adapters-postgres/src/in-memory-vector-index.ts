@@ -1,11 +1,11 @@
 import type { IndexedChunk, VectorIndexPort } from "@amkp/application";
 
-/** In-process vector index stub — namespace isolation for tests / MVP until pgvector retrieve. */
+/** In-process vector index stub — MVP until pgvector retrieve adapter. */
 export class InMemoryVectorIndex implements VectorIndexPort {
-  private readonly chunks: IndexedChunk[] = [];
+  private readonly byId = new Map<string, IndexedChunk>();
 
   async upsert(chunk: IndexedChunk): Promise<void> {
-    this.chunks.push({ ...chunk });
+    this.byId.set(`${chunk.namespace}:${chunk.id}`, { ...chunk });
   }
 
   async search(input: {
@@ -13,17 +13,17 @@ export class InMemoryVectorIndex implements VectorIndexPort {
     query: string;
     limit?: number;
   }): Promise<IndexedChunk[]> {
-    const q = input.query.toLowerCase();
+    const q = (input.query ?? "").toLowerCase();
+    if (!q) return [];
     const limit = input.limit ?? 10;
-    return this.chunks
+    return [...this.byId.values()]
       .filter((c) => c.namespace === input.namespace)
       .filter((c) => c.content.toLowerCase().includes(q))
       .slice(0, limit)
       .map((c) => ({ ...c, score: 1 }));
   }
 
-  /** Test helper — not part of port. */
   clear(): void {
-    this.chunks.length = 0;
+    this.byId.clear();
   }
 }

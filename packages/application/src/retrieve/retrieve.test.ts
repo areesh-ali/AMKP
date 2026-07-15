@@ -6,6 +6,7 @@ import {
   type IndexedChunk,
   type VectorIndexPort,
 } from "./retrieve";
+import { ValidationError } from "../tenancy/ports";
 
 class FakeIndex implements VectorIndexPort {
   constructor(private readonly chunks: IndexedChunk[] = []) {}
@@ -26,11 +27,19 @@ describe("RetrieveUseCase fail-closed isolation", () => {
   it("refuses retrieve without TenantContext", async () => {
     const uc = new RetrieveUseCase(new FakeIndex());
     await expect(
-      uc.execute(null, { query: "secret" }, {
-        requestId: "req_1",
-        namespace: "ns_ten_A",
-      }),
+      uc.execute(null, { query: "secret" }, { requestId: "req_1" }),
     ).rejects.toBeInstanceOf(MissingTenantContextError);
+  });
+
+  it("rejects empty query", async () => {
+    const uc = new RetrieveUseCase(new FakeIndex());
+    await expect(
+      uc.execute(
+        { tenantId: "ten_A", accountId: "acc_1" },
+        { query: "   " },
+        { requestId: "req_q" },
+      ),
+    ).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("never returns cross-Tenant content", async () => {
@@ -59,7 +68,7 @@ describe("RetrieveUseCase fail-closed isolation", () => {
     const envelope = await uc.execute(
       { tenantId: tenA, accountId: "acc_1" },
       { query: "alpha secret" },
-      { requestId: "req_2", namespace: nsA },
+      { requestId: "req_2" },
     );
 
     expect(envelope.tenantId).toBe(tenA);

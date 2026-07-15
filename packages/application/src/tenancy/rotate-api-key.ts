@@ -8,6 +8,15 @@ import {
   type TenantRepository,
 } from "./ports";
 
+export class ApiKeyAlreadyRevokedError extends Error {
+  readonly code = "API_KEY_ALREADY_REVOKED";
+
+  constructor(apiKeyId: ApiKeyId) {
+    super(`Cannot rotate revoked API key: ${apiKeyId}`);
+    this.name = "ApiKeyAlreadyRevokedError";
+  }
+}
+
 export interface RotateApiKeyResult {
   issued: IssuedApiKey;
   revokedApiKeyId: ApiKeyId;
@@ -34,10 +43,11 @@ export class RotateApiKeyUseCase {
       throw new ApiKeyNotFoundError(input.apiKeyId);
     }
 
-    if (!existing.revokedAt) {
-      await this.apiKeys.revoke(input.apiKeyId);
+    if (existing.revokedAt) {
+      throw new ApiKeyAlreadyRevokedError(input.apiKeyId);
     }
 
+    await this.apiKeys.revoke(input.apiKeyId);
     const issued = await this.issuer.issueForTenant(input.tenantId);
     return { issued, revokedApiKeyId: input.apiKeyId };
   }

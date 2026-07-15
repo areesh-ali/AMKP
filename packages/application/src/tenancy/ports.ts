@@ -89,3 +89,30 @@ export class ApiKeyRevokedError extends Error {
     this.name = "ApiKeyRevokedError";
   }
 }
+
+export class ApiKeyInvalidError extends Error {
+  readonly code = "API_KEY_INVALID";
+
+  constructor() {
+    super("Invalid API key");
+    this.name = "ApiKeyInvalidError";
+  }
+}
+
+export class ValidationError extends Error {
+  readonly code = "VALIDATION_ERROR";
+
+  constructor(message: string) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}
+
+export class MissingTenantContextError extends Error {
+  readonly code = "MISSING_TENANT_CONTEXT";
+
+  constructor() {
+    super("Retrieve refused: TenantContext was not resolved from auth");
+    this.name = "MissingTenantContextError";
+  }
+}

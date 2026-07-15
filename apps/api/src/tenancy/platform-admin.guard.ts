@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import type { Request } from "express";
+import { safeEqualString } from "./tenant-api-key.guard";
 
 @Injectable()
 export class PlatformAdminGuard implements CanActivate {
@@ -34,7 +35,7 @@ export class PlatformAdminGuard implements CanActivate {
     }
 
     const token = header.slice("Bearer ".length).trim();
-    if (token !== expected) {
+    if (!safeEqualString(token, expected)) {
       throw new UnauthorizedException({
         error: {
           code: "UNAUTHORIZED",

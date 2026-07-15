@@ -15,7 +15,7 @@ export class PrismaApiKeyRepository implements ApiKeyRepository {
   ): Promise<ResolvedApiKey | null> {
     const keyHash = hashApiKey(plaintext);
     const row = await this.prisma.apiKey.findFirst({
-      where: { keyHash },
+      where: { keyHash, revokedAt: null },
       include: { tenant: true },
     });
     if (!row) return null;
@@ -23,7 +23,7 @@ export class PrismaApiKeyRepository implements ApiKeyRepository {
       apiKeyId: row.id,
       tenantId: row.tenantId,
       accountId: row.tenant.accountId,
-      revokedAt: row.revokedAt ? toIso(row.revokedAt) : null,
+      revokedAt: null,
     };
   }
 

@@ -1,6 +1,7 @@
 import type { AccountId, Tenant } from "@amkp/domain";
 import {
   AccountNotFoundError,
+  ValidationError,
   type AccountRepository,
   type ApiKeyIssuer,
   type TenantRepository,
@@ -24,7 +25,7 @@ export class CreateTenantUseCase {
   }): Promise<CreateTenantResult> {
     const name = input.name?.trim();
     if (!name) {
-      throw new Error("Tenant name is required");
+      throw new ValidationError("Tenant name is required");
     }
 
     const account = await this.accounts.findById(input.accountId);

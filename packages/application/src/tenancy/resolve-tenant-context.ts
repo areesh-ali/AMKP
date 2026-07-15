@@ -1,5 +1,9 @@
 import type { TenantContext } from "./types";
-import { ApiKeyRevokedError, type ApiKeyRepository } from "./ports";
+import {
+  ApiKeyInvalidError,
+  ApiKeyRevokedError,
+  type ApiKeyRepository,
+} from "./ports";
 
 export class ResolveTenantContextUseCase {
   constructor(private readonly apiKeys: ApiKeyRepository) {}
@@ -7,7 +11,7 @@ export class ResolveTenantContextUseCase {
   async execute(plaintextApiKey: string): Promise<TenantContext> {
     const resolved = await this.apiKeys.findActiveByPlaintext(plaintextApiKey);
     if (!resolved) {
-      throw new ApiKeyRevokedError();
+      throw new ApiKeyInvalidError();
     }
     if (resolved.revokedAt) {
       throw new ApiKeyRevokedError(resolved.apiKeyId);

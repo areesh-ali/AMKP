@@ -8,10 +8,13 @@ import {
 import type { Request, Response } from "express";
 import {
   AccountNotFoundError,
+  ApiKeyAlreadyRevokedError,
+  ApiKeyInvalidError,
   ApiKeyNotFoundError,
   ApiKeyRevokedError,
   MissingTenantContextError,
   TenantNotFoundError,
+  ValidationError,
 } from "@amkp/application";
 
 @Catch()
@@ -21,6 +24,17 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const res = ctx.getResponse<Response>();
     const req = ctx.getRequest<Request>();
     const requestId = requestIdFrom(req);
+
+    if (exception instanceof ValidationError) {
+      res.status(HttpStatus.BAD_REQUEST).json({
+        error: {
+          code: exception.code,
+          message: exception.message,
+          request_id: requestId,
+        },
+      });
+      return;
+    }
 
     if (
       exception instanceof AccountNotFoundError ||
@@ -48,8 +62,22 @@ export class ApiExceptionFilter implements ExceptionFilter {
       return;
     }
 
-    if (exception instanceof ApiKeyRevokedError) {
+    if (
+      exception instanceof ApiKeyRevokedError ||
+      exception instanceof ApiKeyInvalidError
+    ) {
       res.status(HttpStatus.UNAUTHORIZED).json({
+        error: {
+          code: exception.code,
+          message: exception.message,
+          request_id: requestId,
+        },
+      });
+      return;
+    }
+
+    if (exception instanceof ApiKeyAlreadyRevokedError) {
+      res.status(HttpStatus.CONFLICT).json({
         error: {
           code: exception.code,
           message: exception.message,
@@ -79,19 +107,17 @@ export class ApiExceptionFilter implements ExceptionFilter {
       res.status(status).json({
         error: {
           code: HttpStatus[status] ?? "ERROR",
-          message: Array.isArray(message) ? message.join(", ") : message,
+          message: Array.isArray(message) ? message.join(", ") : String(message),
           request_id: requestId,
         },
       });
       return;
     }
 
-    const message =
-      exception instanceof Error ? exception.message : "Internal server error";
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       error: {
         code: "INTERNAL_ERROR",
-        message,
+        message: "Internal server error",
         request_id: requestId,
       },
     });

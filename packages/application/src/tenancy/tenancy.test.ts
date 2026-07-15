@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Account, AccountId, Tenant, TenantId } from "@amkp/domain";
 import {
   AccountNotFoundError,
-  ApiKeyRevokedError,
+  ApiKeyInvalidError,
   CreateAccountUseCase,
   CreateApiKeyUseCase,
   CreateTenantUseCase,
@@ -105,14 +105,14 @@ function createApiKeyFakes(tenants: Map<TenantId, Tenant>) {
   const repo: ApiKeyRepository = {
     async findActiveByPlaintext(plaintext) {
       const hit = [...records.values()].find((r) => r.plaintext === plaintext);
-      if (!hit) return null;
+      if (!hit || hit.revokedAt) return null;
       const t = tenants.get(hit.tenantId);
       if (!t) return null;
       return {
         apiKeyId: hit.id,
         tenantId: hit.tenantId,
         accountId: t.accountId,
-        revokedAt: hit.revokedAt,
+        revokedAt: null,
       };
     },
     async findById(id) {
@@ -233,7 +233,7 @@ describe("API key lifecycle", () => {
     const revoke = new RevokeApiKeyUseCase(tenantRepo, repo);
     await revoke.execute({ tenantId: tenant.id, apiKeyId: issued.apiKeyId });
     await expect(resolve.execute(issued.plaintext)).rejects.toBeInstanceOf(
-      ApiKeyRevokedError,
+      ApiKeyInvalidError,
     );
 
     const again = await createKey.execute(tenant.id);
@@ -244,7 +244,7 @@ describe("API key lifecycle", () => {
     });
     expect(rotated.revokedApiKeyId).toBe(again.apiKeyId);
     await expect(resolve.execute(again.plaintext)).rejects.toBeInstanceOf(
-      ApiKeyRevokedError,
+      ApiKeyInvalidError,
     );
     const ctx2 = await resolve.execute(rotated.issued.plaintext);
     expect(ctx2.tenantId).toBe(tenant.id);

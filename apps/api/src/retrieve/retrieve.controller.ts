@@ -10,12 +10,7 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
-import {
-  TENANT_REPOSITORY,
-  type RetrieveUseCase,
-  type TenantContext,
-  type TenantRepository,
-} from "@amkp/application";
+import type { RetrieveUseCase, TenantContext } from "@amkp/application";
 import {
   TenantApiKeyGuard,
   type RequestWithTenant,
@@ -33,7 +28,6 @@ class RetrieveDto {
 export class RetrieveController {
   constructor(
     @Inject(RETRIEVE_UC) private readonly retrieve: RetrieveUseCase,
-    @Inject(TENANT_REPOSITORY) private readonly tenants: TenantRepository,
   ) {}
 
   @Post()
@@ -43,15 +37,10 @@ export class RetrieveController {
     @Body() body: RetrieveDto,
   ) {
     const ctx = req.tenantContext as TenantContext;
-    const tenant = await this.tenants.findById(ctx.tenantId);
-    const namespace = tenant?.vectorNamespace ?? "";
     return this.retrieve.execute(
       ctx,
       { query: body.query },
-      {
-        requestId: `req_${randomUUID()}`,
-        namespace,
-      },
+      { requestId: `req_${randomUUID()}` },
     );
   }
 }

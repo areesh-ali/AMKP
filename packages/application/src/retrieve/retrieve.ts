@@ -3,7 +3,9 @@ import type {
   EvidenceItem,
   TenantId,
 } from "@amkp/domain";
+import { tenantVectorNamespace } from "@amkp/domain";
 import type { TenantContext } from "../tenancy/types";
+import { MissingTenantContextError, ValidationError } from "../tenancy/ports";
 
 export interface RetrieveQuery {
   query: string;
@@ -11,14 +13,7 @@ export interface RetrieveQuery {
   mode?: "single_pass" | "agentic";
 }
 
-export class MissingTenantContextError extends Error {
-  readonly code = "MISSING_TENANT_CONTEXT";
-
-  constructor() {
-    super("Retrieve refused: TenantContext was not resolved from auth");
-    this.name = "MissingTenantContextError";
-  }
-}
+export { MissingTenantContextError };
 
 export interface IndexedChunk {
   id: string;
@@ -31,10 +26,6 @@ export interface IndexedChunk {
 
 export interface VectorIndexPort {
   upsert(chunk: IndexedChunk): Promise<void>;
-  /**
-   * Search ONLY within the given namespace.
-   * Adapters MUST ignore chunks outside this namespace.
-   */
   search(input: {
     namespace: string;
     query: string;
@@ -49,28 +40,32 @@ export class RetrieveUseCase {
 
   /**
    * Fail-closed retrieve (AD-3 / FR-16).
-   * Never accepts client tenantId — only TenantContext from auth.
+   * Namespace is derived from auth TenantContext — never from client input.
    */
   async execute(
     ctx: TenantContext | undefined | null,
     input: RetrieveQuery,
-    options: { requestId: string; namespace: string },
+    options: { requestId: string },
   ): Promise<EvidenceEnvelope> {
     if (!ctx?.tenantId || !ctx.accountId) {
       throw new MissingTenantContextError();
     }
-    if (!options.namespace) {
-      throw new MissingTenantContextError();
+
+    const query = input.query?.trim();
+    if (!query) {
+      throw new ValidationError("query is required");
     }
 
+    const namespace = tenantVectorNamespace(ctx.tenantId);
+
     const hits = await this.index.search({
-      namespace: options.namespace,
-      query: input.query,
+      namespace,
+      query,
       limit: 10,
     });
 
     const safe = hits.filter(
-      (h) => h.namespace === options.namespace && h.tenantId === ctx.tenantId,
+      (h) => h.namespace === namespace && h.tenantId === ctx.tenantId,
     );
 
     const items: EvidenceItem[] = safe.map((h) => ({

@@ -119,7 +119,30 @@ describe("Auth paths CI (T-1.3)", () => {
       .get("/v1/me")
       .set({ Authorization: `Bearer ${created.body.apiKey}` });
     expect(after.status).toBe(401);
-    expect(after.body.error.code).toMatch(/API_KEY_REVOKED|UNAUTHORIZED/);
+    expect(after.body.error.code).toMatch(/API_KEY_REVOKED|API_KEY_INVALID|UNAUTHORIZED/);
+
+    const retrieveRevoked = await request(app.getHttpServer())
+      .post("/v1/retrieve")
+      .set({ Authorization: `Bearer ${created.body.apiKey}` })
+      .send({ query: "anything" });
+    expect(retrieveRevoked.status).toBe(401);
+  });
+
+  it("rejects retrieve body tenant override with 403", async () => {
+    const res = await request(app.getHttpServer())
+      .post("/v1/retrieve")
+      .set({ Authorization: `Bearer ${tenantKey}` })
+      .send({ query: "x", tenantId: otherTenantId });
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe("TENANT_OVERRIDE_FORBIDDEN");
+  });
+
+  it("rejects dual-field override when snake_case mismatches", async () => {
+    const res = await request(app.getHttpServer())
+      .post("/v1/me")
+      .set({ Authorization: `Bearer ${tenantKey}` })
+      .send({ tenantId, tenant_id: otherTenantId });
+    expect(res.status).toBe(403);
   });
 
   it("returns 401 for invalid Bearer key", async () => {

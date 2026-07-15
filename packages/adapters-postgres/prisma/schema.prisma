@@ -41,6 +41,6 @@ model ApiKey {
   tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
-  @@index([keyHash])
+  @@unique([keyHash])
   @@map("api_keys")
 }
