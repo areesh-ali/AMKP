@@ -146,7 +146,15 @@ export interface EvidenceEnvelope {
   };
 }
 
-/** Persisted retrieve Trace for debugging (FR-19 / T-6.1). */
+/** Persisted retrieve Trace for debugging (FR-19 / T-6.1 / T-4.4). */
+export interface TraceHopStep {
+  hop: number;
+  tool: string;
+  query: string;
+  evidenceIds: EvidenceId[];
+  costEstimate: CostEstimate;
+}
+
 export interface TraceRecord {
   requestId: RequestId;
   tenantId: TenantId;
@@ -160,4 +168,6 @@ export interface TraceRecord {
   evidenceIds: EvidenceId[];
   outcomeKind: "evidence" | "insufficient_evidence";
   costEstimate: CostEstimate;
+  /** Ordered agentic hop steps (FR-15 / T-4.4); empty for single-pass. */
+  steps: TraceHopStep[];
 }

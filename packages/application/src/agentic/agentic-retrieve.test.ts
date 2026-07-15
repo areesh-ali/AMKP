@@ -65,9 +65,20 @@ describe("Agentic hop/cost circuit breakers (T-4.3)", () => {
         content: "alpha refund policy details about returns",
       },
     ]);
+    const traces = {
+      items: [] as import("@amkp/domain").TraceRecord[],
+      async save(t: import("@amkp/domain").TraceRecord) {
+        this.items.push(t);
+      },
+      async findByRequestId(id: string) {
+        return this.items.find((x) => x.requestId === id) ?? null;
+      },
+    };
     const uc = new RetrieveUseCase(
       index,
       tenants({ agenticMaxHops: 3, agenticMaxCostUsd: 1 }),
+      undefined,
+      traces,
     );
     const env = await uc.execute(
       { tenantId: ten, accountId: "acc_1" },
@@ -79,6 +90,15 @@ describe("Agentic hop/cost circuit breakers (T-4.3)", () => {
     expect(env.routerDecision?.terminationReason).toBe("hop_budget");
     expect(index.searches).toBe(3);
     expect(env.outcome.kind).toBe("evidence");
+
+    const saved = traces.items[0]!;
+    expect(saved.steps).toHaveLength(3);
+    expect(saved.steps[0]?.tool).toBe("retrieve");
+    expect(saved.steps[0]?.query).toContain("alpha");
+    expect(saved.steps[0]?.evidenceIds).toContain("ev_1");
+    expect(saved.steps[0]?.costEstimate.currency).toBe("USD");
+    expect(saved.steps[1]?.hop).toBe(2);
+    expect(saved.steps[2]?.hop).toBe(3);
   });
 
   it("stops on cost_budget with partial Evidence", async () => {

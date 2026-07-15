@@ -3,6 +3,7 @@ import type {
   EvidenceItem,
   TableEvidence,
   TenantId,
+  TraceRecord,
 } from "@amkp/domain";
 import {
   DEFAULT_PREFER_CORRECTNESS_THRESHOLD,
@@ -166,7 +167,7 @@ export class RetrieveUseCase {
           terminationReason: agentic.terminationReason,
         },
       };
-      await this.persistTrace(envelope);
+      await this.persistTrace(envelope, agentic.steps);
       return envelope;
     }
 
@@ -296,9 +297,12 @@ export class RetrieveUseCase {
     return envelope;
   }
 
-  private async persistTrace(envelope: EvidenceEnvelope): Promise<void> {
+  private async persistTrace(
+    envelope: EvidenceEnvelope,
+    steps: TraceRecord["steps"] = [],
+  ): Promise<void> {
     if (!this.traces) return;
-    await this.traces.save(evidenceEnvelopeToTrace(envelope));
+    await this.traces.save(evidenceEnvelopeToTrace(envelope, undefined, steps));
   }
 
   private async resolvePreferCorrectnessThreshold(

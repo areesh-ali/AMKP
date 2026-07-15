@@ -70,6 +70,7 @@ describe("Trace get (T-6.1)", () => {
     expect(trace.evidenceIds).toEqual(["ev_1"]);
     expect(trace.costEstimate.currency).toBe("USD");
     expect(trace.createdAt).toBeTruthy();
+    expect(trace.steps).toEqual([]);
   });
 
   it("cross-Tenant Trace access is denied", async () => {
@@ -82,6 +83,7 @@ describe("Trace get (T-6.1)", () => {
       evidenceIds: ["ev_1"],
       outcomeKind: "evidence",
       costEstimate: { currency: "USD", estimatedUsd: 0.001 },
+      steps: [],
     });
     const get = new GetTraceUseCase(traces);
     await expect(

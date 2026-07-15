@@ -10,6 +10,7 @@ import {
 export function evidenceEnvelopeToTrace(
   envelope: EvidenceEnvelope,
   createdAt = new Date().toISOString(),
+  steps: TraceRecord["steps"] = [],
 ): TraceRecord {
   const evidenceIds =
     envelope.outcome.kind === "evidence"
@@ -27,6 +28,7 @@ export function evidenceEnvelopeToTrace(
     evidenceIds,
     outcomeKind: envelope.outcome.kind,
     costEstimate: envelope.costEstimate,
+    steps,
   };
 }
 

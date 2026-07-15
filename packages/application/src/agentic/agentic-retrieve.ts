@@ -1,4 +1,4 @@
-import type { EvidenceItem } from "@amkp/domain";
+import type { EvidenceItem, TraceHopStep } from "@amkp/domain";
 import {
   DEFAULT_AGENTIC_MAX_COST_USD,
   DEFAULT_AGENTIC_MAX_HOPS,
@@ -16,11 +16,12 @@ export interface AgenticHopResult {
   hops: number;
   terminationReason: TerminationReason;
   costEstimate: ReturnType<typeof buildRetrieveCostEstimate>;
+  steps: TraceHopStep[];
 }
 
 /**
  * Guarded agentic retrieve loop with hop + cost circuit breakers (FR-14 / T-4.3).
- * Each hop re-queries with prior evidence snippets as context (MVP reformulation).
+ * Each hop is recorded for Trace (FR-15 / T-4.4).
  */
 export async function runAgenticRetrieve(input: {
   index: VectorIndexPort;
@@ -36,27 +37,27 @@ export async function runAgenticRetrieve(input: {
   const maxCost = Math.max(0, input.maxCostUsd ?? DEFAULT_AGENTIC_MAX_COST_USD);
 
   const byId = new Map<string, EvidenceItem>();
+  const steps: TraceHopStep[] = [];
   let hops = 0;
   let spent = 0;
   let terminationReason: TerminationReason = "completed";
   let currentQuery = input.query;
 
   while (hops < maxHops) {
-    const hopCost = buildRetrieveCostEstimate({
+    const hopCostEstimate = buildRetrieveCostEstimate({
       source: "live",
       query: currentQuery,
       hitCount: 1,
-    }).estimatedUsd;
+    });
+    const hopCost = hopCostEstimate.estimatedUsd;
     if (spent + hopCost > maxCost && hops > 0) {
       terminationReason = "cost_budget";
       break;
     }
-    if (spent + hopCost > maxCost && hops === 0) {
-      // Always allow the first hop; break after if over budget.
-    }
 
     hops += 1;
     spent += hopCost;
+    const hopQuery = currentQuery;
 
     const hits = await input.index.search({
       namespace: input.namespace,
@@ -73,7 +74,9 @@ export async function runAgenticRetrieve(input: {
       .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
       .slice(0, 5);
 
+    const hopEvidenceIds: string[] = [];
     for (const h of reranked) {
+      hopEvidenceIds.push(h.id);
       if (byId.has(h.id)) continue;
       byId.set(h.id, {
         id: h.id,
@@ -82,6 +85,14 @@ export async function runAgenticRetrieve(input: {
         content: h.content,
       });
     }
+
+    steps.push({
+      hop: hops,
+      tool: "retrieve",
+      query: hopQuery,
+      evidenceIds: hopEvidenceIds,
+      costEstimate: hopCostEstimate,
+    });
 
     if (spent > maxCost) {
       terminationReason = "cost_budget";
@@ -93,7 +104,6 @@ export async function runAgenticRetrieve(input: {
       break;
     }
 
-    // MVP reformulation: append top snippet keywords for the next hop.
     const top = reranked[0]?.content?.slice(0, 80) ?? "";
     if (!top) {
       terminationReason = "completed";
@@ -114,6 +124,7 @@ export async function runAgenticRetrieve(input: {
     items,
     hops,
     terminationReason,
+    steps,
     costEstimate: {
       currency: "USD",
       estimatedUsd: Math.round(spent * 1e8) / 1e8,
@@ -122,7 +133,6 @@ export async function runAgenticRetrieve(input: {
   };
 }
 
-/** Tiny helper so tests can force cost breaks without huge queries. */
 export function agenticHopBaseCost(): number {
   return RETRIEVE_SEARCH_BASE_USD;
 }
