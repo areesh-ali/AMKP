@@ -15,6 +15,5 @@ headers, admin polish, …).
 
 ## Next candidates
 
-- ~~Cursor pagination / OTel / unpdf / page-vision / multipart / rate headers~~ — done
-- Document status webhooks — in progress
-- Admin list Accounts
+- ~~Cursor pagination / OTel / unpdf / page-vision / multipart / rate headers / webhooks / list accounts~~ — done
+- Further DX (SDK examples, CI badges) as needed
