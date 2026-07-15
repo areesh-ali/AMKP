@@ -17,6 +17,9 @@
 | Document bytes | `AMKP_S3_BUCKET` or `AMKP_OBJECT_STORAGE_DIR` | Postgres BYTEA |
 | Embeddings | `AMKP_EMBEDDING_API_KEY` | stub 64-dim hash |
 | API key hash | `AMKP_API_KEY_PEPPER` | SHA-256 (no pepper) |
+| Ingest MIME allowlist | `AMKP_ALLOWED_CONTENT_TYPES` | all types |
+| Ingest size cap | `AMKP_MAX_DOCUMENT_BYTES` | 10 MiB |
+| Rate limit | `AMKP_RATE_LIMIT_PER_MINUTE` | off |
 
 **Note:** `AMKP_EMBEDDING_DIMS` must match the `vector(64)` column unless you migrate.
 

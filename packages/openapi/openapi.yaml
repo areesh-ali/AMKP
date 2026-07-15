@@ -359,6 +359,18 @@ paths:
       operationId: listDocuments
       security:
         - TenantApiKeyBearer: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
       responses:
         "200":
           description: Tenant-scoped document list
@@ -1009,6 +1021,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/DocumentSummary"
+        total:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
     ChunkSummary:
       type: object
       required:
