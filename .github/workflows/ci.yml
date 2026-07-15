@@ -51,9 +51,11 @@ jobs:
           pnpm --filter @amkp/adapters-postgres build
           pnpm --filter @amkp/adapters-redis build
           pnpm --filter @amkp/adapters-providers build
+          pnpm --filter @amkp/sdk-js build
           pnpm --filter @amkp/api build
           pnpm --filter @amkp/openapi build
           pnpm --filter @amkp/worker build
+          pnpm --filter @amkp/reference-multi-product build
 
       - name: Migrate
         run: pnpm --filter @amkp/adapters-postgres exec prisma migrate deploy
