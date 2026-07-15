@@ -116,6 +116,24 @@ describe("Tenancy API (integration)", () => {
     expect(missing.status).toBe(404);
   });
 
+  it("GET /v1/tenants lists tenants for admin", async () => {
+    const auth = { Authorization: `Bearer ${ADMIN}` };
+    const a = await request(app.getHttpServer())
+      .post("/v1/accounts")
+      .set(auth)
+      .send({ name: "Ten List Acct" });
+    await request(app.getHttpServer())
+      .post(`/v1/accounts/${a.body.accountId}/tenants`)
+      .set(auth)
+      .send({ name: "t1" });
+    const listed = await request(app.getHttpServer())
+      .get(`/v1/tenants?accountId=${a.body.accountId}`)
+      .set(auth);
+    expect(listed.status).toBe(200);
+    expect(listed.body.items.length).toBeGreaterThanOrEqual(1);
+    expect(listed.body.items[0].accountId).toBe(a.body.accountId);
+  });
+
   it("rejects missing admin token with 401 error shape", async () => {
     const res = await request(app.getHttpServer())
       .post("/v1/accounts")

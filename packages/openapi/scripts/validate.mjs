@@ -27,6 +27,7 @@ const required = [
   "getAccount",
   "createTenant",
   "listTenants",
+  "listAllTenants",
   "getTenant",
   "createApiKey",
   "revokeApiKey",

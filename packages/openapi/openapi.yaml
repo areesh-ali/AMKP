@@ -198,6 +198,33 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /v1/tenants:
+    get:
+      summary: List Tenants (platform admin)
+      operationId: listAllTenants
+      security:
+        - PlatformAdminBearer: []
+      parameters:
+        - name: accountId
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 100
+      responses:
+        "200":
+          description: Tenant list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /v1/tenants/{tenantId}:
     get:
       summary: Get Tenant settings (platform admin)

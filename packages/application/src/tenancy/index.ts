@@ -7,6 +7,7 @@ export * from "./list-accounts";
 export * from "./get-account";
 export * from "./create-tenant";
 export * from "./list-tenants";
+export * from "./list-all-tenants";
 export * from "./create-api-key";
 export * from "./revoke-api-key";
 export * from "./rotate-api-key";

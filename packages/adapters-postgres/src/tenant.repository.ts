@@ -43,6 +43,19 @@ export class PrismaTenantRepository implements TenantRepository {
     return rows.map(mapTenant);
   }
 
+  async list(opts?: {
+    accountId?: AccountId;
+    limit?: number;
+  }): Promise<Tenant[]> {
+    const limit = Math.min(Math.max(opts?.limit ?? 100, 1), 500);
+    const rows = await this.prisma.tenant.findMany({
+      where: opts?.accountId ? { accountId: opts.accountId } : undefined,
+      orderBy: { createdAt: "asc" },
+      take: limit,
+    });
+    return rows.map(mapTenant);
+  }
+
   async findById(tenantId: TenantId): Promise<Tenant | null> {
     const row = await this.prisma.tenant.findUnique({
       where: { id: tenantId },

@@ -20,6 +20,7 @@ export interface TenantRepository {
     pageVisionEnabled?: boolean;
   }): Promise<Tenant>;
   listByAccountId(accountId: AccountId): Promise<Tenant[]>;
+  list(opts?: { accountId?: AccountId; limit?: number }): Promise<Tenant[]>;
   findById(tenantId: TenantId): Promise<Tenant | null>;
   updateSettings(
     tenantId: TenantId,

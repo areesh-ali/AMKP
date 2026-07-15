@@ -18,6 +18,7 @@ import type {
   GetTenantUseCase,
   ListAccountsUseCase,
   ListTenantsByAccountUseCase,
+  ListTenantsUseCase,
   UpdateTenantSettingsUseCase,
 } from "@amkp/application";
 import { PlatformAdminGuard } from "./platform-admin.guard";
@@ -27,6 +28,7 @@ import {
   GET_ACCOUNT_UC,
   GET_TENANT_UC,
   LIST_ACCOUNTS_UC,
+  LIST_ALL_TENANTS_UC,
   LIST_TENANTS_UC,
   UPDATE_TENANT_UC,
 } from "./tenancy.tokens";
@@ -61,6 +63,8 @@ export class TenancyController {
     private readonly createTenant: CreateTenantUseCase,
     @Inject(LIST_TENANTS_UC)
     private readonly listTenants: ListTenantsByAccountUseCase,
+    @Inject(LIST_ALL_TENANTS_UC)
+    private readonly listAllTenants: ListTenantsUseCase,
     @Inject(UPDATE_TENANT_UC)
     private readonly updateTenant: UpdateTenantSettingsUseCase,
     @Inject(GET_TENANT_UC)
@@ -132,6 +136,30 @@ export class TenancyController {
   @UseGuards(PlatformAdminGuard)
   async listTenantsHandler(@Param("accountId") accountId: string) {
     const items = await this.listTenants.execute(accountId);
+    return {
+      items: items.map((t) => ({
+        tenantId: t.id,
+        accountId: t.accountId,
+        name: t.name,
+        agenticEnabled: t.agenticEnabled,
+        pageVisionEnabled: t.pageVisionEnabled,
+        preferCorrectnessThreshold: t.preferCorrectnessThreshold,
+        agenticReadinessPassed: t.agenticReadinessPassed,
+        createdAt: t.createdAt,
+      })),
+    };
+  }
+
+  @Get("tenants")
+  @UseGuards(PlatformAdminGuard)
+  async listAllTenantsHandler(
+    @Query("accountId") accountId?: string,
+    @Query("limit") limitRaw?: string,
+  ) {
+    const items = await this.listAllTenants.execute({
+      accountId: accountId?.trim() || undefined,
+      limit: limitRaw ? Number(limitRaw) : undefined,
+    });
     return {
       items: items.map((t) => ({
         tenantId: t.id,

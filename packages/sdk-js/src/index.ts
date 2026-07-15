@@ -310,6 +310,17 @@ export class AmkpAdminClient {
     return this.request("GET", `/v1/audit?${q.toString()}`);
   }
 
+  async listTenants(opts?: {
+    accountId?: string;
+    limit?: number;
+  }): Promise<{ items: unknown[] }> {
+    const q = new URLSearchParams();
+    if (opts?.accountId) q.set("accountId", opts.accountId);
+    if (opts?.limit !== undefined) q.set("limit", String(opts.limit));
+    const qs = q.toString();
+    return this.request("GET", `/v1/tenants${qs ? `?${qs}` : ""}`);
+  }
+
   async getTenant(tenantId: string): Promise<unknown> {
     return this.request("GET", `/v1/tenants/${encodeURIComponent(tenantId)}`);
   }

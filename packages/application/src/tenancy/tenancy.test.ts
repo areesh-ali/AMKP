@@ -64,6 +64,13 @@ function createFakes() {
     async listByAccountId(accountId) {
       return [...tenants.values()].filter((t) => t.accountId === accountId);
     },
+    async list(opts) {
+      let rows = [...tenants.values()];
+      if (opts?.accountId) {
+        rows = rows.filter((t) => t.accountId === opts.accountId);
+      }
+      return rows.slice(0, opts?.limit ?? 100);
+    },
     async findById(id) {
       return tenants.get(id) ?? null;
     },
