@@ -196,6 +196,7 @@ export class IngestController {
     @Query("offset") offsetRaw?: string,
     @Query("cursor") cursorRaw?: string,
     @Query("status") statusRaw?: string,
+    @Query("sourceKey") sourceKeyRaw?: string,
   ) {
     const ctx = req.tenantContext as TenantContext;
     const limit =
@@ -211,6 +212,7 @@ export class IngestController {
       offset,
       cursor: cursorRaw || undefined,
       status: statusRaw || undefined,
+      sourceKey: sourceKeyRaw || undefined,
     });
     return {
       items: page.items.map((d) => ({

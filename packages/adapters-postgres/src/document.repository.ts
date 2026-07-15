@@ -134,9 +134,11 @@ export class PrismaDocumentRepository implements DocumentRepository {
   ): Promise<ListDocumentsPage> {
     const limit = clampDocumentListLimit(opts.limit);
     const statusFilter = opts.status?.trim() || undefined;
+    const sourceKeyFilter = opts.sourceKey?.trim() || undefined;
     const baseWhere = {
       tenantId,
       ...(statusFilter ? { status: statusFilter } : {}),
+      ...(sourceKeyFilter ? { sourceKey: sourceKeyFilter } : {}),
     };
     const total = await this.prisma.document.count({ where: baseWhere });
 

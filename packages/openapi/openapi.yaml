@@ -516,6 +516,11 @@ paths:
           description: Filter by Document status
           schema:
             type: string
+        - name: sourceKey
+          in: query
+          description: Exact sourceKey filter
+          schema:
+            type: string
       responses:
         "200":
           description: Tenant-scoped document list

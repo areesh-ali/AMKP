@@ -9,6 +9,8 @@ export interface ListDocumentsOpts {
   cursor?: string | null;
   /** Optional status filter (pending|parsing|parsed|failed|…). */
   status?: string;
+  /** Optional exact sourceKey filter. */
+  sourceKey?: string;
 }
 
 export interface ListDocumentsPage {
@@ -74,6 +76,10 @@ export function paginateDocumentList(
   if (opts.status) {
     const status = opts.status.trim();
     sorted = sorted.filter((d) => d.status === status);
+  }
+  if (opts.sourceKey) {
+    const sourceKey = opts.sourceKey.trim();
+    sorted = sorted.filter((d) => d.sourceKey === sourceKey);
   }
   const limit = clampDocumentListLimit(opts.limit);
   let offset = Math.max(0, Math.floor(opts.offset ?? 0));
