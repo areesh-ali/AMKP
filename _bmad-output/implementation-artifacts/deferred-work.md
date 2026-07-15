@@ -10,7 +10,7 @@
 
 - ~~**Worker process uses a separate InMemoryVectorIndex from API**~~ — **done** (both use `PostgresVectorIndex` by default)
 - ~~**Object storage for Document bytes**~~ — **done** (`ObjectStoragePort` + local FS + S3/MinIO via `AMKP_S3_*`; BYTEA default remains)
-- **Full PDF engine** — Tj/TJ text-layer extractor is intentional cheap tier; richer layout/PDF libs deferred with page-vision (T-2.4)
+- **Full PDF engine** — improved FlateDecode inflate + Tj/TJ/'/" / hex strings; full layout/PDF.js still deferred with richer page-vision
 - ~~**Real embedding provider**~~ — **done** (`OpenAiEmbeddingProvider` via `AMKP_EMBEDDING_*`; stub remains default). Changing dims requires a vector column migration.
 - ~~**In-memory Trace / audit only**~~ — **done** (`PrismaTraceRepository` + `PrismaAuditLog`; memory for tests)
 - ~~**In-memory retrieve cache only**~~ — **done** (`RedisTenantRetrieveCache` when `REDIS_URL` set outside test/memory mode)

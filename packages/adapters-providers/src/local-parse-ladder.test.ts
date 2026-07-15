@@ -32,6 +32,16 @@ describe("extractPdfTextLayer", () => {
     const pdf = buildTextPdf("Hello AMKP text layer");
     expect(extractPdfTextLayer(pdf)).toContain("Hello AMKP text layer");
   });
+
+  it("recovers hex-string Tj operators", () => {
+    const hex = Buffer.from("Hex AMKP", "utf8").toString("hex");
+    const stream = `BT /F1 12 Tf 100 700 Td <${hex}> Tj ET`;
+    const pdf = Buffer.from(
+      `%PDF-1.4\n1 0 obj<<>>endobj\nstream\n${stream}\nendstream\n`,
+      "latin1",
+    );
+    expect(extractPdfTextLayer(pdf)).toContain("Hex AMKP");
+  });
 });
 
 describe("LocalParseLadder", () => {
