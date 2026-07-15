@@ -11,6 +11,7 @@ export * from "./ingest";
 export * from "./mcp";
 export * from "./observability";
 export * from "./agentic";
+export * from "./eval";
 
 export interface RetrievePort {
   retrieve(ctx: TenantContext, input: RetrieveQuery): Promise<EvidenceEnvelope>;

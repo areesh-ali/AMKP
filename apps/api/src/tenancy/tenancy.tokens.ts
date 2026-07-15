@@ -10,6 +10,7 @@ export const RESOLVE_TENANT_UC = Symbol("RESOLVE_TENANT_UC");
 export const RETRIEVE_UC = Symbol("RETRIEVE_UC");
 export const MCP_RETRIEVE_UC = Symbol("MCP_RETRIEVE_UC");
 export const GET_TRACE_UC = Symbol("GET_TRACE_UC");
+export const RUN_GOLDEN_EVAL_UC = Symbol("RUN_GOLDEN_EVAL_UC");
 export const INGEST_DOCUMENT_UC = Symbol("INGEST_DOCUMENT_UC");
 export const LIST_DOCUMENTS_UC = Symbol("LIST_DOCUMENTS_UC");
 export const GET_DOCUMENT_UC = Symbol("GET_DOCUMENT_UC");

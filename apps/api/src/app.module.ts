@@ -6,6 +6,7 @@ import { RetrieveModule } from "./retrieve/retrieve.module";
 import { IngestModule } from "./ingest/ingest.module";
 import { McpModule } from "./mcp/mcp.module";
 import { ObservabilityModule } from "./observability/observability.module";
+import { EvalModule } from "./eval/eval.module";
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ObservabilityModule } from "./observability/observability.module";
     IngestModule,
     McpModule,
     ObservabilityModule,
+    EvalModule,
   ],
   controllers: [HealthController],
 })
