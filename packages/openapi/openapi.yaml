@@ -24,6 +24,35 @@ paths:
                     type: boolean
                   service:
                     type: string
+                  adapters:
+                    type: object
+                    additionalProperties:
+                      type: string
+  /ready:
+    get:
+      summary: Readiness probe (database)
+      operationId: getReady
+      responses:
+        "200":
+          description: Ready
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, service, database]
+                properties:
+                  ok:
+                    type: boolean
+                  service:
+                    type: string
+                  database:
+                    type: string
+        "503":
+          description: Database unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /v1/accounts:
     post:
       summary: Create Account

@@ -46,7 +46,18 @@ describe("Tenancy API (integration)", () => {
   it("GET /health returns ok", async () => {
     const res = await request(app.getHttpServer()).get("/health");
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ ok: true, service: "api" });
+    expect(res.body.ok).toBe(true);
+    expect(res.body.service).toBe("api");
+    expect(res.body.adapters).toMatchObject({
+      vector: expect.any(String),
+      retrieveCache: expect.any(String),
+    });
+  });
+
+  it("GET /ready checks database", async () => {
+    const res = await request(app.getHttpServer()).get("/ready");
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ ok: true, database: "up" });
   });
 
   it("rejects missing admin token with 401 error shape", async () => {
