@@ -1,13 +1,9 @@
 import type { EvidenceEnvelope, TenantId } from "@amkp/domain";
+import type { TenantContext } from "./tenancy/types";
 
 export type { AccountId, Account, Tenant } from "@amkp/domain";
+export type { TenantContext } from "./tenancy/types";
 export * from "./tenancy";
-
-/** Resolved only from auth middleware — never from client body (AD-2). */
-export interface TenantContext {
-  tenantId: TenantId;
-  accountId: string;
-}
 
 export interface RetrieveQuery {
   query: string;
@@ -30,3 +26,6 @@ export class HealthUseCase {
     return this.health.check();
   }
 }
+
+// keep TenantId import used for RetrievePort consumers via domain re-exports
+export type { TenantId };

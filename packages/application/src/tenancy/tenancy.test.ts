@@ -2,11 +2,17 @@ import { describe, expect, it } from "vitest";
 import type { Account, AccountId, Tenant, TenantId } from "@amkp/domain";
 import {
   AccountNotFoundError,
+  ApiKeyRevokedError,
   CreateAccountUseCase,
+  CreateApiKeyUseCase,
   CreateTenantUseCase,
   ListTenantsByAccountUseCase,
+  ResolveTenantContextUseCase,
+  RevokeApiKeyUseCase,
+  RotateApiKeyUseCase,
   type AccountRepository,
   type ApiKeyIssuer,
+  type ApiKeyRepository,
   type TenantRepository,
 } from "./index";
 
@@ -47,6 +53,9 @@ function createFakes() {
     async listByAccountId(accountId) {
       return [...tenants.values()].filter((t) => t.accountId === accountId);
     },
+    async findById(id) {
+      return tenants.get(id) ?? null;
+    },
   };
 
   const issued: string[] = [];
@@ -59,6 +68,88 @@ function createFakes() {
   };
 
   return { accountRepo, tenantRepo, apiKeys, issued, accounts, tenants };
+}
+
+function createApiKeyFakes(tenants: Map<TenantId, Tenant>) {
+  const records = new Map<
+    string,
+    {
+      id: string;
+      tenantId: string;
+      prefix: string;
+      createdAt: string;
+      revokedAt: string | null;
+      plaintext: string;
+    }
+  >();
+  let keySeq = 0;
+
+  const issuer: ApiKeyIssuer = {
+    async issueForTenant(tenantId) {
+      keySeq += 1;
+      const id = `key_NEW${keySeq}`;
+      const plaintext = `amkp_${id}`;
+      records.set(id, {
+        id,
+        tenantId,
+        prefix: plaintext.slice(0, 8),
+        createdAt: new Date().toISOString(),
+        revokedAt: null,
+        plaintext,
+      });
+      return { apiKeyId: id, plaintext, tenantId };
+    },
+  };
+
+  const repo: ApiKeyRepository = {
+    async findActiveByPlaintext(plaintext) {
+      const hit = [...records.values()].find((r) => r.plaintext === plaintext);
+      if (!hit) return null;
+      const t = tenants.get(hit.tenantId);
+      if (!t) return null;
+      return {
+        apiKeyId: hit.id,
+        tenantId: hit.tenantId,
+        accountId: t.accountId,
+        revokedAt: hit.revokedAt,
+      };
+    },
+    async findById(id) {
+      const hit = records.get(id);
+      if (!hit) return null;
+      return {
+        id: hit.id,
+        tenantId: hit.tenantId,
+        prefix: hit.prefix,
+        createdAt: hit.createdAt,
+        revokedAt: hit.revokedAt,
+      };
+    },
+    async listByTenantId(tenantId) {
+      return [...records.values()]
+        .filter((r) => r.tenantId === tenantId)
+        .map((r) => ({
+          id: r.id,
+          tenantId: r.tenantId,
+          prefix: r.prefix,
+          createdAt: r.createdAt,
+          revokedAt: r.revokedAt,
+        }));
+    },
+    async revoke(id) {
+      const hit = records.get(id)!;
+      hit.revokedAt = new Date().toISOString();
+      return {
+        id: hit.id,
+        tenantId: hit.tenantId,
+        prefix: hit.prefix,
+        createdAt: hit.createdAt,
+        revokedAt: hit.revokedAt,
+      };
+    },
+  };
+
+  return { issuer, repo };
 }
 
 describe("CreateAccountUseCase", () => {
@@ -116,5 +207,45 @@ describe("ListTenantsByAccountUseCase", () => {
     await expect(list.execute("acc_nope")).rejects.toBeInstanceOf(
       AccountNotFoundError,
     );
+  });
+});
+
+describe("API key lifecycle", () => {
+  it("creates, resolves, revokes, and rotates", async () => {
+    const { accountRepo, tenantRepo, apiKeys, tenants } = createFakes();
+    const account = await accountRepo.create({ name: "Acme" });
+    const createTenant = new CreateTenantUseCase(accountRepo, tenantRepo, apiKeys);
+    const { tenant } = await createTenant.execute({
+      accountId: account.id,
+      name: "support",
+    });
+
+    const { issuer, repo } = createApiKeyFakes(tenants);
+    const createKey = new CreateApiKeyUseCase(tenantRepo, issuer);
+    const issued = await createKey.execute(tenant.id);
+
+    const resolve = new ResolveTenantContextUseCase(repo);
+    const ctx = await resolve.execute(issued.plaintext);
+    expect(ctx.tenantId).toBe(tenant.id);
+    expect(ctx.accountId).toBe(account.id);
+
+    const revoke = new RevokeApiKeyUseCase(tenantRepo, repo);
+    await revoke.execute({ tenantId: tenant.id, apiKeyId: issued.apiKeyId });
+    await expect(resolve.execute(issued.plaintext)).rejects.toBeInstanceOf(
+      ApiKeyRevokedError,
+    );
+
+    const again = await createKey.execute(tenant.id);
+    const rotate = new RotateApiKeyUseCase(tenantRepo, repo, issuer);
+    const rotated = await rotate.execute({
+      tenantId: tenant.id,
+      apiKeyId: again.apiKeyId,
+    });
+    expect(rotated.revokedApiKeyId).toBe(again.apiKeyId);
+    await expect(resolve.execute(again.plaintext)).rejects.toBeInstanceOf(
+      ApiKeyRevokedError,
+    );
+    const ctx2 = await resolve.execute(rotated.issued.plaintext);
+    expect(ctx2.tenantId).toBe(tenant.id);
   });
 });

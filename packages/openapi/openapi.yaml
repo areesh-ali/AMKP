@@ -118,12 +118,138 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /v1/tenants/{tenantId}/api-keys:
+    post:
+      summary: Create API key for Tenant
+      operationId: createApiKey
+      security:
+        - PlatformAdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "201":
+          description: Key created; plaintext returned once
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateApiKeyResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    get:
+      summary: List API key metadata for Tenant
+      operationId: listApiKeys
+      security:
+        - PlatformAdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Metadata only (no plaintext)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKeyListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/tenants/{tenantId}/api-keys/{apiKeyId}/revoke:
+    post:
+      summary: Revoke API key
+      operationId: revokeApiKey
+      security:
+        - PlatformAdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ApiKeyId"
+      responses:
+        "200":
+          description: Key revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RevokeApiKeyResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/tenants/{tenantId}/api-keys/{apiKeyId}/rotate:
+    post:
+      summary: Rotate API key (revoke old, issue new)
+      operationId: rotateApiKey
+      security:
+        - PlatformAdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ApiKeyId"
+      responses:
+        "201":
+          description: New key issued; old revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RotateApiKeyResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/me:
+    get:
+      summary: Resolve TenantContext from Product API key
+      operationId: getMe
+      security:
+        - TenantApiKeyBearer: []
+      responses:
+        "200":
+          description: Auth-derived tenant context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      summary: Resolve TenantContext (body tenant override rejected)
+      operationId: postMe
+      security:
+        - TenantApiKeyBearer: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tenantId:
+                  type: string
+                  description: If present and differs from auth → 403
+      responses:
+        "200":
+          description: Auth-derived tenant context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Tenant override forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   securitySchemes:
     PlatformAdminBearer:
       type: http
       scheme: bearer
       description: PLATFORM_ADMIN_TOKEN from environment
+    TenantApiKeyBearer:
+      type: http
+      scheme: bearer
+      description: Tenant-scoped amkp_ API key
   parameters:
     AccountId:
       name: accountId
@@ -132,6 +258,33 @@ components:
       schema:
         type: string
         example: acc_01HZY...
+    TenantId:
+      name: tenantId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: ten_01HZY...
+    ApiKeyId:
+      name: apiKeyId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: key_01HZY...
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
   schemas:
     AccountResponse:
       type: object
@@ -187,6 +340,78 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TenantSummary"
+    CreateApiKeyResponse:
+      type: object
+      required: [apiKeyId, tenantId, apiKey, createdAt]
+      properties:
+        apiKeyId:
+          type: string
+        tenantId:
+          type: string
+        apiKey:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    ApiKeySummary:
+      type: object
+      required: [apiKeyId, tenantId, prefix, createdAt, revokedAt]
+      properties:
+        apiKeyId:
+          type: string
+        tenantId:
+          type: string
+        prefix:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          nullable: true
+          format: date-time
+    ApiKeyListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApiKeySummary"
+    RevokeApiKeyResponse:
+      type: object
+      required: [apiKeyId, tenantId, revokedAt]
+      properties:
+        apiKeyId:
+          type: string
+        tenantId:
+          type: string
+        revokedAt:
+          type: string
+          format: date-time
+    RotateApiKeyResponse:
+      type: object
+      required: [apiKeyId, tenantId, apiKey, revokedApiKeyId, createdAt]
+      properties:
+        apiKeyId:
+          type: string
+        tenantId:
+          type: string
+        apiKey:
+          type: string
+        revokedApiKeyId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    MeResponse:
+      type: object
+      required: [tenantId, accountId]
+      properties:
+        tenantId:
+          type: string
+        accountId:
+          type: string
     ErrorResponse:
       type: object
       required: [error]

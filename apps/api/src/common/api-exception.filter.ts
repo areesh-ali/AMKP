@@ -6,7 +6,12 @@ import {
   HttpStatus,
 } from "@nestjs/common";
 import type { Request, Response } from "express";
-import { AccountNotFoundError } from "@amkp/application";
+import {
+  AccountNotFoundError,
+  ApiKeyNotFoundError,
+  ApiKeyRevokedError,
+  TenantNotFoundError,
+} from "@amkp/application";
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
@@ -16,8 +21,23 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const req = ctx.getRequest<Request>();
     const requestId = requestIdFrom(req);
 
-    if (exception instanceof AccountNotFoundError) {
+    if (
+      exception instanceof AccountNotFoundError ||
+      exception instanceof TenantNotFoundError ||
+      exception instanceof ApiKeyNotFoundError
+    ) {
       res.status(HttpStatus.NOT_FOUND).json({
+        error: {
+          code: exception.code,
+          message: exception.message,
+          request_id: requestId,
+        },
+      });
+      return;
+    }
+
+    if (exception instanceof ApiKeyRevokedError) {
+      res.status(HttpStatus.UNAUTHORIZED).json({
         error: {
           code: exception.code,
           message: exception.message,

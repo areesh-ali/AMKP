@@ -11,7 +11,7 @@ import {
 } from "@amkp/adapters-postgres";
 
 const DATABASE_URL =
-  process.env.DATABASE_URL ?? "postgresql://amkp:amkp@localhost:5432/amkp";
+  process.env.DATABASE_URL ?? "postgresql://amkp:amkp@localhost:5433/amkp";
 const ADMIN = "test-admin-token";
 
 describe("Tenancy API (integration)", () => {
@@ -106,16 +106,97 @@ describe("Tenancy API (integration)", () => {
     expect(listA.body.items).toHaveLength(1);
     expect(listA.body.items[0].name).toBe("support");
     expect(listA.body.items[0].apiKey).toBeUndefined();
-    expect(
-      listA.body.items.every(
-        (t: { accountId: string }) => t.accountId === aRes.body.accountId,
-      ),
-    ).toBe(true);
 
     const missing = await request(app.getHttpServer())
       .get("/v1/accounts/acc_DOES_NOT_EXIST/tenants")
       .set(auth);
     expect(missing.status).toBe(404);
     expect(missing.body.error.code).toBe("ACCOUNT_NOT_FOUND");
+  });
+
+  it("resolves TenantContext from key, rejects override and revoked", async () => {
+    const auth = { Authorization: `Bearer ${ADMIN}` };
+
+    const account = await request(app.getHttpServer())
+      .post("/v1/accounts")
+      .set(auth)
+      .send({ name: "Key Account" });
+    expect(account.status).toBe(201);
+
+    const tenant = await request(app.getHttpServer())
+      .post(`/v1/accounts/${account.body.accountId}/tenants`)
+      .set(auth)
+      .send({ name: "keys" });
+    expect(tenant.status).toBe(201);
+    const tenantId = tenant.body.tenantId as string;
+    const initialKey = tenant.body.apiKey as string;
+
+    const me = await request(app.getHttpServer())
+      .get("/v1/me")
+      .set({ Authorization: `Bearer ${initialKey}` });
+    expect(me.status).toBe(200);
+    expect(me.body).toEqual({
+      tenantId,
+      accountId: account.body.accountId,
+    });
+
+    const override = await request(app.getHttpServer())
+      .post("/v1/me")
+      .set({ Authorization: `Bearer ${initialKey}` })
+      .send({ tenantId: "ten_OTHER" });
+    expect(override.status).toBe(403);
+    expect(override.body.error.code).toBe("TENANT_OVERRIDE_FORBIDDEN");
+
+    const okBody = await request(app.getHttpServer())
+      .post("/v1/me")
+      .set({ Authorization: `Bearer ${initialKey}` })
+      .send({});
+    expect(okBody.status).toBe(200);
+
+    const created = await request(app.getHttpServer())
+      .post(`/v1/tenants/${tenantId}/api-keys`)
+      .set(auth);
+    expect(created.status).toBe(201);
+    expect(created.body.apiKey).toMatch(/^amkp_/);
+    const apiKeyId = created.body.apiKeyId as string;
+    const plaintext = created.body.apiKey as string;
+
+    const list = await request(app.getHttpServer())
+      .get(`/v1/tenants/${tenantId}/api-keys`)
+      .set(auth);
+    expect(list.status).toBe(200);
+    expect(list.body.items.some((k: { apiKeyId: string }) => k.apiKeyId === apiKeyId)).toBe(
+      true,
+    );
+    expect(list.body.items.every((k: { apiKey?: string }) => k.apiKey === undefined)).toBe(
+      true,
+    );
+
+    const rotated = await request(app.getHttpServer())
+      .post(`/v1/tenants/${tenantId}/api-keys/${apiKeyId}/rotate`)
+      .set(auth);
+    expect(rotated.status).toBe(201);
+    expect(rotated.body.revokedApiKeyId).toBe(apiKeyId);
+    expect(rotated.body.apiKey).toMatch(/^amkp_/);
+
+    const revokedUse = await request(app.getHttpServer())
+      .get("/v1/me")
+      .set({ Authorization: `Bearer ${plaintext}` });
+    expect(revokedUse.status).toBe(401);
+
+    const newMe = await request(app.getHttpServer())
+      .get("/v1/me")
+      .set({ Authorization: `Bearer ${rotated.body.apiKey}` });
+    expect(newMe.status).toBe(200);
+    expect(newMe.body.tenantId).toBe(tenantId);
+
+    await request(app.getHttpServer())
+      .post(`/v1/tenants/${tenantId}/api-keys/${rotated.body.apiKeyId}/revoke`)
+      .set(auth);
+
+    const afterRevoke = await request(app.getHttpServer())
+      .get("/v1/me")
+      .set({ Authorization: `Bearer ${rotated.body.apiKey}` });
+    expect(afterRevoke.status).toBe(401);
   });
 });

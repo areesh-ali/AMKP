@@ -9,10 +9,17 @@ const yaml = readFileSync(specPath, "utf8");
 const required = [
   "/v1/accounts:",
   "/v1/accounts/{accountId}/tenants:",
+  "/v1/tenants/{tenantId}/api-keys:",
+  "/v1/me:",
   "PlatformAdminBearer:",
+  "TenantApiKeyBearer:",
   "createAccount",
   "createTenant",
   "listTenants",
+  "createApiKey",
+  "revokeApiKey",
+  "rotateApiKey",
+  "getMe",
 ];
 
 const missing = required.filter((s) => !yaml.includes(s));
