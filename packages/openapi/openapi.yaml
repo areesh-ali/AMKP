@@ -565,6 +565,51 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /v1/documents/versions/prune:
+    post:
+      summary: Prune older Document versions for a sourceKey
+      operationId: pruneDocumentVersions
+      security:
+        - TenantApiKeyBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sourceKey]
+              properties:
+                sourceKey:
+                  type: string
+                keep:
+                  type: integer
+                  minimum: 1
+                  description: Newest versions to retain (default AMKP_DOCUMENT_VERSION_RETENTION or 10)
+      responses:
+        "200":
+          description: Prune result
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sourceKey, kept, deleted]
+                properties:
+                  sourceKey:
+                    type: string
+                  kept:
+                    type: integer
+                  deleted:
+                    type: array
+                    items:
+                      type: string
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /v1/documents/{documentId}:
     get:
       summary: Get Document by ID (Tenant-scoped)

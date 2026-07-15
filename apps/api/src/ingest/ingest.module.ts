@@ -12,6 +12,7 @@ import {
   ListDocumentsUseCase,
   PARSE_LADDER,
   ProcessParseJobUseCase,
+  PruneDocumentVersionsUseCase,
   ReparseDocumentUseCase,
   TENANT_REPOSITORY,
   RETRIEVE_CACHE,
@@ -38,6 +39,7 @@ import {
   LIST_DOCUMENT_VERSIONS_UC,
   LIST_DOCUMENTS_UC,
   PROCESS_PARSE_UC,
+  PRUNE_DOCUMENT_VERSIONS_UC,
   REPARSE_DOCUMENT_UC,
 } from "../tenancy/tenancy.tokens";
 
@@ -81,6 +83,14 @@ import {
         cache: RetrieveCachePort,
       ) => new DeleteDocumentUseCase(docs, index, cache),
       inject: [DOCUMENT_REPOSITORY, VECTOR_INDEX, RETRIEVE_CACHE],
+    },
+    {
+      provide: PRUNE_DOCUMENT_VERSIONS_UC,
+      useFactory: (
+        docs: DocumentRepository,
+        del: DeleteDocumentUseCase,
+      ) => new PruneDocumentVersionsUseCase(docs, del),
+      inject: [DOCUMENT_REPOSITORY, DELETE_DOCUMENT_UC],
     },
     {
       provide: REPARSE_DOCUMENT_UC,

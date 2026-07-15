@@ -114,6 +114,14 @@ Worker and API must share the same `DATABASE_URL`, vector mode, object storage, 
 
 `GET /v1/documents` supports `limit` (default 50, max 500), legacy `offset`, opaque `cursor` / `nextCursor`, and optional `status` / `sourceKey` filters.
 
+## Version retention
+
+| Concern | Env | Default |
+| --- | --- | --- |
+| Keep newest N versions per sourceKey | `AMKP_DOCUMENT_VERSION_RETENTION` | off (manual prune only) |
+
+When set (≥1), non-deduped ingest auto-prunes older versions. Manual: `POST /v1/documents/versions/prune` with `{ "sourceKey", "keep?" }` (default keep 10 when env unset).
+
 ## Multipart ingest
 
 `POST /v1/ingest/upload` accepts `multipart/form-data` with required field `file` and optional `sourceKey` / `filename`. Size capped by `AMKP_MAX_DOCUMENT_BYTES`.

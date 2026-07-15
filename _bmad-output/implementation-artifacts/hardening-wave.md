@@ -17,5 +17,5 @@ compensation, README/ops sync, ingest filters, webhooks, OTel, etc.).
 - Commercial VLM beyond HTTP contract
 - Argon2 (intentionally deferred)
 - Richer layout/PDF page-vision pipelines
-- Concurrent ingest hash uniqueness / Idempotency-Key
-- Document version retention / prune
+- HTTP LLM judge for golden eval
+- Idempotency-Key middleware (content-hash uniqueness already covers identical ingest races)

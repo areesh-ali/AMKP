@@ -161,6 +161,13 @@ export class AmkpClient {
     );
   }
 
+  async pruneDocumentVersions(input: {
+    sourceKey: string;
+    keep?: number;
+  }): Promise<{ sourceKey: string; kept: number; deleted: string[] }> {
+    return this.request("POST", "/v1/documents/versions/prune", input);
+  }
+
   async listDocumentChunks(
     documentId: string,
   ): Promise<{ items: unknown[] }> {

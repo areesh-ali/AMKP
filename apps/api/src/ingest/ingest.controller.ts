@@ -26,9 +26,11 @@ import type {
   ListChunksUseCase,
   ListDocumentVersionsUseCase,
   ListDocumentsUseCase,
+  PruneDocumentVersionsUseCase,
   ReparseDocumentUseCase,
   TenantContext,
 } from "@amkp/application";
+import { documentVersionRetention } from "@amkp/application";
 import {
   TenantApiKeyGuard,
   type RequestWithTenant,
@@ -43,6 +45,7 @@ import {
   LIST_CHUNKS_UC,
   LIST_DOCUMENT_VERSIONS_UC,
   LIST_DOCUMENTS_UC,
+  PRUNE_DOCUMENT_VERSIONS_UC,
   REPARSE_DOCUMENT_UC,
 } from "../tenancy/tenancy.tokens";
 
@@ -103,6 +106,8 @@ export class IngestController {
     private readonly listDocuments: ListDocumentsUseCase,
     @Inject(LIST_DOCUMENT_VERSIONS_UC)
     private readonly listDocumentVersions: ListDocumentVersionsUseCase,
+    @Inject(PRUNE_DOCUMENT_VERSIONS_UC)
+    private readonly pruneDocumentVersions: PruneDocumentVersionsUseCase,
     @Inject(GET_DOCUMENT_UC)
     private readonly getDocument: GetDocumentUseCase,
     @Inject(GET_DOCUMENT_CONTENT_UC)
@@ -110,6 +115,15 @@ export class IngestController {
     @Inject(LIST_CHUNKS_UC)
     private readonly listChunks: ListChunksUseCase,
   ) {}
+
+  private async maybeAutoPrune(
+    ctx: TenantContext,
+    sourceKey: string,
+    deduped: boolean,
+  ): Promise<void> {
+    if (deduped || !documentVersionRetention()) return;
+    await this.pruneDocumentVersions.execute(ctx, sourceKey);
+  }
 
   @Post("ingest")
   @HttpCode(HttpStatus.ACCEPTED)
@@ -139,7 +153,9 @@ export class IngestController {
       sourceKey: body.sourceKey,
     });
 
-    return mapIngestResult(result);
+    const mapped = mapIngestResult(result);
+    await this.maybeAutoPrune(ctx, mapped.sourceKey, mapped.deduped);
+    return mapped;
   }
 
   /**
@@ -186,7 +202,9 @@ export class IngestController {
       sourceKey:
         typeof body.sourceKey === "string" ? body.sourceKey : undefined,
     });
-    return mapIngestResult(result);
+    const mapped = mapIngestResult(result);
+    await this.maybeAutoPrune(ctx, mapped.sourceKey, mapped.deduped);
+    return mapped;
   }
 
   @Get("documents")
@@ -259,6 +277,20 @@ export class IngestController {
         createdAt: d.createdAt,
       })),
     };
+  }
+
+  @Post("documents/versions/prune")
+  @HttpCode(HttpStatus.OK)
+  async pruneVersionsHandler(
+    @Req() req: RequestWithTenant,
+    @Body() body: { sourceKey?: string; keep?: number },
+  ) {
+    const ctx = req.tenantContext as TenantContext;
+    return this.pruneDocumentVersions.execute(
+      ctx,
+      body.sourceKey ?? "",
+      body.keep,
+    );
   }
 
   @Get("documents/:documentId")

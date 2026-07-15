@@ -35,6 +35,8 @@ All planned epic stories (T-1.x through T-8.4) have implementation artifacts and
 | Object-storage create orphan compensation | done |
 | SDK chunks + admin API keys + requestId | done |
 | Ingest `deduped` in OpenAPI/SDK | done |
+| Concurrent content-hash unique + retry | done |
+| Document version prune / retention | done |
 
 ## Still open (optional)
 
