@@ -3,9 +3,11 @@ import {
   RetrieveUseCase,
   RETRIEVE_CACHE,
   TENANT_REPOSITORY,
+  TRACE_REPOSITORY,
   VECTOR_INDEX,
   type RetrieveCachePort,
   type TenantRepository,
+  type TraceRepository,
   type VectorIndexPort,
 } from "@amkp/application";
 import { PersistenceModule } from "../infrastructure/persistence.module";
@@ -23,8 +25,9 @@ import { RETRIEVE_UC } from "../tenancy/tenancy.tokens";
         index: VectorIndexPort,
         tenants: TenantRepository,
         cache: RetrieveCachePort,
-      ) => new RetrieveUseCase(index, tenants, cache),
-      inject: [VECTOR_INDEX, TENANT_REPOSITORY, RETRIEVE_CACHE],
+        traces: TraceRepository,
+      ) => new RetrieveUseCase(index, tenants, cache, traces),
+      inject: [VECTOR_INDEX, TENANT_REPOSITORY, RETRIEVE_CACHE, TRACE_REPOSITORY],
     },
   ],
   exports: [RETRIEVE_UC],

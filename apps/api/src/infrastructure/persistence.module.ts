@@ -9,10 +9,12 @@ import {
   PARSE_LADDER,
   RETRIEVE_CACHE,
   TENANT_REPOSITORY,
+  TRACE_REPOSITORY,
   VECTOR_INDEX,
 } from "@amkp/application";
 import {
   createPrismaClient,
+  InMemoryTraceRepository,
   InMemoryVectorIndex,
   PrismaAccountRepository,
   PrismaApiKeyIssuer,
@@ -43,6 +45,9 @@ export const sharedMemoryJobQueue = new InMemoryJobQueue();
 
 /** Shared tenant-keyed retrieve cache (T-5.2). */
 export const sharedRetrieveCache = new InMemoryTenantRetrieveCache();
+
+/** Shared Trace store (T-6.1 MVP in-memory). */
+export const sharedTraceRepository = new InMemoryTraceRepository();
 
 /** Shared VLM spend ledger for asserting page-vision opt-in (T-2.4). */
 export const sharedPageVisionLedger = createPageVisionLedger();
@@ -93,6 +98,10 @@ export const sharedParseLadder = new LocalParseLadder(sharedPageVisionLedger);
       useValue: sharedRetrieveCache,
     },
     {
+      provide: TRACE_REPOSITORY,
+      useValue: sharedTraceRepository,
+    },
+    {
       provide: JOB_QUEUE,
       useFactory: () => {
         if (
@@ -116,6 +125,7 @@ export const sharedParseLadder = new LocalParseLadder(sharedPageVisionLedger);
     PARSE_LADDER,
     VECTOR_INDEX,
     RETRIEVE_CACHE,
+    TRACE_REPOSITORY,
     JOB_QUEUE,
   ],
 })

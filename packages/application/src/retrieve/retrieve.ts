@@ -15,6 +15,8 @@ import {
   type TenantRepository,
 } from "../tenancy/ports";
 import { buildRetrieveCostEstimate } from "./cost-estimate";
+import { evidenceEnvelopeToTrace } from "../observability/get-trace";
+import type { TraceRepository } from "../observability/trace-ports";
 
 export interface RetrieveQuery {
   query: string;
@@ -81,6 +83,7 @@ export class RetrieveUseCase {
     private readonly index: VectorIndexPort,
     private readonly tenants?: TenantRepository,
     private readonly cache?: RetrieveCachePort,
+    private readonly traces?: TraceRepository,
   ) {}
 
   /**
@@ -116,7 +119,7 @@ export class RetrieveUseCase {
         preferCorrectnessThreshold: threshold,
       });
       if (cached) {
-        return {
+        const envelope: EvidenceEnvelope = {
           ...cached,
           requestId: options.requestId,
           tenantId: ctx.tenantId,
@@ -125,6 +128,8 @@ export class RetrieveUseCase {
             query,
           }),
         };
+        await this.persistTrace(envelope);
+        return envelope;
       }
     }
 
@@ -221,7 +226,13 @@ export class RetrieveUseCase {
       });
     }
 
+    await this.persistTrace(envelope);
     return envelope;
+  }
+
+  private async persistTrace(envelope: EvidenceEnvelope): Promise<void> {
+    if (!this.traces) return;
+    await this.traces.save(evidenceEnvelopeToTrace(envelope));
   }
 
   private async resolvePreferCorrectnessThreshold(

@@ -8,3 +8,4 @@ export { PrismaDocumentRepository } from "./document.repository";
 export { PrismaChunkRepository } from "./chunk.repository";
 export { PostgresHealthAdapter } from "./health.adapter";
 export { InMemoryVectorIndex } from "./in-memory-vector-index";
+export { InMemoryTraceRepository } from "./trace.repository";

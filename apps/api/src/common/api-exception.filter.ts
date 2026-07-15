@@ -15,6 +15,8 @@ import {
   DocumentNotFoundError,
   MissingTenantContextError,
   TenantNotFoundError,
+  TraceNotFoundError,
+  TraceTenantMismatchError,
   ValidationError,
 } from "@amkp/application";
 
@@ -41,7 +43,8 @@ export class ApiExceptionFilter implements ExceptionFilter {
       exception instanceof AccountNotFoundError ||
       exception instanceof TenantNotFoundError ||
       exception instanceof ApiKeyNotFoundError ||
-      exception instanceof DocumentNotFoundError
+      exception instanceof DocumentNotFoundError ||
+      exception instanceof TraceNotFoundError
     ) {
       res.status(HttpStatus.NOT_FOUND).json({
         error: {
@@ -53,7 +56,10 @@ export class ApiExceptionFilter implements ExceptionFilter {
       return;
     }
 
-    if (exception instanceof MissingTenantContextError) {
+    if (
+      exception instanceof MissingTenantContextError ||
+      exception instanceof TraceTenantMismatchError
+    ) {
       res.status(HttpStatus.FORBIDDEN).json({
         error: {
           code: exception.code,

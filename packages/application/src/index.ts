@@ -9,6 +9,7 @@ export * from "./tenancy";
 export * from "./retrieve";
 export * from "./ingest";
 export * from "./mcp";
+export * from "./observability";
 
 export interface RetrievePort {
   retrieve(ctx: TenantContext, input: RetrieveQuery): Promise<EvidenceEnvelope>;

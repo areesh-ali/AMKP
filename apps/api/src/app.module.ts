@@ -5,6 +5,7 @@ import { TenancyModule } from "./tenancy/tenancy.module";
 import { RetrieveModule } from "./retrieve/retrieve.module";
 import { IngestModule } from "./ingest/ingest.module";
 import { McpModule } from "./mcp/mcp.module";
+import { ObservabilityModule } from "./observability/observability.module";
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { McpModule } from "./mcp/mcp.module";
     RetrieveModule,
     IngestModule,
     McpModule,
+    ObservabilityModule,
   ],
   controllers: [HealthController],
 })
