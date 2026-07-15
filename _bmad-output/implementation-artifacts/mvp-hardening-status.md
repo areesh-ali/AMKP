@@ -37,6 +37,7 @@ All planned epic stories (T-1.x through T-8.4) have implementation artifacts and
 | Ingest `deduped` in OpenAPI/SDK | done |
 | Concurrent content-hash unique + retry | done |
 | Document version prune / retention | done |
+| HTTP eval judge (`AMKP_EVAL_JUDGE_URL`) | done |
 
 ## Still open (optional)
 

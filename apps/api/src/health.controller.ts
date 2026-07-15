@@ -31,6 +31,7 @@ function adapterSummary() {
     pageVision: process.env.AMKP_PAGE_VISION_URL?.trim()
       ? "http"
       : "stub",
+    evalJudge: process.env.AMKP_EVAL_JUDGE_URL?.trim() ? "http" : "off",
     documentWebhook: process.env.AMKP_DOCUMENT_WEBHOOK_URL?.trim()
       ? process.env.AMKP_DOCUMENT_WEBHOOK_SECRET?.trim()
         ? "signed_http"

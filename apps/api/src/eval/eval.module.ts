@@ -2,8 +2,10 @@ import { Module } from "@nestjs/common";
 import {
   RunGoldenEvalUseCase,
   RunTableRankAblationUseCase,
+  type EvalJudgePort,
   type RetrieveUseCase,
 } from "@amkp/application";
+import { createEvalJudgeFromEnv } from "@amkp/adapters-providers";
 import { AuthModule } from "../auth/auth.module";
 import { RetrieveModule } from "../retrieve/retrieve.module";
 import {
@@ -13,6 +15,8 @@ import {
 } from "../tenancy/tenancy.tokens";
 import { EvalController } from "./eval.controller";
 
+const evalJudge = createEvalJudgeFromEnv();
+
 @Module({
   imports: [AuthModule, RetrieveModule],
   controllers: [EvalController],
@@ -20,7 +24,10 @@ import { EvalController } from "./eval.controller";
     {
       provide: RUN_GOLDEN_EVAL_UC,
       useFactory: (retrieve: RetrieveUseCase) =>
-        new RunGoldenEvalUseCase(retrieve),
+        new RunGoldenEvalUseCase(
+          retrieve,
+          evalJudge as EvalJudgePort | undefined,
+        ),
       inject: [RETRIEVE_UC],
     },
     {

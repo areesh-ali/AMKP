@@ -2,6 +2,7 @@ import type { TenantId } from "@amkp/domain";
 import type { TenantContext } from "../tenancy/types";
 import { MissingTenantContextError, ValidationError } from "../tenancy/ports";
 import type { RetrieveUseCase } from "../retrieve/retrieve";
+import type { EvalJudgePort } from "./eval-judge";
 
 export interface GoldenQuestion {
   id: string;
@@ -41,10 +42,14 @@ export interface GoldenEvalReport {
 
 /**
  * Golden-set eval runner (FR-21 / T-7.1).
- * MVP judge is lexical overlap; LLM judge modelId is plumbed for later.
+ * Default judge is lexical overlap. Optional EvalJudgePort scores when
+ * `judge.kind === "llm"` (falls back to lexical if no port configured).
  */
 export class RunGoldenEvalUseCase {
-  constructor(private readonly retrieve: RetrieveUseCase) {}
+  constructor(
+    private readonly retrieve: RetrieveUseCase,
+    private readonly evalJudge?: EvalJudgePort,
+  ) {}
 
   async execute(
     ctx: TenantContext | undefined | null,
@@ -62,8 +67,11 @@ export class RunGoldenEvalUseCase {
     }
 
     const judgeKind = input.judge?.kind ?? "lexical_stub";
-    const modelId =
-      judgeKind === "llm" ? (input.judge?.modelId ?? "unspecified-llm-judge") : null;
+    let modelId =
+      judgeKind === "llm"
+        ? (input.judge?.modelId ?? "unspecified-llm-judge")
+        : null;
+    const useLlmJudge = judgeKind === "llm" && !!this.evalJudge;
 
     const outcomes: GoldenEvalQuestionOutcome[] = [];
     for (const q of input.questions) {
@@ -80,39 +88,60 @@ export class RunGoldenEvalUseCase {
         envelope.outcome.kind === "evidence" ? envelope.outcome.items : [];
       const evidenceIds = items.map((i) => i.id);
       const citationDocumentIds = items.map((i) => i.citation.documentId);
-      const contentBlob = items.map((i) => i.content ?? "").join("\n").toLowerCase();
+      const contentBlob = items
+        .map((i) => i.content ?? "")
+        .join("\n")
+        .toLowerCase();
 
       let passed = true;
-      const notes: string[] = [];
+      let notes: string[] = [];
+      let topScore = items[0]?.score ?? 0;
 
-      if (q.expectedDocumentIds?.length) {
-        const hit = q.expectedDocumentIds.some((d) =>
-          citationDocumentIds.includes(d),
-        );
-        if (!hit) {
+      if (useLlmJudge && this.evalJudge) {
+        const judged = await this.evalJudge.judge({
+          question: q.question,
+          evidenceContent: items.map((i) => i.content ?? "").join("\n"),
+          citationDocumentIds,
+          expectedDocumentIds: q.expectedDocumentIds,
+          expectedKeywords: q.expectedKeywords,
+          modelId: modelId ?? undefined,
+        });
+        passed = judged.passed;
+        topScore = judged.score;
+        notes = [judged.notes];
+        modelId = judged.modelId;
+      } else {
+        if (q.expectedDocumentIds?.length) {
+          const hit = q.expectedDocumentIds.some((d) =>
+            citationDocumentIds.includes(d),
+          );
+          if (!hit) {
+            passed = false;
+            notes.push("expected document citation missing");
+          }
+        }
+        if (q.expectedKeywords?.length) {
+          const hit = q.expectedKeywords.every((k) =>
+            contentBlob.includes(k.toLowerCase()),
+          );
+          if (!hit) {
+            passed = false;
+            notes.push("expected keywords missing from evidence");
+          }
+        }
+        if (
+          !q.expectedDocumentIds?.length &&
+          !q.expectedKeywords?.length &&
+          items.length === 0
+        ) {
           passed = false;
-          notes.push("expected document citation missing");
+          notes.push("no evidence returned");
+        }
+        if (judgeKind === "llm" && !this.evalJudge) {
+          notes.push("llm judge not configured; used lexical");
         }
       }
-      if (q.expectedKeywords?.length) {
-        const hit = q.expectedKeywords.every((k) =>
-          contentBlob.includes(k.toLowerCase()),
-        );
-        if (!hit) {
-          passed = false;
-          notes.push("expected keywords missing from evidence");
-        }
-      }
-      if (
-        !q.expectedDocumentIds?.length &&
-        !q.expectedKeywords?.length &&
-        items.length === 0
-      ) {
-        passed = false;
-        notes.push("no evidence returned");
-      }
 
-      const topScore = items[0]?.score ?? 0;
       outcomes.push({
         questionId: q.id,
         question: q.question,

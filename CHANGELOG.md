@@ -34,6 +34,7 @@
 - Object-storage **orphan compensation** if Document DB insert fails after put
 - Content-hash **unique index** + ingest retry for concurrent identical uploads
 - Document **version prune** (`POST /v1/documents/versions/prune`, optional `AMKP_DOCUMENT_VERSION_RETENTION`)
+- HTTP **eval judge** via `AMKP_EVAL_JUDGE_URL` for golden-set `judge.kind: "llm"`
 - Ops guide: `docs/operations.md`
 
 ### Epics E1–E8

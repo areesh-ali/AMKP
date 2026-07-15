@@ -17,6 +17,10 @@ export {
   createPageVisionProviderFromEnv,
 } from "./http-page-vision";
 export {
+  HttpEvalJudge,
+  createEvalJudgeFromEnv,
+} from "./http-eval-judge";
+export {
   HttpDocumentStatusNotifier,
   createDocumentStatusNotifierFromEnv,
   verifyAmkpWebhookSignature,

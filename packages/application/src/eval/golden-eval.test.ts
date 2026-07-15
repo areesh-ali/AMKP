@@ -61,5 +61,43 @@ describe("RunGoldenEvalUseCase (T-7.1)", () => {
     expect(report.summary.passed).toBe(1);
     expect(report.outcomes[0]?.passed).toBe(true);
     expect(report.outcomes[1]?.passed).toBe(false);
+    expect(report.outcomes[0]?.notes).toContain("llm judge not configured");
+  });
+
+  it("uses EvalJudgePort when configured for llm kind", async () => {
+    const ten = "ten_B";
+    const ns = tenantVectorNamespace(ten);
+    const retrieve = new RetrieveUseCase(
+      new FakeIndex([
+        {
+          id: "ev_1",
+          tenantId: ten,
+          namespace: ns,
+          documentId: "doc_1",
+          content: "anything",
+        },
+      ]),
+    );
+    const evalUc = new RunGoldenEvalUseCase(retrieve, {
+      async judge() {
+        return {
+          passed: false,
+          score: 0.1,
+          notes: "remote fail",
+          modelId: "remote-judge",
+        };
+      },
+    });
+    const report = await evalUc.execute(
+      { tenantId: ten, accountId: "acc_1" },
+      {
+        questions: [{ id: "q1", question: "refund", expectedDocumentIds: ["doc_1"] }],
+        judge: { kind: "llm", modelId: "client-model" },
+      },
+      { requestId: "eval_2" },
+    );
+    expect(report.judge.modelId).toBe("remote-judge");
+    expect(report.outcomes[0]?.passed).toBe(false);
+    expect(report.outcomes[0]?.notes).toBe("remote fail");
   });
 });

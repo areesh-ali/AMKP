@@ -70,6 +70,24 @@ Set `AMKP_PAGE_VISION_URL` to an HTTP endpoint that accepts:
 and returns `{ "text": "...", "confidence": 0.8, "spendUsd": 0.02 }`.
 Without it, tier3 uses the deterministic stub (still only when Tenant `pageVisionEnabled`).
 
+## Golden eval LLM judge
+
+Set `AMKP_EVAL_JUDGE_URL` to an HTTP endpoint that accepts:
+
+```json
+{
+  "question": "...",
+  "evidenceContent": "...",
+  "citationDocumentIds": ["doc_..."],
+  "expectedDocumentIds": [],
+  "expectedKeywords": [],
+  "modelId": "..."
+}
+```
+
+and returns `{ "passed": true, "score": 0.9, "notes": "ok", "modelId": "..." }`.
+Optional `AMKP_EVAL_JUDGE_MODEL` sets the default modelId. When unset, `judge.kind: "llm"` falls back to lexical scoring.
+
 ## Document status webhooks
 
 Set `AMKP_DOCUMENT_WEBHOOK_URL` to receive a POST after a Document reaches `parsed`:
