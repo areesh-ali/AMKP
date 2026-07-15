@@ -136,7 +136,41 @@ async function main() {
   const health = createServer(async (req, res) => {
     if (req.url === "/health") {
       res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ ok: true, service: "worker" }));
+      res.end(
+        JSON.stringify({
+          ok: true,
+          service: "worker",
+          adapters: {
+            vector:
+              process.env.AMKP_VECTOR_INDEX === "memory"
+                ? "memory"
+                : "postgres+pgvector",
+            objectStorage: process.env.AMKP_S3_BUCKET
+              ? "s3"
+              : process.env.AMKP_OBJECT_STORAGE_DIR
+                ? "local_fs"
+                : "postgres_bytea",
+            embeddings: process.env.AMKP_EMBEDDING_API_KEY?.trim()
+              ? "openai_compatible"
+              : "stub",
+            pdfEngine:
+              process.env.AMKP_PDF_ENGINE === "cheap" ? "cheap" : "unpdf",
+            pageVision: process.env.AMKP_PAGE_VISION_URL?.trim()
+              ? "http"
+              : "stub",
+            documentWebhook: process.env.AMKP_DOCUMENT_WEBHOOK_URL?.trim()
+              ? process.env.AMKP_DOCUMENT_WEBHOOK_SECRET?.trim()
+                ? "signed_http"
+                : "http"
+              : "off",
+            otel:
+              process.env.OTEL_EXPORTER_OTLP_ENDPOINT?.trim() ||
+              process.env.AMKP_OTEL === "1"
+                ? "otlp"
+                : "noop",
+          },
+        }),
+      );
       return;
     }
     if (req.url === "/ready") {
