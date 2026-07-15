@@ -14,6 +14,7 @@ export function securityHeadersMiddleware(
     "camera=(), microphone=(), geolocation=()",
   );
   res.setHeader("Cross-Origin-Resource-Policy", "same-site");
+  res.setHeader("Cache-Control", "no-store");
   if (process.env.AMKP_HSTS === "1") {
     const maxAge = Number(process.env.AMKP_HSTS_MAX_AGE ?? 31536000);
     res.setHeader(

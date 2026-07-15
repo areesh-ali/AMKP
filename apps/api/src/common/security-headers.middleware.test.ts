@@ -18,6 +18,7 @@ describe("securityHeadersMiddleware", () => {
     securityHeadersMiddleware({} as Request, res, () => {});
     expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(res.headers.get("Cross-Origin-Resource-Policy")).toBe("same-site");
+    expect(res.headers.get("Cache-Control")).toBe("no-store");
     expect(res.headers.has("Strict-Transport-Security")).toBe(false);
   });
 
