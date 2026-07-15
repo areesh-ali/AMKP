@@ -1,6 +1,10 @@
 import type { IndexedChunk, VectorIndexPort } from "@amkp/application";
 
-/** In-process vector index stub — MVP until pgvector retrieve adapter. */
+/**
+ * In-process hybrid index stub (T-3.1) until pgvector.
+ * Lexical: term overlap. Dense stub: match-span density in content.
+ * Results reranked by combined score descending.
+ */
 export class InMemoryVectorIndex implements VectorIndexPort {
   private readonly byId = new Map<string, IndexedChunk>();
 
@@ -13,17 +17,47 @@ export class InMemoryVectorIndex implements VectorIndexPort {
     query: string;
     limit?: number;
   }): Promise<IndexedChunk[]> {
-    const q = (input.query ?? "").toLowerCase();
+    const q = (input.query ?? "").trim().toLowerCase();
     if (!q) return [];
+    const terms = q.split(/\s+/).filter(Boolean);
     const limit = input.limit ?? 10;
-    return [...this.byId.values()]
+
+    const scored = [...this.byId.values()]
       .filter((c) => c.namespace === input.namespace)
-      .filter((c) => c.content.toLowerCase().includes(q))
-      .slice(0, limit)
-      .map((c) => ({ ...c, score: 1 }));
+      .map((c) => {
+        const content = c.content.toLowerCase();
+        const lexical = lexicalScore(content, terms);
+        const dense = denseStubScore(content, q);
+        if (lexical <= 0 && dense <= 0) return null;
+        const score = 0.6 * lexical + 0.4 * dense;
+        return { ...c, score };
+      })
+      .filter((c): c is IndexedChunk & { score: number } => c !== null)
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+      .slice(0, limit);
+
+    return scored;
   }
 
   clear(): void {
     this.byId.clear();
   }
+}
+
+function lexicalScore(content: string, terms: string[]): number {
+  if (terms.length === 0) return 0;
+  let hits = 0;
+  for (const t of terms) {
+    if (content.includes(t)) hits += 1;
+  }
+  return hits / terms.length;
+}
+
+function denseStubScore(content: string, query: string): number {
+  if (!content.includes(query) && !query.split(/\s+/).some((t) => content.includes(t))) {
+    return 0;
+  }
+  // Density proxy: shorter matching chunks score higher (MVP stub).
+  const len = Math.max(content.length, 1);
+  return Math.min(1, (query.length + 8) / Math.sqrt(len));
 }

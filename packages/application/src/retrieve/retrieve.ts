@@ -80,10 +80,15 @@ export class RetrieveUseCase {
     );
 
     const preferred = preferLatest
-      ? preferLatestVersions(safe).slice(0, 10)
-      : safe.slice(0, 10);
+      ? preferLatestVersions(safe)
+      : safe;
 
-    const items: EvidenceItem[] = preferred.map((h) => {
+    // Hybrid rerank (T-3.1): sort by score desc, then take top-k.
+    const reranked = [...preferred]
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+      .slice(0, 10);
+
+    const items: EvidenceItem[] = reranked.map((h) => {
       const item: EvidenceItem = {
         id: h.id,
         score: h.score ?? 1,
@@ -99,18 +104,21 @@ export class RetrieveUseCase {
       return item;
     });
 
+    const emptyOutcome =
+      input.preferCorrectness === true
+        ? {
+            kind: "insufficient_evidence" as const,
+            reason: "no_matches",
+            threshold: 0,
+          }
+        : { kind: "evidence" as const, items: [] };
+
     return {
       schemaVersion: "1",
       requestId: options.requestId,
       tenantId: ctx.tenantId,
       outcome:
-        items.length > 0
-          ? { kind: "evidence", items }
-          : {
-              kind: "insufficient_evidence",
-              reason: "no_matches",
-              threshold: 0,
-            },
+        items.length > 0 ? { kind: "evidence", items } : emptyOutcome,
       costEstimate: { currency: "USD", estimatedUsd: 0 },
       routerDecision: { mode: "single_pass", reasonCode: "default" },
     };

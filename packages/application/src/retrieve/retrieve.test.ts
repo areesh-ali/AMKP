@@ -19,7 +19,7 @@ class FakeIndex implements VectorIndexPort {
       .filter((c) => c.namespace === input.namespace)
       .filter((c) => c.content.toLowerCase().includes(q))
       .slice(0, input.limit ?? 10)
-      .map((c) => ({ ...c, score: 1 }));
+      .map((c) => ({ ...c, score: c.score ?? 1 }));
   }
 }
 
@@ -76,9 +76,70 @@ describe("RetrieveUseCase fail-closed isolation", () => {
     if (envelope.outcome.kind === "evidence") {
       expect(envelope.outcome.items).toHaveLength(1);
       expect(envelope.outcome.items[0]?.content).toContain("for A");
+      expect(envelope.outcome.items[0]?.id).toBe("ev_a");
+      expect(envelope.outcome.items[0]?.citation.documentId).toBe("doc_a");
+      expect(envelope.outcome.items[0]?.score).toBeGreaterThan(0);
       expect(
         envelope.outcome.items.every((i) => !i.content?.includes("for B")),
       ).toBe(true);
+    }
+  });
+
+  it("returns empty evidence list when no matches (not fabricated)", async () => {
+    const uc = new RetrieveUseCase(new FakeIndex([]));
+    const envelope = await uc.execute(
+      { tenantId: "ten_A", accountId: "acc_1" },
+      { query: "nothing-here" },
+      { requestId: "req_empty" },
+    );
+    expect(envelope.outcome.kind).toBe("evidence");
+    if (envelope.outcome.kind === "evidence") {
+      expect(envelope.outcome.items).toEqual([]);
+    }
+  });
+
+  it("preferCorrectness empty yields insufficient_evidence", async () => {
+    const uc = new RetrieveUseCase(new FakeIndex([]));
+    const envelope = await uc.execute(
+      { tenantId: "ten_A", accountId: "acc_1" },
+      { query: "nothing-here", preferCorrectness: true },
+      { requestId: "req_pc" },
+    );
+    expect(envelope.outcome.kind).toBe("insufficient_evidence");
+  });
+
+  it("reranks by score descending", async () => {
+    const ten = "ten_A";
+    const ns = tenantVectorNamespace(ten);
+    const index = new FakeIndex([
+      {
+        id: "low",
+        tenantId: ten,
+        namespace: ns,
+        documentId: "d1",
+        content: "alpha",
+        score: 0.2,
+      },
+      {
+        id: "high",
+        tenantId: ten,
+        namespace: ns,
+        documentId: "d2",
+        content: "alpha beta",
+        score: 0.9,
+      },
+    ]);
+
+    const uc = new RetrieveUseCase(index);
+    const envelope = await uc.execute(
+      { tenantId: ten, accountId: "acc_1" },
+      { query: "alpha" },
+      { requestId: "req_rank" },
+    );
+    expect(envelope.outcome.kind).toBe("evidence");
+    if (envelope.outcome.kind === "evidence") {
+      expect(envelope.outcome.items[0]?.id).toBe("high");
+      expect(envelope.outcome.items[1]?.id).toBe("low");
     }
   });
 });
