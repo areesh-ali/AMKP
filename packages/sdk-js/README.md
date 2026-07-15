@@ -68,6 +68,7 @@ const admin = new AmkpAdminClient({
 const { accountId } = await admin.createAccount("Acme");
 await admin.listAccounts();
 await admin.getAccount(accountId);
+await admin.listTenants({ accountId });
 const { apiKey } = await admin.createTenant(accountId, "support");
 await admin.getTenant(/* tenantId */);
 await admin.updateTenant(/* tenantId */, { pageVisionEnabled: true });

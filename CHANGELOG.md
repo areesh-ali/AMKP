@@ -24,6 +24,7 @@
 - Tenant **`GET /v1/documents/:id/content`** download
 - Tenant **`GET /v1/documents/versions?sourceKey=`** version history
 - Enriched **`/health` adapters** (pdf/embeddings/webhook/otel)
+- Admin **`GET /v1/tenants`** (optional `accountId`)
 - Ops guide: `docs/operations.md`
 
 ### Epics E1–E8
