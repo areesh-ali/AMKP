@@ -33,6 +33,7 @@ import {
   type RequestWithTenant,
 } from "../tenancy/tenant-api-key.guard";
 import { TenantContextInterceptor } from "../tenancy/tenant-context.interceptor";
+import { TenantRateLimitInterceptor } from "../common/tenant-rate-limit.interceptor";
 import {
   DELETE_DOCUMENT_UC,
   GET_DOCUMENT_CONTENT_UC,
@@ -87,7 +88,7 @@ function maxUploadBytes(): number {
 
 @Controller("v1")
 @UseGuards(TenantApiKeyGuard)
-@UseInterceptors(TenantContextInterceptor)
+@UseInterceptors(TenantContextInterceptor, TenantRateLimitInterceptor)
 export class IngestController {
   constructor(
     @Inject(INGEST_DOCUMENT_UC)
