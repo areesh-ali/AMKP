@@ -78,10 +78,19 @@ export interface Tenant {
    * mode=agentic requires this OR an audited override enabling agenticEnabled.
    */
   agenticReadinessPassed: boolean;
+  /** Max agentic hops (FR-14 / T-4.3). Default 3. */
+  agenticMaxHops: number;
+  /** Max agentic CostEstimate USD before circuit break (T-4.3). Default 0.01. */
+  agenticMaxCostUsd: number;
   /** AD-3: dedicated vector namespace/collection for this Tenant */
   vectorNamespace: string;
   createdAt: string; // UTC ISO-8601
 }
+
+/** Default agentic hop budget for new Tenants. */
+export const DEFAULT_AGENTIC_MAX_HOPS = 3;
+/** Default agentic cost circuit breaker (USD). */
+export const DEFAULT_AGENTIC_MAX_COST_USD = 0.01;
 
 /** Default PreferCorrectness score floor for new Tenants. */
 export const DEFAULT_PREFER_CORRECTNESS_THRESHOLD = 0.5;
@@ -132,6 +141,8 @@ export interface EvidenceEnvelope {
   routerDecision?: {
     mode: "single_pass" | "agentic";
     reasonCode: string;
+    hops?: number;
+    terminationReason?: "completed" | "hop_budget" | "cost_budget";
   };
 }
 
@@ -143,6 +154,8 @@ export interface TraceRecord {
   routerDecision: {
     mode: "single_pass" | "agentic";
     reasonCode: string;
+    hops?: number;
+    terminationReason?: "completed" | "hop_budget" | "cost_budget";
   };
   evidenceIds: EvidenceId[];
   outcomeKind: "evidence" | "insufficient_evidence";

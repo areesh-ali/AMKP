@@ -48,6 +48,8 @@ function fakeTenants(
         pageVisionEnabled: false,
         preferCorrectnessThreshold: threshold,
         agenticReadinessPassed: false,
+      agenticMaxHops: 3,
+      agenticMaxCostUsd: 0.01,
         vectorNamespace: tenantVectorNamespace(id),
         createdAt: new Date().toISOString(),
       };

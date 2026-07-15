@@ -18,6 +18,7 @@ import { buildRetrieveCostEstimate } from "./cost-estimate";
 import { evidenceEnvelopeToTrace } from "../observability/get-trace";
 import type { TraceRepository } from "../observability/trace-ports";
 import { decideRetrieveRoute } from "../agentic/router";
+import { runAgenticRetrieve } from "../agentic/agentic-retrieve";
 
 export interface RetrieveQuery {
   query: string;
@@ -115,14 +116,61 @@ export class RetrieveUseCase {
       requestedMode: input.mode,
       tenant,
     });
-    // MVP agentic path not yet implemented — force single-pass execution.
-    if (route.mode === "agentic") {
-      // Reserved for T-4.3+; still record the decision intent.
-    }
     const threshold = preferCorrectness
-      ? (tenant?.preferCorrectnessThreshold ??
-        (await this.resolvePreferCorrectnessThreshold(ctx.tenantId)))
+      ? (typeof tenant?.preferCorrectnessThreshold === "number"
+          ? tenant.preferCorrectnessThreshold
+          : await this.resolvePreferCorrectnessThreshold(ctx.tenantId))
       : undefined;
+
+    if (route.mode === "agentic") {
+      const preferLatest = input.preferLatestVersion !== false;
+      const namespace = tenantVectorNamespace(ctx.tenantId);
+      const agentic = await runAgenticRetrieve({
+        index: this.index,
+        namespace,
+        tenantId: ctx.tenantId,
+        query,
+        maxHops: tenant?.agenticMaxHops,
+        maxCostUsd: tenant?.agenticMaxCostUsd,
+        preferLatestVersions,
+        preferLatest,
+      });
+
+      let outcome: EvidenceEnvelope["outcome"] = {
+        kind: "evidence",
+        items: agentic.items,
+      };
+      if (preferCorrectness) {
+        const topScore = agentic.items[0]?.score ?? 0;
+        const thr = threshold ?? DEFAULT_PREFER_CORRECTNESS_THRESHOLD;
+        if (agentic.items.length === 0 || topScore < thr) {
+          outcome = {
+            kind: "insufficient_evidence",
+            reason:
+              agentic.items.length === 0 ? "no_matches" : "below_threshold",
+            threshold: thr,
+          };
+        }
+      }
+
+      const envelope: EvidenceEnvelope = {
+        schemaVersion: "1",
+        requestId: options.requestId,
+        tenantId: ctx.tenantId,
+        outcome,
+        costEstimate: agentic.costEstimate,
+        routerDecision: {
+          mode: "agentic",
+          reasonCode: route.reasonCode,
+          hops: agentic.hops,
+          terminationReason: agentic.terminationReason,
+        },
+      };
+      await this.persistTrace(envelope);
+      return envelope;
+    }
+
+    // MVP agentic path handled above; single-pass continues.
 
     if (this.cache) {
       const cached = await this.cache.get({

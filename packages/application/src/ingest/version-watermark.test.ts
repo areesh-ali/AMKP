@@ -154,6 +154,8 @@ const tenants = {
       pageVisionEnabled: false,
       preferCorrectnessThreshold: 0.5,
       agenticReadinessPassed: false,
+      agenticMaxHops: 3,
+      agenticMaxCostUsd: 0.01,
       vectorNamespace: `ns_${id}`,
       createdAt: new Date().toISOString(),
     };

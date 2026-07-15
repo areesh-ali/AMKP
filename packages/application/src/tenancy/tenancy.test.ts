@@ -50,6 +50,8 @@ function createFakes() {
         pageVisionEnabled,
         preferCorrectnessThreshold: 0.5,
         agenticReadinessPassed: false,
+      agenticMaxHops: 3,
+      agenticMaxCostUsd: 0.01,
         vectorNamespace: `ns_ten_TEST${seq}`,
         createdAt: new Date().toISOString(),
       };

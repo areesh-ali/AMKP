@@ -27,6 +27,8 @@ export class PrismaTenantRepository implements TenantRepository {
         pageVisionEnabled: input.pageVisionEnabled ?? false,
         preferCorrectnessThreshold: DEFAULT_PREFER_CORRECTNESS_THRESHOLD,
         agenticReadinessPassed: false,
+        agenticMaxHops: 3,
+        agenticMaxCostUsd: 0.01,
         vectorNamespace: tenantVectorNamespace(id),
       },
     });
@@ -93,6 +95,8 @@ function mapTenant(row: {
   pageVisionEnabled: boolean;
   preferCorrectnessThreshold: number;
   agenticReadinessPassed: boolean;
+  agenticMaxHops: number;
+  agenticMaxCostUsd: number;
   vectorNamespace: string;
   createdAt: Date;
 }): Tenant {
@@ -104,6 +108,8 @@ function mapTenant(row: {
     pageVisionEnabled: row.pageVisionEnabled,
     preferCorrectnessThreshold: row.preferCorrectnessThreshold,
     agenticReadinessPassed: row.agenticReadinessPassed,
+    agenticMaxHops: row.agenticMaxHops,
+    agenticMaxCostUsd: row.agenticMaxCostUsd,
     vectorNamespace: row.vectorNamespace,
     createdAt: toIso(row.createdAt),
   };
