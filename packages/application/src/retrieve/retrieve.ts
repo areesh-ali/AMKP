@@ -12,6 +12,8 @@ export interface RetrieveQuery {
   query: string;
   preferCorrectness?: boolean;
   mode?: "single_pass" | "agentic";
+  /** Prefer latest Document version per sourceKey (FR-7 default true). */
+  preferLatestVersion?: boolean;
 }
 
 export { MissingTenantContextError };
@@ -26,6 +28,10 @@ export interface IndexedChunk {
   parseConfidence?: number;
   parseTier?: string;
   table?: TableEvidence;
+  documentVersionId?: string;
+  sourceKey?: string;
+  version?: number;
+  contentHash?: string;
 }
 
 export interface VectorIndexPort {
@@ -44,8 +50,7 @@ export class RetrieveUseCase {
 
   /**
    * Fail-closed retrieve (AD-3 / FR-16).
-   * Namespace is derived from auth TenantContext — never from client input.
-   * Surfaces TableEvidence + parseConfidence when present (FR-6 / T-2.3).
+   * Prefers latest Document version per sourceKey by default (FR-7 / T-2.5).
    */
   async execute(
     ctx: TenantContext | undefined | null,
@@ -61,19 +66,24 @@ export class RetrieveUseCase {
       throw new ValidationError("query is required");
     }
 
+    const preferLatest = input.preferLatestVersion !== false;
     const namespace = tenantVectorNamespace(ctx.tenantId);
 
     const hits = await this.index.search({
       namespace,
       query,
-      limit: 10,
+      limit: preferLatest ? 40 : 10,
     });
 
     const safe = hits.filter(
       (h) => h.namespace === namespace && h.tenantId === ctx.tenantId,
     );
 
-    const items: EvidenceItem[] = safe.map((h) => {
+    const preferred = preferLatest
+      ? preferLatestVersions(safe).slice(0, 10)
+      : safe.slice(0, 10);
+
+    const items: EvidenceItem[] = preferred.map((h) => {
       const item: EvidenceItem = {
         id: h.id,
         score: h.score ?? 1,
@@ -85,6 +95,7 @@ export class RetrieveUseCase {
       }
       if (h.parseTier) item.parseTier = h.parseTier;
       if (h.table) item.table = h.table;
+      if (h.documentVersionId) item.documentVersionId = h.documentVersionId;
       return item;
     });
 
@@ -104,4 +115,20 @@ export class RetrieveUseCase {
       routerDecision: { mode: "single_pass", reasonCode: "default" },
     };
   }
+}
+
+/** Keep highest version per sourceKey; chunks without sourceKey pass through. */
+export function preferLatestVersions(hits: IndexedChunk[]): IndexedChunk[] {
+  const bestBySource = new Map<string, number>();
+  for (const h of hits) {
+    if (!h.sourceKey) continue;
+    const v = h.version ?? 0;
+    const prev = bestBySource.get(h.sourceKey) ?? -1;
+    if (v > prev) bestBySource.set(h.sourceKey, v);
+  }
+
+  return hits.filter((h) => {
+    if (!h.sourceKey || h.version === undefined) return true;
+    return h.version === bestBySource.get(h.sourceKey);
+  });
 }

@@ -26,6 +26,9 @@ export class PrismaDocumentRepository implements DocumentRepository {
         contentType: input.contentType,
         byteSize: input.content.length,
         content: input.content,
+        sourceKey: input.sourceKey,
+        version: input.version,
+        contentHash: input.contentHash,
         status: "pending",
       },
     });
@@ -38,6 +41,18 @@ export class PrismaDocumentRepository implements DocumentRepository {
   ): Promise<Document | null> {
     const row = await this.prisma.document.findFirst({
       where: { id: documentId, tenantId },
+    });
+    if (!row) return null;
+    return mapDocument(row);
+  }
+
+  async findLatestBySourceKey(
+    tenantId: TenantId,
+    sourceKey: string,
+  ): Promise<Document | null> {
+    const row = await this.prisma.document.findFirst({
+      where: { tenantId, sourceKey },
+      orderBy: { version: "desc" },
     });
     if (!row) return null;
     return mapDocument(row);
@@ -58,7 +73,7 @@ export class PrismaDocumentRepository implements DocumentRepository {
   async listByTenantId(tenantId: TenantId): Promise<Document[]> {
     const rows = await this.prisma.document.findMany({
       where: { tenantId },
-      orderBy: { createdAt: "asc" },
+      orderBy: [{ sourceKey: "asc" }, { version: "asc" }],
     });
     return rows.map(mapDocument);
   }
@@ -89,6 +104,9 @@ function mapDocument(row: {
   contentType: string;
   byteSize: number;
   status: string;
+  sourceKey: string;
+  version: number;
+  contentHash: string;
   createdAt: Date;
 }): Document {
   return {
@@ -98,6 +116,9 @@ function mapDocument(row: {
     contentType: row.contentType,
     byteSize: row.byteSize,
     status: row.status as DocumentStatus,
+    sourceKey: row.sourceKey,
+    version: row.version,
+    contentHash: row.contentHash,
     createdAt: toIso(row.createdAt),
   };
 }

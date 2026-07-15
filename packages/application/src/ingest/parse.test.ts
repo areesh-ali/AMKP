@@ -24,6 +24,9 @@ class FakeDocs implements DocumentRepository {
     filename: string;
     contentType: string;
     content: Buffer;
+    sourceKey: string;
+    contentHash: string;
+    version: number;
   }): Promise<Document> {
     const id = `doc_${this.store.size + 1}`;
     const doc: Document & { content: Buffer } = {
@@ -33,11 +36,21 @@ class FakeDocs implements DocumentRepository {
       contentType: input.contentType,
       byteSize: input.content.length,
       status: "pending",
+      sourceKey: input.sourceKey,
+      version: input.version,
+      contentHash: input.contentHash,
       createdAt: new Date().toISOString(),
       content: input.content,
     };
     this.store.set(`${input.tenantId}:${id}`, doc);
     return omitContent(doc);
+  }
+
+  async findLatestBySourceKey(tenantId: TenantId, sourceKey: string) {
+    const rows = [...this.store.values()]
+      .filter((d) => d.tenantId === tenantId && d.sourceKey === sourceKey)
+      .sort((a, b) => b.version - a.version);
+    return rows[0] ? omitContent(rows[0]) : null;
   }
 
   async findByIdForTenant(tenantId: TenantId, documentId: DocumentId) {
@@ -87,6 +100,7 @@ class FakeChunks implements ChunkRepository {
       id: newChunkId(),
       tenantId: c.tenantId,
       documentId: c.documentId,
+      documentVersionId: c.documentVersionId,
       content: c.content,
       parseTier: c.parseTier,
       parseConfidence: c.parseConfidence,

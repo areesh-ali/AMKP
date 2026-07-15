@@ -275,6 +275,9 @@ paths:
                 filename:
                   type: string
                   example: handbook.pdf
+                sourceKey:
+                  type: string
+                  description: Stable identity for versioning (defaults to filename)
                 contentType:
                   type: string
                   example: application/pdf
@@ -598,9 +601,29 @@ components:
           type: string
     IngestResponse:
       type: object
-      required: [documentId, jobId, status, filename, contentType, byteSize]
+      required:
+        [
+          documentId,
+          documentVersionId,
+          sourceKey,
+          version,
+          contentHash,
+          jobId,
+          status,
+          filename,
+          contentType,
+          byteSize,
+        ]
       properties:
         documentId:
+          type: string
+        documentVersionId:
+          type: string
+        sourceKey:
+          type: string
+        version:
+          type: integer
+        contentHash:
           type: string
         jobId:
           type: string
@@ -615,9 +638,28 @@ components:
     DocumentSummary:
       type: object
       required:
-        [documentId, filename, contentType, byteSize, status, createdAt]
+        [
+          documentId,
+          documentVersionId,
+          sourceKey,
+          version,
+          contentHash,
+          filename,
+          contentType,
+          byteSize,
+          status,
+          createdAt,
+        ]
       properties:
         documentId:
+          type: string
+        documentVersionId:
+          type: string
+        sourceKey:
+          type: string
+        version:
+          type: integer
+        contentHash:
           type: string
         filename:
           type: string

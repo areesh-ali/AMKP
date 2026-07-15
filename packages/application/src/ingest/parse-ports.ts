@@ -10,6 +10,7 @@ import type {
 export interface CreateChunkInput {
   tenantId: TenantId;
   documentId: DocumentId;
+  documentVersionId: DocumentId;
   content: string;
   parseTier: ParseTier;
   parseConfidence: number;

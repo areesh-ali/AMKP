@@ -11,6 +11,10 @@ export interface CreateDocumentInput {
   filename: string;
   contentType: string;
   content: Buffer;
+  /** Stable key for versioning; defaults to filename at use-case layer. */
+  sourceKey: string;
+  contentHash: string;
+  version: number;
 }
 
 export interface DocumentRepository {
@@ -18,6 +22,11 @@ export interface DocumentRepository {
   findByIdForTenant(
     tenantId: TenantId,
     documentId: DocumentId,
+  ): Promise<Document | null>;
+  /** Highest version for tenant+sourceKey, or null if none. */
+  findLatestBySourceKey(
+    tenantId: TenantId,
+    sourceKey: string,
   ): Promise<Document | null>;
   /** Load stored bytes for parse workers (tenant-scoped). */
   getContentForTenant(

@@ -35,6 +35,8 @@ class IngestDto {
   contentType?: string;
   /** Base64-encoded document bytes. */
   contentBase64!: string;
+  /** Stable source identity for versioning (defaults to filename). */
+  sourceKey?: string;
 }
 
 @Controller("v1")
@@ -77,10 +79,15 @@ export class IngestController {
       filename: body.filename,
       contentType: body.contentType,
       content,
+      sourceKey: body.sourceKey,
     });
 
     return {
       documentId: result.document.id,
+      documentVersionId: result.document.id,
+      sourceKey: result.document.sourceKey,
+      version: result.document.version,
+      contentHash: result.document.contentHash,
       jobId: result.jobId,
       status: result.document.status,
       filename: result.document.filename,
@@ -96,6 +103,10 @@ export class IngestController {
     return {
       items: items.map((d) => ({
         documentId: d.id,
+        documentVersionId: d.id,
+        sourceKey: d.sourceKey,
+        version: d.version,
+        contentHash: d.contentHash,
         filename: d.filename,
         contentType: d.contentType,
         byteSize: d.byteSize,
@@ -114,6 +125,10 @@ export class IngestController {
     const d = await this.getDocument.execute(ctx, documentId);
     return {
       documentId: d.id,
+      documentVersionId: d.id,
+      sourceKey: d.sourceKey,
+      version: d.version,
+      contentHash: d.contentHash,
       filename: d.filename,
       contentType: d.contentType,
       byteSize: d.byteSize,

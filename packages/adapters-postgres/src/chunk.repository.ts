@@ -29,6 +29,7 @@ export class PrismaChunkRepository implements ChunkRepository {
         id: `chk_${ulid()}`,
         tenantId: c.tenantId,
         documentId: c.documentId,
+        documentVersionId: c.documentVersionId,
         content: c.content,
         parseTier: c.parseTier,
         parseConfidence: c.parseConfidence,
@@ -58,6 +59,7 @@ function mapChunk(row: {
   id: string;
   tenantId: string;
   documentId: string;
+  documentVersionId: string;
   content: string;
   parseTier: string;
   parseConfidence: number;
@@ -69,6 +71,7 @@ function mapChunk(row: {
     id: row.id,
     tenantId: row.tenantId,
     documentId: row.documentId,
+    documentVersionId: row.documentVersionId,
     content: row.content,
     parseTier: row.parseTier as ParseTier,
     parseConfidence: row.parseConfidence,

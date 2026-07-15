@@ -36,6 +36,9 @@ model Tenant {
 model Document {
   id          String   @id
   tenantId    String   @map("tenant_id")
+  sourceKey   String   @map("source_key")
+  version     Int
+  contentHash String   @map("content_hash")
   filename    String
   contentType String   @map("content_type")
   byteSize    Int      @map("byte_size")
@@ -45,21 +48,24 @@ model Document {
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   chunks      Chunk[]
 
+  @@unique([tenantId, sourceKey, version])
   @@index([tenantId])
+  @@index([tenantId, sourceKey])
   @@map("documents")
 }
 
 model Chunk {
-  id              String   @id
-  tenantId        String   @map("tenant_id")
-  documentId      String   @map("document_id")
-  content         String
-  parseTier       String   @map("parse_tier")
-  parseConfidence Float    @map("parse_confidence")
-  ordinal         Int
-  tableJson       Json?    @map("table_json")
-  createdAt       DateTime @default(now()) @map("created_at")
-  document        Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  id                String   @id
+  tenantId          String   @map("tenant_id")
+  documentId        String   @map("document_id")
+  documentVersionId String   @map("document_version_id")
+  content           String
+  parseTier         String   @map("parse_tier")
+  parseConfidence   Float    @map("parse_confidence")
+  ordinal           Int
+  tableJson         Json?    @map("table_json")
+  createdAt         DateTime @default(now()) @map("created_at")
+  document          Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, documentId])
   @@map("chunks")

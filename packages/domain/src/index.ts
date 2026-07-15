@@ -23,6 +23,12 @@ export type ChunkId = string;
 export interface Document {
   id: DocumentId;
   tenantId: TenantId;
+  /** Stable identity for re-ingest versions (default: filename). */
+  sourceKey: string;
+  /** Monotonic version within tenant+sourceKey (1-based). */
+  version: number;
+  /** SHA-256 hex of content bytes (freshness watermark). */
+  contentHash: string;
   filename: string;
   contentType: string;
   byteSize: number;
@@ -34,6 +40,8 @@ export interface Chunk {
   id: ChunkId;
   tenantId: TenantId;
   documentId: DocumentId;
+  /** Same as document id for MVP — each ingest row is a version. */
+  documentVersionId: DocumentId;
   content: string;
   parseTier: ParseTier;
   parseConfidence: number;

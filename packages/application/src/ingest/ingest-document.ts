@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { Document, JobId } from "@amkp/domain";
 import type { TenantContext } from "../tenancy/types";
 import {
@@ -12,6 +12,11 @@ export interface IngestDocumentInput {
   contentType?: string;
   /** Raw bytes (decoded from base64 at the HTTP edge). */
   content: Buffer;
+  /**
+   * Stable source identity for versioning (FR-7).
+   * Defaults to filename when omitted.
+   */
+  sourceKey?: string;
 }
 
 export interface IngestDocumentResult {
@@ -20,6 +25,10 @@ export interface IngestDocumentResult {
 }
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MiB MVP soft limit
+
+export function hashDocumentContent(content: Buffer): string {
+  return createHash("sha256").update(content).digest("hex");
+}
 
 export class IngestDocumentUseCase {
   constructor(
@@ -50,12 +59,26 @@ export class IngestDocumentUseCase {
 
     const contentType =
       input.contentType?.trim() || "application/octet-stream";
+    const sourceKey = (input.sourceKey?.trim() || filename).trim();
+    if (!sourceKey) {
+      throw new ValidationError("sourceKey is required");
+    }
+
+    const contentHash = hashDocumentContent(input.content);
+    const latest = await this.documents.findLatestBySourceKey(
+      ctx.tenantId,
+      sourceKey,
+    );
+    const version = (latest?.version ?? 0) + 1;
 
     const document = await this.documents.create({
       tenantId: ctx.tenantId,
       filename,
       contentType,
       content: input.content,
+      sourceKey,
+      contentHash,
+      version,
     });
 
     const jobId = `job_${randomUUID().replace(/-/g, "")}`;

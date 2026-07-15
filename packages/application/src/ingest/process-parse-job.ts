@@ -112,9 +112,11 @@ export class ProcessParseJobUseCase {
 
     const confidence = clampParseConfidence(chosen.confidence);
     const segments = segmentTextWithTables(chosen.text);
+    const versionId = doc.id;
     const inputs: Array<{
       tenantId: TenantId;
       documentId: DocumentId;
+      documentVersionId: DocumentId;
       content: string;
       parseTier: ParseTier;
       parseConfidence: number;
@@ -128,6 +130,7 @@ export class ProcessParseJobUseCase {
         inputs.push({
           tenantId: input.tenantId,
           documentId: input.documentId,
+          documentVersionId: versionId,
           content: seg.text,
           parseTier,
           parseConfidence: confidence,
@@ -140,6 +143,7 @@ export class ProcessParseJobUseCase {
         inputs.push({
           tenantId: input.tenantId,
           documentId: input.documentId,
+          documentVersionId: versionId,
           content: piece,
           parseTier,
           parseConfidence: confidence,
@@ -161,6 +165,10 @@ export class ProcessParseJobUseCase {
         tenantId: input.tenantId,
         namespace,
         documentId: input.documentId,
+        documentVersionId: chunk.documentVersionId,
+        sourceKey: doc.sourceKey,
+        version: doc.version,
+        contentHash: doc.contentHash,
         content: chunk.content,
         score: chunk.parseConfidence,
         parseConfidence: chunk.parseConfidence,
