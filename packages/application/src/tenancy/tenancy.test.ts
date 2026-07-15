@@ -45,6 +45,7 @@ function createFakes() {
         accountId,
         name,
         agenticEnabled,
+        vectorNamespace: `ns_ten_TEST${seq}`,
         createdAt: new Date().toISOString(),
       };
       tenants.set(tenant.id, tenant);

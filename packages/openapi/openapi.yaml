@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: AMKP API
   version: 0.1.0
-  description: Agentic Multimodal Knowledge Plane — Account & Tenant APIs (T-1.1)
+  description: Agentic Multimodal Knowledge Plane — Tenancy, Auth, and Isolation APIs
 servers:
   - url: http://localhost:3000
     description: Local
@@ -195,6 +195,33 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+  /v1/retrieve:
+    post:
+      summary: Fail-closed single-pass Retrieve (namespace-scoped)
+      operationId: retrieve
+      security:
+        - TenantApiKeyBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query:
+                  type: string
+      responses:
+        "200":
+          description: EvidenceEnvelope for authenticated Tenant only
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Missing TenantContext or tenant override
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /v1/me:
     get:
       summary: Resolve TenantContext from Product API key

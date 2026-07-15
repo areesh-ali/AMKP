@@ -19,7 +19,14 @@ export interface Tenant {
   name: string;
   /** AD-8: new Tenants default single-pass only */
   agenticEnabled: boolean;
+  /** AD-3: dedicated vector namespace/collection for this Tenant */
+  vectorNamespace: string;
   createdAt: string; // UTC ISO-8601
+}
+
+/** Canonical namespace for a Tenant (fail-closed data plane). */
+export function tenantVectorNamespace(tenantId: TenantId): string {
+  return `ns_${tenantId}`;
 }
 
 export interface Citation {

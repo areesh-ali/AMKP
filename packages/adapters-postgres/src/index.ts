@@ -5,3 +5,4 @@ export { PrismaTenantRepository } from "./tenant.repository";
 export { PrismaApiKeyIssuer } from "./api-key.issuer";
 export { PrismaApiKeyRepository } from "./api-key.repository";
 export { PostgresHealthAdapter } from "./health.adapter";
+export { InMemoryVectorIndex } from "./in-memory-vector-index";

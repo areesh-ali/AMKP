@@ -18,13 +18,14 @@ model Account {
 }
 
 model Tenant {
-  id             String   @id
-  accountId      String   @map("account_id")
-  name           String
-  agenticEnabled Boolean  @default(false) @map("agentic_enabled")
-  createdAt      DateTime @default(now()) @map("created_at")
-  account        Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  apiKeys        ApiKey[]
+  id              String   @id
+  accountId       String   @map("account_id")
+  name            String
+  agenticEnabled  Boolean  @default(false) @map("agentic_enabled")
+  vectorNamespace String   @unique @map("vector_namespace")
+  createdAt       DateTime @default(now()) @map("created_at")
+  account         Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  apiKeys         ApiKey[]
 
   @@index([accountId])
   @@map("tenants")

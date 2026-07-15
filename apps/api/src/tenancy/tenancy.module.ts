@@ -8,7 +8,6 @@ import {
   CreateTenantUseCase,
   ListApiKeysUseCase,
   ListTenantsByAccountUseCase,
-  ResolveTenantContextUseCase,
   RevokeApiKeyUseCase,
   RotateApiKeyUseCase,
   TENANT_REPOSITORY,
@@ -18,30 +17,26 @@ import {
   type TenantRepository,
 } from "@amkp/application";
 import { PersistenceModule } from "../infrastructure/persistence.module";
+import { AuthModule } from "../auth/auth.module";
 import { TenancyController } from "./tenancy.controller";
 import { ApiKeysController } from "./api-keys.controller";
 import { MeController } from "./me.controller";
 import { PlatformAdminGuard } from "./platform-admin.guard";
-import { TenantApiKeyGuard } from "./tenant-api-key.guard";
-import { TenantContextInterceptor } from "./tenant-context.interceptor";
 import {
   CREATE_ACCOUNT_UC,
   CREATE_API_KEY_UC,
   CREATE_TENANT_UC,
   LIST_API_KEYS_UC,
   LIST_TENANTS_UC,
-  RESOLVE_TENANT_UC,
   REVOKE_API_KEY_UC,
   ROTATE_API_KEY_UC,
 } from "./tenancy.tokens";
 
 @Module({
-  imports: [PersistenceModule],
+  imports: [PersistenceModule, AuthModule],
   controllers: [TenancyController, ApiKeysController, MeController],
   providers: [
     PlatformAdminGuard,
-    TenantApiKeyGuard,
-    TenantContextInterceptor,
     {
       provide: CREATE_ACCOUNT_UC,
       useFactory: (accounts: AccountRepository) =>
@@ -89,12 +84,6 @@ import {
         issuer: ApiKeyIssuer,
       ) => new RotateApiKeyUseCase(tenants, keys, issuer),
       inject: [TENANT_REPOSITORY, API_KEY_REPOSITORY, API_KEY_ISSUER],
-    },
-    {
-      provide: RESOLVE_TENANT_UC,
-      useFactory: (keys: ApiKeyRepository) =>
-        new ResolveTenantContextUseCase(keys),
-      inject: [API_KEY_REPOSITORY],
     },
   ],
 })

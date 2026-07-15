@@ -19,6 +19,7 @@ const required = [
   "createApiKey",
   "revokeApiKey",
   "rotateApiKey",
+  "retrieve",
   "getMe",
 ];
 

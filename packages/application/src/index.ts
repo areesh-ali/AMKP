@@ -1,15 +1,12 @@
-import type { EvidenceEnvelope, TenantId } from "@amkp/domain";
+import type { EvidenceEnvelope } from "@amkp/domain";
 import type { TenantContext } from "./tenancy/types";
+import type { RetrieveQuery } from "./retrieve";
 
 export type { AccountId, Account, Tenant } from "@amkp/domain";
 export type { TenantContext } from "./tenancy/types";
+export type { TenantId } from "@amkp/domain";
 export * from "./tenancy";
-
-export interface RetrieveQuery {
-  query: string;
-  preferCorrectness?: boolean;
-  mode?: "single_pass" | "agentic";
-}
+export * from "./retrieve";
 
 export interface RetrievePort {
   retrieve(ctx: TenantContext, input: RetrieveQuery): Promise<EvidenceEnvelope>;
@@ -26,6 +23,3 @@ export class HealthUseCase {
     return this.health.check();
   }
 }
-
-// keep TenantId import used for RetrievePort consumers via domain re-exports
-export type { TenantId };

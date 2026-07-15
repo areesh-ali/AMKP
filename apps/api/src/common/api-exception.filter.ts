@@ -10,6 +10,7 @@ import {
   AccountNotFoundError,
   ApiKeyNotFoundError,
   ApiKeyRevokedError,
+  MissingTenantContextError,
   TenantNotFoundError,
 } from "@amkp/application";
 
@@ -27,6 +28,17 @@ export class ApiExceptionFilter implements ExceptionFilter {
       exception instanceof ApiKeyNotFoundError
     ) {
       res.status(HttpStatus.NOT_FOUND).json({
+        error: {
+          code: exception.code,
+          message: exception.message,
+          request_id: requestId,
+        },
+      });
+      return;
+    }
+
+    if (exception instanceof MissingTenantContextError) {
+      res.status(HttpStatus.FORBIDDEN).json({
         error: {
           code: exception.code,
           message: exception.message,

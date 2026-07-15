@@ -7,3 +7,4 @@ export const LIST_API_KEYS_UC = Symbol("LIST_API_KEYS_UC");
 export const REVOKE_API_KEY_UC = Symbol("REVOKE_API_KEY_UC");
 export const ROTATE_API_KEY_UC = Symbol("ROTATE_API_KEY_UC");
 export const RESOLVE_TENANT_UC = Symbol("RESOLVE_TENANT_UC");
+export const RETRIEVE_UC = Symbol("RETRIEVE_UC");
