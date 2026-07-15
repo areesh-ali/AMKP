@@ -49,6 +49,7 @@ function createFakes() {
         agenticEnabled,
         pageVisionEnabled,
         preferCorrectnessThreshold: 0.5,
+        agenticReadinessPassed: false,
         vectorNamespace: `ns_ten_TEST${seq}`,
         createdAt: new Date().toISOString(),
       };
@@ -74,6 +75,9 @@ function createFakes() {
           : {}),
         ...(patch.preferCorrectnessThreshold !== undefined
           ? { preferCorrectnessThreshold: patch.preferCorrectnessThreshold }
+          : {}),
+        ...(patch.agenticReadinessPassed !== undefined
+          ? { agenticReadinessPassed: patch.agenticReadinessPassed }
           : {}),
       };
       tenants.set(tenantId, next);

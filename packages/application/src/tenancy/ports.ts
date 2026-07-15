@@ -26,6 +26,7 @@ export interface TenantRepository {
       pageVisionEnabled?: boolean;
       agenticEnabled?: boolean;
       preferCorrectnessThreshold?: number;
+      agenticReadinessPassed?: boolean;
     },
   ): Promise<Tenant>;
 }

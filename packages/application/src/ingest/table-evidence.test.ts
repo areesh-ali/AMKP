@@ -211,6 +211,7 @@ describe("TableEvidence parse → retrieve gold fixture", () => {
           agenticEnabled: false,
           pageVisionEnabled: false,
           preferCorrectnessThreshold: 0.5,
+      agenticReadinessPassed: false,
           vectorNamespace: `ns_${id}`,
           createdAt: new Date().toISOString(),
         };

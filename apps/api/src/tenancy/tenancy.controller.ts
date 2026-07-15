@@ -36,6 +36,9 @@ class UpdateTenantDto {
   pageVisionEnabled?: boolean;
   agenticEnabled?: boolean;
   preferCorrectnessThreshold?: number;
+  agenticReadinessPassed?: boolean;
+  agenticOverride?: boolean;
+  actor?: string;
 }
 
 @Controller("v1")
@@ -81,6 +84,7 @@ export class TenancyController {
       agenticEnabled: result.tenant.agenticEnabled,
       pageVisionEnabled: result.tenant.pageVisionEnabled,
       preferCorrectnessThreshold: result.tenant.preferCorrectnessThreshold,
+      agenticReadinessPassed: result.tenant.agenticReadinessPassed,
       apiKey: result.apiKey,
       createdAt: result.tenant.createdAt,
     };
@@ -98,6 +102,7 @@ export class TenancyController {
         agenticEnabled: t.agenticEnabled,
         pageVisionEnabled: t.pageVisionEnabled,
         preferCorrectnessThreshold: t.preferCorrectnessThreshold,
+        agenticReadinessPassed: t.agenticReadinessPassed,
         createdAt: t.createdAt,
       })),
     };
@@ -114,6 +119,9 @@ export class TenancyController {
       pageVisionEnabled: body.pageVisionEnabled,
       agenticEnabled: body.agenticEnabled,
       preferCorrectnessThreshold: body.preferCorrectnessThreshold,
+      agenticReadinessPassed: body.agenticReadinessPassed,
+      agenticOverride: body.agenticOverride,
+      actor: body.actor,
     });
     return {
       tenantId: tenant.id,
@@ -122,6 +130,7 @@ export class TenancyController {
       agenticEnabled: tenant.agenticEnabled,
       pageVisionEnabled: tenant.pageVisionEnabled,
       preferCorrectnessThreshold: tenant.preferCorrectnessThreshold,
+      agenticReadinessPassed: tenant.agenticReadinessPassed,
       createdAt: tenant.createdAt,
     };
   }

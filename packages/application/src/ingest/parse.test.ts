@@ -167,6 +167,7 @@ class FakeTenants {
       agenticEnabled: false,
       pageVisionEnabled: this.pageVisionEnabled,
       preferCorrectnessThreshold: 0.5,
+      agenticReadinessPassed: false,
       vectorNamespace: `ns_${id}`,
       createdAt: new Date().toISOString(),
     };

@@ -18,6 +18,7 @@ import {
   TraceNotFoundError,
   TraceTenantMismatchError,
   AgenticNotEnabledError,
+  AgenticReadinessRequiredError,
   ValidationError,
 } from "@amkp/application";
 
@@ -60,7 +61,8 @@ export class ApiExceptionFilter implements ExceptionFilter {
     if (
       exception instanceof MissingTenantContextError ||
       exception instanceof TraceTenantMismatchError ||
-      exception instanceof AgenticNotEnabledError
+      exception instanceof AgenticNotEnabledError ||
+      exception instanceof AgenticReadinessRequiredError
     ) {
       res.status(HttpStatus.FORBIDDEN).json({
         error: {

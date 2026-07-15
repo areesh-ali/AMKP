@@ -1,5 +1,5 @@
 /**
- * T-4.1 — Router default single-pass for new Tenants.
+ * T-4.2 — Agentic Readiness gate + audited override.
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Test } from "@nestjs/testing";
@@ -13,6 +13,7 @@ import {
   type PrismaClient,
 } from "@amkp/adapters-postgres";
 import {
+  sharedAuditLog,
   sharedRetrieveCache,
   sharedTraceRepository,
   sharedVectorIndex,
@@ -22,11 +23,12 @@ const DATABASE_URL =
   process.env.DATABASE_URL ?? "postgresql://amkp:amkp@localhost:5433/amkp";
 const ADMIN = process.env.PLATFORM_ADMIN_TOKEN ?? "ci-admin-token";
 
-describe("Router default single-pass (T-4.1)", () => {
+describe("Agentic Readiness gate (T-4.2)", () => {
   let app: INestApplication;
   let prisma: PrismaClient;
   let key: string;
   let tenantId: string;
+  const auth = { Authorization: `Bearer ${ADMIN}` };
 
   beforeAll(async () => {
     process.env.DATABASE_URL = DATABASE_URL;
@@ -50,22 +52,22 @@ describe("Router default single-pass (T-4.1)", () => {
     sharedVectorIndex.clear();
     sharedRetrieveCache.clear();
     sharedTraceRepository.clear();
+    sharedAuditLog.clear();
     await prisma.chunk.deleteMany();
     await prisma.document.deleteMany();
     await prisma.apiKey.deleteMany();
     await prisma.tenant.deleteMany();
     await prisma.account.deleteMany();
 
-    const auth = { Authorization: `Bearer ${ADMIN}` };
     const acc = await request(app.getHttpServer())
       .post("/v1/accounts")
       .set(auth)
-      .send({ name: "Router Acct" });
+      .send({ name: "Ready Acct" });
     const t = await request(app.getHttpServer())
       .post(`/v1/accounts/${acc.body.accountId}/tenants`)
       .set(auth)
       .send({ name: "new" });
-    expect(t.body.agenticEnabled).toBe(false);
+    expect(t.body.agenticReadinessPassed).toBe(false);
     key = t.body.apiKey;
     tenantId = t.body.tenantId;
 
@@ -83,27 +85,6 @@ describe("Router default single-pass (T-4.1)", () => {
     await prisma?.$disconnect();
   });
 
-  it("new Tenant retrieve is single-pass; Trace records reason code", async () => {
-    const retrieve = await request(app.getHttpServer())
-      .post("/v1/retrieve")
-      .set({ Authorization: `Bearer ${key}` })
-      .send({ query: "hello" });
-    expect(retrieve.status).toBe(200);
-    expect(retrieve.body.routerDecision.mode).toBe("single_pass");
-    expect(retrieve.body.routerDecision.reasonCode).toBe(
-      "tenant_default_single_pass",
-    );
-
-    const trace = await request(app.getHttpServer())
-      .get(`/v1/traces/${retrieve.body.requestId}`)
-      .set({ Authorization: `Bearer ${key}` });
-    expect(trace.status).toBe(200);
-    expect(trace.body.routerDecision.mode).toBe("single_pass");
-    expect(trace.body.routerDecision.reasonCode).toBe(
-      "tenant_default_single_pass",
-    );
-  });
-
   it("mode=agentic without readiness returns 403", async () => {
     const res = await request(app.getHttpServer())
       .post("/v1/retrieve")
@@ -111,5 +92,36 @@ describe("Router default single-pass (T-4.1)", () => {
       .send({ query: "hello", mode: "agentic" });
     expect(res.status).toBe(403);
     expect(res.body.error.code).toBe("AGENTIC_READINESS_REQUIRED");
+  });
+
+  it("audited override enables agentic and writes actor+timestamp", async () => {
+    const denied = await request(app.getHttpServer())
+      .patch(`/v1/tenants/${tenantId}`)
+      .set(auth)
+      .send({ agenticEnabled: true });
+    expect(denied.status).toBe(400);
+
+    const ok = await request(app.getHttpServer())
+      .patch(`/v1/tenants/${tenantId}`)
+      .set(auth)
+      .send({
+        agenticEnabled: true,
+        agenticOverride: true,
+        actor: "admin@example.com",
+      });
+    expect(ok.status).toBe(200);
+    expect(ok.body.agenticEnabled).toBe(true);
+
+    expect(sharedAuditLog.entries).toHaveLength(1);
+    expect(sharedAuditLog.entries[0]?.action).toBe("agentic_override_enable");
+    expect(sharedAuditLog.entries[0]?.actor).toBe("admin@example.com");
+    expect(sharedAuditLog.entries[0]?.at).toBeTruthy();
+
+    const retrieve = await request(app.getHttpServer())
+      .post("/v1/retrieve")
+      .set({ Authorization: `Bearer ${key}` })
+      .send({ query: "hello", mode: "agentic" });
+    expect(retrieve.status).toBe(200);
+    expect(retrieve.body.routerDecision.mode).toBe("agentic");
   });
 });

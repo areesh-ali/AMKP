@@ -24,6 +24,7 @@ model Tenant {
   agenticEnabled               Boolean  @default(false) @map("agentic_enabled")
   pageVisionEnabled            Boolean  @default(false) @map("page_vision_enabled")
   preferCorrectnessThreshold   Float    @default(0.5) @map("prefer_correctness_threshold")
+  agenticReadinessPassed       Boolean  @default(false) @map("agentic_readiness_passed")
   vectorNamespace              String   @unique @map("vector_namespace")
   createdAt         DateTime   @default(now()) @map("created_at")
   account           Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)

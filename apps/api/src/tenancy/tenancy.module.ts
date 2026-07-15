@@ -12,9 +12,11 @@ import {
   RotateApiKeyUseCase,
   UpdateTenantSettingsUseCase,
   TENANT_REPOSITORY,
+  AUDIT_LOG,
   type AccountRepository,
   type ApiKeyIssuer,
   type ApiKeyRepository,
+  type AuditLogPort,
   type TenantRepository,
 } from "@amkp/application";
 import { PersistenceModule } from "../infrastructure/persistence.module";
@@ -62,9 +64,9 @@ import {
     },
     {
       provide: UPDATE_TENANT_UC,
-      useFactory: (tenants: TenantRepository) =>
-        new UpdateTenantSettingsUseCase(tenants),
-      inject: [TENANT_REPOSITORY],
+      useFactory: (tenants: TenantRepository, audit: AuditLogPort) =>
+        new UpdateTenantSettingsUseCase(tenants, audit),
+      inject: [TENANT_REPOSITORY, AUDIT_LOG],
     },
     {
       provide: CREATE_API_KEY_UC,

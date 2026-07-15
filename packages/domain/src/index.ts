@@ -73,6 +73,11 @@ export interface Tenant {
    * Default 0.5 — below this, Retrieve returns insufficient_evidence.
    */
   preferCorrectnessThreshold: number;
+  /**
+   * Agentic Readiness gate (FR-13 / T-4.2). Default false.
+   * mode=agentic requires this OR an audited override enabling agenticEnabled.
+   */
+  agenticReadinessPassed: boolean;
   /** AD-3: dedicated vector namespace/collection for this Tenant */
   vectorNamespace: string;
   createdAt: string; // UTC ISO-8601

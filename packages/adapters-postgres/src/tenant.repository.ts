@@ -26,6 +26,7 @@ export class PrismaTenantRepository implements TenantRepository {
         agenticEnabled: input.agenticEnabled ?? false,
         pageVisionEnabled: input.pageVisionEnabled ?? false,
         preferCorrectnessThreshold: DEFAULT_PREFER_CORRECTNESS_THRESHOLD,
+        agenticReadinessPassed: false,
         vectorNamespace: tenantVectorNamespace(id),
       },
     });
@@ -54,6 +55,7 @@ export class PrismaTenantRepository implements TenantRepository {
       pageVisionEnabled?: boolean;
       agenticEnabled?: boolean;
       preferCorrectnessThreshold?: number;
+      agenticReadinessPassed?: boolean;
     },
   ): Promise<Tenant> {
     const existing = await this.prisma.tenant.findUnique({
@@ -74,6 +76,9 @@ export class PrismaTenantRepository implements TenantRepository {
         ...(patch.preferCorrectnessThreshold !== undefined
           ? { preferCorrectnessThreshold: patch.preferCorrectnessThreshold }
           : {}),
+        ...(patch.agenticReadinessPassed !== undefined
+          ? { agenticReadinessPassed: patch.agenticReadinessPassed }
+          : {}),
       },
     });
     return mapTenant(row);
@@ -87,6 +92,7 @@ function mapTenant(row: {
   agenticEnabled: boolean;
   pageVisionEnabled: boolean;
   preferCorrectnessThreshold: number;
+  agenticReadinessPassed: boolean;
   vectorNamespace: string;
   createdAt: Date;
 }): Tenant {
@@ -97,6 +103,7 @@ function mapTenant(row: {
     agenticEnabled: row.agenticEnabled,
     pageVisionEnabled: row.pageVisionEnabled,
     preferCorrectnessThreshold: row.preferCorrectnessThreshold,
+    agenticReadinessPassed: row.agenticReadinessPassed,
     vectorNamespace: row.vectorNamespace,
     createdAt: toIso(row.createdAt),
   };
