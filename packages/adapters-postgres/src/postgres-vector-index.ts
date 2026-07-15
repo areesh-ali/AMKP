@@ -1,9 +1,14 @@
-import type { IndexedChunk, VectorIndexPort } from "@amkp/application";
-import type { PrismaClient } from "./prisma";
+import type {
+  EmbeddingProvider,
+  IndexedChunk,
+  VectorIndexPort,
+} from "@amkp/application";
 import {
   embeddingToPgVectorLiteral,
-  stubEmbedding,
-} from "./stub-embedding";
+  stubEmbedText,
+  STUB_EMBEDDING_DIMS,
+} from "@amkp/application";
+import type { PrismaClient } from "./prisma";
 
 type Row = {
   id: string;
@@ -21,18 +26,31 @@ type Row = {
   dense: number;
 };
 
+class DefaultStubEmbedder implements EmbeddingProvider {
+  readonly dimensions = STUB_EMBEDDING_DIMS;
+  async embed(texts: string[]): Promise<number[][]> {
+    return texts.map((t) => stubEmbedText(t, this.dimensions));
+  }
+}
+
 /**
- * Shared Postgres + pgvector index (AD-3 / deferred T-3.x).
- * Hybrid: cosine dense stub + lexical overlap, same weights as InMemoryVectorIndex.
+ * Shared Postgres + pgvector index (AD-3).
+ * Hybrid: cosine dense via EmbeddingProvider + lexical overlap.
  */
 export class PostgresVectorIndex implements VectorIndexPort {
-  constructor(private readonly prisma: PrismaClient) {}
+  private readonly embedder: EmbeddingProvider;
+
+  constructor(
+    private readonly prisma: PrismaClient,
+    embedder?: EmbeddingProvider,
+  ) {
+    this.embedder = embedder ?? new DefaultStubEmbedder();
+  }
 
   async upsert(chunk: IndexedChunk): Promise<void> {
-    const emb = embeddingToPgVectorLiteral(stubEmbedding(chunk.content));
-    const tableJson = chunk.table
-      ? JSON.stringify(chunk.table)
-      : null;
+    const [vec] = await this.embedder.embed([chunk.content]);
+    const emb = embeddingToPgVectorLiteral(vec ?? stubEmbedText(chunk.content));
+    const tableJson = chunk.table ? JSON.stringify(chunk.table) : null;
 
     await this.prisma.$executeRawUnsafe(
       `
@@ -84,7 +102,8 @@ export class PostgresVectorIndex implements VectorIndexPort {
     if (!q) return [];
     const limit = input.limit ?? 10;
     const candidateLimit = Math.max(limit * 5, 50);
-    const emb = embeddingToPgVectorLiteral(stubEmbedding(q));
+    const [vec] = await this.embedder.embed([q]);
+    const emb = embeddingToPgVectorLiteral(vec ?? stubEmbedText(q));
     const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
 
     const rows = await this.prisma.$queryRawUnsafe<Row[]>(

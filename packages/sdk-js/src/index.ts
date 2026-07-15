@@ -63,6 +63,38 @@ export class AmkpClient {
     return this.request("GET", `/v1/traces/${encodeURIComponent(requestId)}`);
   }
 
+  async listDocuments(): Promise<{ items: unknown[] }> {
+    return this.request("GET", "/v1/documents");
+  }
+
+  async listMcpTools(): Promise<unknown> {
+    return this.request("GET", "/v1/mcp/tools");
+  }
+
+  async mcpRetrieve(input: {
+    query: string;
+    preferCorrectness?: boolean;
+    documentIds?: string[];
+  }): Promise<EvidenceEnvelope> {
+    return this.request("POST", "/v1/mcp/tools/retrieve", input);
+  }
+
+  async runGoldenEval(input: {
+    questions: Array<{
+      id: string;
+      question: string;
+      expectedDocumentIds?: string[];
+      expectedKeywords?: string[];
+    }>;
+    judge?: { kind: "lexical_stub" | "llm"; modelId?: string };
+  }): Promise<unknown> {
+    return this.request("POST", "/v1/eval/golden-set", input);
+  }
+
+  async runTableRankEval(input: { queries: string[] }): Promise<unknown> {
+    return this.request("POST", "/v1/eval/table-rank", input);
+  }
+
   private async request<T>(
     method: string,
     path: string,

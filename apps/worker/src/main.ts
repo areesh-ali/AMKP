@@ -17,7 +17,7 @@ import {
   PrismaDocumentRepository,
   PrismaTenantRepository,
 } from "@amkp/adapters-postgres";
-import { LocalParseLadder } from "@amkp/adapters-providers";
+import { LocalParseLadder, StubEmbeddingProvider } from "@amkp/adapters-providers";
 import { BullMqJobQueue, QUEUE_NAMES } from "@amkp/adapters-redis";
 
 function connectionFromUrl(redisUrl: string) {
@@ -43,10 +43,11 @@ async function main() {
   const tenants = new PrismaTenantRepository(prisma);
   const jobs: JobQueuePort = new BullMqJobQueue(redisUrl);
   const ladder: ParseLadderPort = new LocalParseLadder();
+  const embedder = new StubEmbeddingProvider();
   const index: VectorIndexPort =
     process.env.AMKP_VECTOR_INDEX === "memory"
       ? new InMemoryVectorIndex()
-      : new PostgresVectorIndex(prisma);
+      : new PostgresVectorIndex(prisma, embedder);
 
   const processIngest = new ProcessIngestJobUseCase(documents, jobs);
   const processParse = new ProcessParseJobUseCase(

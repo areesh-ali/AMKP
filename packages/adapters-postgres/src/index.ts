@@ -9,7 +9,11 @@ export { PrismaChunkRepository } from "./chunk.repository";
 export { PostgresHealthAdapter } from "./health.adapter";
 export { InMemoryVectorIndex } from "./in-memory-vector-index";
 export { PostgresVectorIndex } from "./postgres-vector-index";
-export { stubEmbedding, embeddingToPgVectorLiteral } from "./stub-embedding";
+export {
+  stubEmbedding,
+  embeddingToPgVectorLiteral,
+  STUB_EMBEDDING_DIMS,
+} from "./stub-embedding";
 export {
   InMemoryTraceRepository,
   PrismaTraceRepository,

@@ -30,7 +30,11 @@ import {
   PrismaTenantRepository,
   PrismaTraceRepository,
 } from "@amkp/adapters-postgres";
-import { LocalParseLadder, createPageVisionLedger } from "@amkp/adapters-providers";
+import {
+  StubEmbeddingProvider,
+  LocalParseLadder,
+  createPageVisionLedger,
+} from "@amkp/adapters-providers";
 import {
   createJobQueue,
   InMemoryJobQueue,
@@ -66,6 +70,7 @@ export const sharedMetrics = new InMemoryMetrics();
 /** Shared VLM spend ledger for asserting page-vision opt-in (T-2.4). */
 export const sharedPageVisionLedger = createPageVisionLedger();
 export const sharedParseLadder = new LocalParseLadder(sharedPageVisionLedger);
+export const sharedEmbeddingProvider = new StubEmbeddingProvider();
 
 function useEphemeralAdapters(): boolean {
   return (
@@ -118,7 +123,7 @@ function useEphemeralAdapters(): boolean {
         if (useEphemeralAdapters()) {
           return sharedVectorIndex;
         }
-        return new PostgresVectorIndex(prisma);
+        return new PostgresVectorIndex(prisma, sharedEmbeddingProvider);
       },
       inject: [PRISMA],
     },

@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   embeddingToPgVectorLiteral,
-  stubEmbedding,
+  stubEmbedText,
   STUB_EMBEDDING_DIMS,
-} from "./stub-embedding";
+} from "@amkp/application";
 
-describe("stubEmbedding", () => {
+describe("stubEmbedText", () => {
   it("is deterministic and unit-length", () => {
-    const a = stubEmbedding("refund policy table");
-    const b = stubEmbedding("refund policy table");
+    const a = stubEmbedText("refund policy table");
+    const b = stubEmbedText("refund policy table");
     expect(a).toEqual(b);
     expect(a).toHaveLength(STUB_EMBEDDING_DIMS);
     const norm = Math.sqrt(a.reduce((s, v) => s + v * v, 0));
@@ -16,9 +16,9 @@ describe("stubEmbedding", () => {
   });
 
   it("scores overlapping queries higher than unrelated", () => {
-    const doc = stubEmbedding("quarterly revenue table with region totals");
-    const related = stubEmbedding("revenue table region");
-    const unrelated = stubEmbedding("completely different topic xyz");
+    const doc = stubEmbedText("quarterly revenue table with region totals");
+    const related = stubEmbedText("revenue table region");
+    const unrelated = stubEmbedText("completely different topic xyz");
     const cos = (x: number[], y: number[]) =>
       x.reduce((s, v, i) => s + v * y[i]!, 0);
     expect(cos(doc, related)).toBeGreaterThan(cos(doc, unrelated));
