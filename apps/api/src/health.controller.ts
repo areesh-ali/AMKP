@@ -22,6 +22,26 @@ function adapterSummary() {
     apiKeyHash: process.env.AMKP_API_KEY_PEPPER?.trim()
       ? "hmac-sha256"
       : "sha256",
+    embeddings: process.env.AMKP_EMBEDDING_API_KEY?.trim()
+      ? "openai_compatible"
+      : "stub",
+    pdfEngine:
+      process.env.AMKP_PDF_ENGINE === "cheap" ? "cheap" : "unpdf",
+    pageVision: process.env.AMKP_PAGE_VISION_URL?.trim()
+      ? "http"
+      : "stub",
+    documentWebhook: process.env.AMKP_DOCUMENT_WEBHOOK_URL?.trim()
+      ? process.env.AMKP_DOCUMENT_WEBHOOK_SECRET?.trim()
+        ? "signed_http"
+        : "http"
+      : "off",
+    otel:
+      process.env.OTEL_EXPORTER_OTLP_ENDPOINT?.trim() ||
+      process.env.AMKP_OTEL === "1"
+        ? "otlp"
+        : process.env.AMKP_TRACE_CONSOLE === "1"
+          ? "console"
+          : "noop",
   };
 }
 
