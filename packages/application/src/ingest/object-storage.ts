@@ -12,6 +12,8 @@ export interface ObjectStoragePort {
   }): Promise<void>;
   get(key: string): Promise<Buffer | null>;
   delete(key: string): Promise<void>;
+  /** Optional listing for orphan GC (local FS / S3). */
+  listKeys?(prefix: string): Promise<string[]>;
 }
 
 export const OBJECT_STORAGE = Symbol("OBJECT_STORAGE");

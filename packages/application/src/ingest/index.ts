@@ -14,3 +14,4 @@ export * from "./delete-document";
 export * from "./reparse-document";
 export * from "./prune-document-versions";
 export * from "./idempotency-store";
+export * from "./sweep-orphan-objects";

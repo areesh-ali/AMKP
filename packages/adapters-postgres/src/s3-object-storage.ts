@@ -1,6 +1,7 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -88,6 +89,30 @@ export class S3ObjectStorage implements ObjectStoragePort {
         Key: this.fullKey(key),
       }),
     );
+  }
+
+  async listKeys(prefix: string): Promise<string[]> {
+    const fullPrefix = this.fullKey(prefix);
+    const out: string[] = [];
+    let token: string | undefined;
+    do {
+      const page = await this.client.send(
+        new ListObjectsV2Command({
+          Bucket: this.bucket,
+          Prefix: fullPrefix,
+          ContinuationToken: token,
+        }),
+      );
+      for (const obj of page.Contents ?? []) {
+        if (!obj.Key) continue;
+        const key = this.keyPrefix
+          ? obj.Key.slice(this.keyPrefix.length + 1)
+          : obj.Key;
+        if (key) out.push(key);
+      }
+      token = page.IsTruncated ? page.NextContinuationToken : undefined;
+    } while (token);
+    return out.sort();
   }
 }
 

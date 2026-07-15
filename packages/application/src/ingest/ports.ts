@@ -66,6 +66,8 @@ export interface DocumentRepository {
     documentId: DocumentId,
     status: DocumentStatus,
   ): Promise<Document>;
+  /** Storage keys referenced by Documents (for orphan GC). */
+  listStorageKeys?(): Promise<string[]>;
 }
 
 export type QueueName = "ingest" | "parse" | "eval";

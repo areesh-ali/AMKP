@@ -41,4 +41,24 @@ describe("LocalFsObjectStorage", () => {
   it("returns null for missing keys", async () => {
     expect(await store.get("tenants/x/documents/missing")).toBeNull();
   });
+
+  it("lists keys under prefix", async () => {
+    await store.put({
+      key: "tenants/ten_a/documents/doc_1",
+      bytes: Buffer.from("a"),
+      contentType: "text/plain",
+    });
+    await store.put({
+      key: "tenants/ten_b/documents/doc_2",
+      bytes: Buffer.from("b"),
+      contentType: "text/plain",
+    });
+    const all = await store.listKeys("tenants/");
+    expect(all).toEqual([
+      "tenants/ten_a/documents/doc_1",
+      "tenants/ten_b/documents/doc_2",
+    ]);
+    const onlyA = await store.listKeys("tenants/ten_a");
+    expect(onlyA).toEqual(["tenants/ten_a/documents/doc_1"]);
+  });
 });

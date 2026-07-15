@@ -146,6 +146,10 @@ When set (≥1), non-deduped ingest auto-prunes older versions. Manual: `POST /v
 
 Send header `Idempotency-Key` on `POST /v1/ingest` or `/v1/ingest/upload`. Matching Tenant+key replays the first `202` JSON body and sets `Idempotent-Replayed: true`. TTL via `AMKP_IDEMPOTENCY_TTL_SECONDS` (default 24h). Backed by Redis when configured; in-memory otherwise.
 
+## Orphan object-storage sweep
+
+Platform admin `POST /v1/admin/storage/sweep-orphans` with optional `{ "dryRun": true, "prefix": "tenants/" }` lists (or deletes) blob keys not referenced by any `documents.storage_key`. Requires `AMKP_S3_BUCKET` or `AMKP_OBJECT_STORAGE_DIR`. Default is dry-run.
+
 ## Multipart ingest
 
 `POST /v1/ingest/upload` accepts `multipart/form-data` with required field `file` and optional `sourceKey` / `filename`. Size capped by `AMKP_MAX_DOCUMENT_BYTES`.

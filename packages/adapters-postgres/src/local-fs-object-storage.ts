@@ -1,5 +1,5 @@
-import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
-import { dirname, join, resolve, sep } from "node:path";
+import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import type { ObjectStoragePort } from "@amkp/application";
 
 /**
@@ -53,5 +53,32 @@ export class LocalFsObjectStorage implements ObjectStoragePort {
       if ((err as NodeJS.ErrnoException).code === "ENOENT") return;
       throw err;
     }
+  }
+
+  async listKeys(prefix: string): Promise<string[]> {
+    const root = resolve(this.rootDir);
+    const start = prefix
+      ? this.resolveSafe(prefix.replace(/\/$/, ""))
+      : root;
+    const out: string[] = [];
+    async function walk(dir: string): Promise<void> {
+      let entries;
+      try {
+        entries = await readdir(dir, { withFileTypes: true });
+      } catch (err) {
+        if ((err as NodeJS.ErrnoException).code === "ENOENT") return;
+        throw err;
+      }
+      for (const ent of entries) {
+        const full = join(dir, ent.name);
+        if (ent.isDirectory()) {
+          await walk(full);
+        } else if (ent.isFile()) {
+          out.push(relative(root, full).split(sep).join("/"));
+        }
+      }
+    }
+    await walk(start);
+    return out.sort();
   }
 }

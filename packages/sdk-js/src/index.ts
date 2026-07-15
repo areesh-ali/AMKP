@@ -473,6 +473,18 @@ export class AmkpAdminClient {
     );
   }
 
+  async sweepOrphanObjects(opts?: {
+    dryRun?: boolean;
+    prefix?: string;
+  }): Promise<{
+    scanned: number;
+    orphaned: string[];
+    deleted: string[];
+    dryRun: boolean;
+  }> {
+    return this.request("POST", "/v1/admin/storage/sweep-orphans", opts ?? {});
+  }
+
   private requestIdHeaders(): Record<string, string> {
     return this.requestId ? { "x-request-id": this.requestId } : {};
   }

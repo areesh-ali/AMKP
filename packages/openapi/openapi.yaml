@@ -1000,6 +1000,51 @@ paths:
                           format: date-time
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /v1/admin/storage/sweep-orphans:
+    post:
+      summary: Sweep orphan object-storage keys (platform admin)
+      operationId: sweepOrphanObjects
+      security:
+        - PlatformAdminBearer: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dryRun:
+                  type: boolean
+                  default: true
+                  description: When true (default), only report orphans
+                prefix:
+                  type: string
+                  default: tenants/
+      responses:
+        "200":
+          description: Sweep result
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [scanned, orphaned, deleted, dryRun]
+                properties:
+                  scanned:
+                    type: integer
+                  orphaned:
+                    type: array
+                    items:
+                      type: string
+                  deleted:
+                    type: array
+                    items:
+                      type: string
+                  dryRun:
+                    type: boolean
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          description: Object storage not configured
 components:
   securitySchemes:
     PlatformAdminBearer:

@@ -274,6 +274,16 @@ export class PrismaDocumentRepository implements DocumentRepository {
     });
     return mapDocument(row);
   }
+
+  async listStorageKeys(): Promise<string[]> {
+    const rows = await this.prisma.document.findMany({
+      where: { storageKey: { not: null } },
+      select: { storageKey: true },
+    });
+    return rows
+      .map((r) => r.storageKey)
+      .filter((k): k is string => typeof k === "string" && k.length > 0);
+  }
 }
 
 function mapDocument(row: {

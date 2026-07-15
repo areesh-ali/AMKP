@@ -36,6 +36,7 @@
 - Document **version prune** (`POST /v1/documents/versions/prune`, optional `AMKP_DOCUMENT_VERSION_RETENTION`)
 - HTTP **eval judge** via `AMKP_EVAL_JUDGE_URL` for golden-set `judge.kind: "llm"`
 - Ingest **`Idempotency-Key`** header (tenant-scoped replay; Redis or memory)
+- Admin **orphan object-storage sweep** (`POST /v1/admin/storage/sweep-orphans`)
 - Ops guide: `docs/operations.md`
 
 ### Epics E1–E8
