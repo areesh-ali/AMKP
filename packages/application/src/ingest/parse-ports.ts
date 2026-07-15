@@ -95,4 +95,18 @@ export interface PageVisionProvider {
 
 export const PAGE_VISION_PROVIDER = Symbol("PAGE_VISION_PROVIDER");
 
+/** Fire-and-forget notifier for Document lifecycle events. */
+export interface DocumentStatusNotifier {
+  notify(event: {
+    tenantId: TenantId;
+    documentId: DocumentId;
+    status: string;
+    parseTier?: ParseTier;
+    chunkCount?: number;
+    usedVlm?: boolean;
+  }): Promise<void>;
+}
+
+export const DOCUMENT_STATUS_NOTIFIER = Symbol("DOCUMENT_STATUS_NOTIFIER");
+
 export type { ChunkId };

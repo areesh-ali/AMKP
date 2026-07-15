@@ -10,7 +10,11 @@ import { tenantVectorNamespace } from "@amkp/domain";
 import type { VectorIndexPort } from "../retrieve/retrieve";
 import type { TenantRepository } from "../tenancy/ports";
 import { DocumentNotFoundError, type DocumentRepository } from "./ports";
-import type { ChunkRepository, ParseLadderPort } from "./parse-ports";
+import type {
+  ChunkRepository,
+  DocumentStatusNotifier,
+  ParseLadderPort,
+} from "./parse-ports";
 import {
   clampParseConfidence,
   segmentTextWithTables,
@@ -39,6 +43,7 @@ export class ProcessParseJobUseCase {
     private readonly ladder: ParseLadderPort,
     private readonly index: VectorIndexPort,
     private readonly tenants: TenantRepository,
+    private readonly statusNotifier?: DocumentStatusNotifier,
   ) {}
 
   async execute(input: {
@@ -182,6 +187,15 @@ export class ProcessParseJobUseCase {
       input.documentId,
       "parsed",
     );
+
+    await this.statusNotifier?.notify({
+      tenantId: input.tenantId,
+      documentId: input.documentId,
+      status: "parsed",
+      parseTier,
+      chunkCount: created.length,
+      usedVlm,
+    });
 
     return {
       documentId: input.documentId,

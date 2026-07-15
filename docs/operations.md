@@ -63,6 +63,24 @@ Set `AMKP_PAGE_VISION_URL` to an HTTP endpoint that accepts:
 and returns `{ "text": "...", "confidence": 0.8, "spendUsd": 0.02 }`.
 Without it, tier3 uses the deterministic stub (still only when Tenant `pageVisionEnabled`).
 
+## Document status webhooks
+
+Set `AMKP_DOCUMENT_WEBHOOK_URL` to receive a POST after a Document reaches `parsed`:
+
+```json
+{
+  "tenantId": "ten_...",
+  "documentId": "doc_...",
+  "status": "parsed",
+  "parseTier": "tier1_text",
+  "chunkCount": 3,
+  "usedVlm": false,
+  "at": "2026-07-15T00:00:00.000Z"
+}
+```
+
+Delivery failures are logged and do not fail the parse job.
+
 ## Access logs
 
 Set `AMKP_ACCESS_LOG=1` for one JSON line per HTTP request (`method`, `path`, `status`, `duration_ms`, `request_id`).

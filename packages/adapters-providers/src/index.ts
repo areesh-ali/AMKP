@@ -16,6 +16,10 @@ export {
   HttpPageVisionProvider,
   createPageVisionProviderFromEnv,
 } from "./http-page-vision";
+export {
+  HttpDocumentStatusNotifier,
+  createDocumentStatusNotifierFromEnv,
+} from "./http-document-webhook";
 export { OtelApiTracer } from "./otel-tracer";
 export { startAmkpOtel } from "./otel-bootstrap";
 export { createAmkpTracerFromEnv } from "./create-tracer";

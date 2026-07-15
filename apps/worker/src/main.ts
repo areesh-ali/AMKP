@@ -23,6 +23,7 @@ import {
   LocalParseLadder,
   createEmbeddingProviderFromEnv,
   createPageVisionProviderFromEnv,
+  createDocumentStatusNotifierFromEnv,
   startAmkpOtel,
 } from "@amkp/adapters-providers";
 import { BullMqJobQueue, QUEUE_NAMES } from "@amkp/adapters-redis";
@@ -71,6 +72,7 @@ async function main() {
     ladder,
     index,
     tenants,
+    createDocumentStatusNotifierFromEnv(),
   );
 
   const connection = connectionFromUrl(redisUrl);

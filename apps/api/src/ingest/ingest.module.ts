@@ -16,12 +16,14 @@ import {
   VECTOR_INDEX,
   type ChunkRepository,
   type DocumentRepository,
+  type DocumentStatusNotifier,
   type JobQueuePort,
   type ParseLadderPort,
   type RetrieveCachePort,
   type TenantRepository,
   type VectorIndexPort,
 } from "@amkp/application";
+import { createDocumentStatusNotifierFromEnv } from "@amkp/adapters-providers";
 import { PersistenceModule } from "../infrastructure/persistence.module";
 import { AuthModule } from "../auth/auth.module";
 import { IngestController } from "./ingest.controller";
@@ -84,7 +86,17 @@ import {
         ladder: ParseLadderPort,
         index: VectorIndexPort,
         tenants: TenantRepository,
-      ) => new ProcessParseJobUseCase(docs, chunks, ladder, index, tenants),
+      ) =>
+        new ProcessParseJobUseCase(
+          docs,
+          chunks,
+          ladder,
+          index,
+          tenants,
+          createDocumentStatusNotifierFromEnv() as
+            | DocumentStatusNotifier
+            | undefined,
+        ),
       inject: [
         DOCUMENT_REPOSITORY,
         CHUNK_REPOSITORY,
