@@ -7,14 +7,14 @@ status: in_progress
 
 Running unattended until the user asks to stop.
 
-## Latest on `main` (local)
+## Tip (`main`, local)
 
-Continuous hardening continues on tip of `main` (see `git log`). Recent
-slices: pagination, OTel, unpdf, page-vision HTTP, multipart ingest,
-rate-limit headers, webhooks (+ HMAC + failed), admin account list/get.
+~17 commits ahead of `origin/main` since the last remote sync point,
+including status filter, admin tenant list, health adapters, versions,
+content download, webhooks, etc.
 
 ## Still optional
 
 - Commercial VLM beyond HTTP contract
-- Argon2 (intentionally deferred for high-entropy keyed lookup)
+- Argon2 (intentionally deferred)
 - Richer layout/PDF page-vision pipelines
