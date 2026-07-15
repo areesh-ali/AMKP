@@ -98,6 +98,7 @@ export class IngestController {
       filename: result.document.filename,
       contentType: result.document.contentType,
       byteSize: result.document.byteSize,
+      deduped: String(result.jobId).startsWith("noop_"),
     };
   }
 

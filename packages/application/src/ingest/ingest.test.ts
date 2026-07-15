@@ -160,6 +160,27 @@ describe("IngestDocumentUseCase", () => {
       uc.execute(ctx, { filename: "x.txt", content: Buffer.alloc(0) }),
     ).rejects.toBeInstanceOf(ValidationError);
   });
+
+  it("is idempotent for identical bytes on the same sourceKey", async () => {
+    const docs = new FakeDocs();
+    const queue = new FakeQueue();
+    const uc = new IngestDocumentUseCase(docs, queue);
+    const bytes = Buffer.from("same payload");
+    const first = await uc.execute(ctx, {
+      filename: "a.txt",
+      sourceKey: "a",
+      content: bytes,
+    });
+    const second = await uc.execute(ctx, {
+      filename: "a.txt",
+      sourceKey: "a",
+      content: bytes,
+    });
+    expect(second.document.id).toBe(first.document.id);
+    expect(second.document.version).toBe(1);
+    expect(String(second.jobId)).toMatch(/^noop_/);
+    expect(queue.jobs).toHaveLength(1);
+  });
 });
 
 describe("ListDocumentsUseCase isolation", () => {

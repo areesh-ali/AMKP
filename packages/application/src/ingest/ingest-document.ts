@@ -77,6 +77,13 @@ export class IngestDocumentUseCase {
       ctx.tenantId,
       sourceKey,
     );
+    if (latest && latest.contentHash === contentHash) {
+      // Idempotent re-ingest of identical bytes — return existing Document, no new job.
+      return {
+        document: latest,
+        jobId: `noop_${randomUUID()}` as JobId,
+      };
+    }
     const version = (latest?.version ?? 0) + 1;
 
     const document = await this.documents.create({
