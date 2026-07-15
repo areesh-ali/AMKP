@@ -136,6 +136,62 @@ export class AmkpClient {
   }
 }
 
+export interface AmkpAdminClientOptions {
+  baseUrl: string;
+  /** PLATFORM_ADMIN_TOKEN bearer. */
+  adminToken: string;
+  fetch?: typeof fetch;
+}
+
+/** Platform-admin SDK surface (accounts, tenants, audit). */
+export class AmkpAdminClient {
+  private readonly baseUrl: string;
+  private readonly adminToken: string;
+  private readonly fetchFn: typeof fetch;
+
+  constructor(opts: AmkpAdminClientOptions) {
+    this.baseUrl = opts.baseUrl.replace(/\/$/, "");
+    this.adminToken = opts.adminToken;
+    this.fetchFn = opts.fetch ?? fetch;
+  }
+
+  async createAccount(name: string): Promise<{ accountId: string; name: string }> {
+    return this.request("POST", "/v1/accounts", { name });
+  }
+
+  async createTenant(
+    accountId: string,
+    name: string,
+  ): Promise<{ tenantId: string; apiKey: string }> {
+    return this.request("POST", `/v1/accounts/${accountId}/tenants`, { name });
+  }
+
+  async listAudit(limit = 50): Promise<{ items: unknown[] }> {
+    return this.request("GET", `/v1/audit?limit=${encodeURIComponent(String(limit))}`);
+  }
+
+  private async request<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+  ): Promise<T> {
+    const res = await this.fetchFn(`${this.baseUrl}${path}`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${this.adminToken}`,
+        ...(body !== undefined
+          ? { "Content-Type": "application/json" }
+          : {}),
+      },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) {
+      throw new AmkpApiError(res.status, await safeJson(res));
+    }
+    return res.json() as Promise<T>;
+  }
+}
+
 async function safeJson(res: Response): Promise<unknown> {
   try {
     return await res.json();

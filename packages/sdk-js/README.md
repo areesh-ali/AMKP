@@ -45,8 +45,26 @@ if (envelope.requestId) {
 
 | Method | Endpoint |
 | --- | --- |
-| `health()` | `GET /health` |
+| `health()` / `ready()` | `GET /health`, `GET /ready` |
 | `me()` | `GET /v1/me` |
 | `ingest(...)` | `POST /v1/ingest` |
+| `listDocuments()` / `deleteDocument(id)` | documents |
 | `retrieve(...)` | `POST /v1/retrieve` |
 | `getTrace(requestId)` | `GET /v1/traces/:requestId` |
+| `listMcpTools()` / `mcpRetrieve(...)` | MCP facade |
+| `runGoldenEval(...)` / `runTableRankEval(...)` | eval |
+
+### Admin client
+
+```ts
+import { AmkpAdminClient } from "@amkp/sdk-js";
+
+const admin = new AmkpAdminClient({
+  baseUrl: "http://localhost:3000",
+  adminToken: process.env.PLATFORM_ADMIN_TOKEN!,
+});
+
+const { accountId } = await admin.createAccount("Acme");
+const { apiKey } = await admin.createTenant(accountId, "support");
+const { items } = await admin.listAudit();
+```
