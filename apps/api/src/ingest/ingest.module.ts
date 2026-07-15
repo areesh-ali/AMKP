@@ -10,6 +10,7 @@ import {
   ListDocumentsUseCase,
   PARSE_LADDER,
   ProcessParseJobUseCase,
+  ReparseDocumentUseCase,
   TENANT_REPOSITORY,
   RETRIEVE_CACHE,
   VECTOR_INDEX,
@@ -31,6 +32,7 @@ import {
   LIST_CHUNKS_UC,
   LIST_DOCUMENTS_UC,
   PROCESS_PARSE_UC,
+  REPARSE_DOCUMENT_UC,
 } from "../tenancy/tenancy.tokens";
 
 @Module({
@@ -61,6 +63,12 @@ import {
         cache: RetrieveCachePort,
       ) => new DeleteDocumentUseCase(docs, index, cache),
       inject: [DOCUMENT_REPOSITORY, VECTOR_INDEX, RETRIEVE_CACHE],
+    },
+    {
+      provide: REPARSE_DOCUMENT_UC,
+      useFactory: (docs: DocumentRepository, jobs: JobQueuePort) =>
+        new ReparseDocumentUseCase(docs, jobs),
+      inject: [DOCUMENT_REPOSITORY, JOB_QUEUE],
     },
     {
       provide: LIST_CHUNKS_UC,

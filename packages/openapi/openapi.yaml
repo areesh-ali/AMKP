@@ -420,6 +420,37 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+  /v1/documents/{documentId}/reparse:
+    post:
+      summary: Re-enqueue parse for an existing Document
+      operationId: reparseDocument
+      security:
+        - TenantApiKeyBearer: []
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Parse job enqueued
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [documentId, jobId, status]
+                properties:
+                  documentId:
+                    type: string
+                  jobId:
+                    type: string
+                  status:
+                    type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /v1/documents/{documentId}/chunks:
     get:
       summary: List Chunks for a Document (includes parseTier)

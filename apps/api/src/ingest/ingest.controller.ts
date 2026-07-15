@@ -18,6 +18,7 @@ import type {
   IngestDocumentUseCase,
   ListChunksUseCase,
   ListDocumentsUseCase,
+  ReparseDocumentUseCase,
   TenantContext,
 } from "@amkp/application";
 import {
@@ -31,6 +32,7 @@ import {
   INGEST_DOCUMENT_UC,
   LIST_CHUNKS_UC,
   LIST_DOCUMENTS_UC,
+  REPARSE_DOCUMENT_UC,
 } from "../tenancy/tenancy.tokens";
 
 class IngestDto {
@@ -51,6 +53,8 @@ export class IngestController {
     private readonly ingest: IngestDocumentUseCase,
     @Inject(DELETE_DOCUMENT_UC)
     private readonly deleteDocument: DeleteDocumentUseCase,
+    @Inject(REPARSE_DOCUMENT_UC)
+    private readonly reparseDocument: ReparseDocumentUseCase,
     @Inject(LIST_DOCUMENTS_UC)
     private readonly listDocuments: ListDocumentsUseCase,
     @Inject(GET_DOCUMENT_UC)
@@ -151,6 +155,16 @@ export class IngestController {
   ) {
     const ctx = req.tenantContext as TenantContext;
     return this.deleteDocument.execute(ctx, documentId);
+  }
+
+  @Post("documents/:documentId/reparse")
+  @HttpCode(HttpStatus.ACCEPTED)
+  async reparseHandler(
+    @Req() req: RequestWithTenant,
+    @Param("documentId") documentId: string,
+  ) {
+    const ctx = req.tenantContext as TenantContext;
+    return this.reparseDocument.execute(ctx, documentId);
   }
 
   @Get("documents/:documentId/chunks")

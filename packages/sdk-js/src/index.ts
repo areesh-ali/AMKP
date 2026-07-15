@@ -128,6 +128,15 @@ export class AmkpClient {
     }
   }
 
+  async reparseDocument(
+    documentId: string,
+  ): Promise<{ documentId: string; jobId: string; status: string }> {
+    return this.request(
+      "POST",
+      `/v1/documents/${encodeURIComponent(documentId)}/reparse`,
+    );
+  }
+
   async listMcpTools(): Promise<unknown> {
     return this.request("GET", "/v1/mcp/tools");
   }
