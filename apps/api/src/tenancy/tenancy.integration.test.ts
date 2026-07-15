@@ -96,6 +96,26 @@ describe("Tenancy API (integration)", () => {
     expect(listed.body.items[0].accountId).toMatch(/^acc_/);
   });
 
+  it("GET /v1/accounts/:id returns one account", async () => {
+    const auth = { Authorization: `Bearer ${ADMIN}` };
+    const created = await request(app.getHttpServer())
+      .post("/v1/accounts")
+      .set(auth)
+      .send({ name: "Solo Acct" });
+    const got = await request(app.getHttpServer())
+      .get(`/v1/accounts/${created.body.accountId}`)
+      .set(auth);
+    expect(got.status).toBe(200);
+    expect(got.body).toMatchObject({
+      accountId: created.body.accountId,
+      name: "Solo Acct",
+    });
+    const missing = await request(app.getHttpServer())
+      .get("/v1/accounts/acc_missing")
+      .set(auth);
+    expect(missing.status).toBe(404);
+  });
+
   it("rejects missing admin token with 401 error shape", async () => {
     const res = await request(app.getHttpServer())
       .post("/v1/accounts")

@@ -261,6 +261,15 @@ export class AmkpAdminClient {
     );
   }
 
+  async getAccount(
+    accountId: string,
+  ): Promise<{ accountId: string; name: string; createdAt?: string }> {
+    return this.request(
+      "GET",
+      `/v1/accounts/${encodeURIComponent(accountId)}`,
+    );
+  }
+
   async createTenant(
     accountId: string,
     name: string,

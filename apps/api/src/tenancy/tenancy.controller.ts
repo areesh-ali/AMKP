@@ -14,6 +14,7 @@ import {
 import type {
   CreateAccountUseCase,
   CreateTenantUseCase,
+  GetAccountUseCase,
   GetTenantUseCase,
   ListAccountsUseCase,
   ListTenantsByAccountUseCase,
@@ -23,6 +24,7 @@ import { PlatformAdminGuard } from "./platform-admin.guard";
 import {
   CREATE_ACCOUNT_UC,
   CREATE_TENANT_UC,
+  GET_ACCOUNT_UC,
   GET_TENANT_UC,
   LIST_ACCOUNTS_UC,
   LIST_TENANTS_UC,
@@ -53,6 +55,8 @@ export class TenancyController {
     private readonly createAccount: CreateAccountUseCase,
     @Inject(LIST_ACCOUNTS_UC)
     private readonly listAccounts: ListAccountsUseCase,
+    @Inject(GET_ACCOUNT_UC)
+    private readonly getAccount: GetAccountUseCase,
     @Inject(CREATE_TENANT_UC)
     private readonly createTenant: CreateTenantUseCase,
     @Inject(LIST_TENANTS_UC)
@@ -86,6 +90,17 @@ export class TenancyController {
         name: a.name,
         createdAt: a.createdAt,
       })),
+    };
+  }
+
+  @Get("accounts/:accountId")
+  @UseGuards(PlatformAdminGuard)
+  async getAccountHandler(@Param("accountId") accountId: string) {
+    const account = await this.getAccount.execute(accountId);
+    return {
+      accountId: account.id,
+      name: account.name,
+      createdAt: account.createdAt,
     };
   }
 

@@ -24,6 +24,7 @@ const required = [
   "TenantApiKeyBearer:",
   "createAccount",
   "listAccounts",
+  "getAccount",
   "createTenant",
   "listTenants",
   "getTenant",

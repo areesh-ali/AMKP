@@ -115,6 +115,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /v1/accounts/{accountId}:
+    get:
+      summary: Get Account by id
+      operationId: getAccount
+      security:
+        - PlatformAdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/AccountId"
+      responses:
+        "200":
+          description: Account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /v1/accounts/{accountId}/tenants:
     post:
       summary: Create Tenant under Account

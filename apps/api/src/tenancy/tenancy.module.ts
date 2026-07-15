@@ -6,6 +6,7 @@ import {
   CreateAccountUseCase,
   CreateApiKeyUseCase,
   CreateTenantUseCase,
+  GetAccountUseCase,
   GetTenantUseCase,
   ListAccountsUseCase,
   ListApiKeysUseCase,
@@ -31,6 +32,7 @@ import {
   CREATE_ACCOUNT_UC,
   CREATE_API_KEY_UC,
   CREATE_TENANT_UC,
+  GET_ACCOUNT_UC,
   GET_TENANT_UC,
   LIST_ACCOUNTS_UC,
   LIST_API_KEYS_UC,
@@ -55,6 +57,12 @@ import {
       provide: LIST_ACCOUNTS_UC,
       useFactory: (accounts: AccountRepository) =>
         new ListAccountsUseCase(accounts),
+      inject: [ACCOUNT_REPOSITORY],
+    },
+    {
+      provide: GET_ACCOUNT_UC,
+      useFactory: (accounts: AccountRepository) =>
+        new GetAccountUseCase(accounts),
       inject: [ACCOUNT_REPOSITORY],
     },
     {
