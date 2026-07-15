@@ -2,10 +2,21 @@ import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ApiExceptionFilter } from "./common/api-exception.filter";
+import { requestIdMiddleware } from "./common/request-id.middleware";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(requestIdMiddleware);
   app.useGlobalFilters(new ApiExceptionFilter());
+
+  const origins = process.env.AMKP_CORS_ORIGINS?.trim();
+  if (origins) {
+    app.enableCors({
+      origin: origins.split(",").map((o) => o.trim()).filter(Boolean),
+      credentials: true,
+    });
+  }
+
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port);
   // eslint-disable-next-line no-console
