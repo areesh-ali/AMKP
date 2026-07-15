@@ -3,6 +3,7 @@ import {
   CHUNK_REPOSITORY,
   DOCUMENT_REPOSITORY,
   DeleteDocumentUseCase,
+  GetDocumentContentUseCase,
   GetDocumentUseCase,
   IngestDocumentUseCase,
   JOB_QUEUE,
@@ -29,6 +30,7 @@ import { AuthModule } from "../auth/auth.module";
 import { IngestController } from "./ingest.controller";
 import {
   DELETE_DOCUMENT_UC,
+  GET_DOCUMENT_CONTENT_UC,
   GET_DOCUMENT_UC,
   INGEST_DOCUMENT_UC,
   LIST_CHUNKS_UC,
@@ -55,6 +57,12 @@ import {
     {
       provide: GET_DOCUMENT_UC,
       useFactory: (docs: DocumentRepository) => new GetDocumentUseCase(docs),
+      inject: [DOCUMENT_REPOSITORY],
+    },
+    {
+      provide: GET_DOCUMENT_CONTENT_UC,
+      useFactory: (docs: DocumentRepository) =>
+        new GetDocumentContentUseCase(docs),
       inject: [DOCUMENT_REPOSITORY],
     },
     {

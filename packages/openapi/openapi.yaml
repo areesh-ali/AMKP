@@ -545,6 +545,30 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+  /v1/documents/{documentId}/content:
+    get:
+      summary: Download Document bytes (Tenant-scoped)
+      operationId: getDocumentContent
+      security:
+        - TenantApiKeyBearer: []
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Raw document bytes
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /v1/documents/{documentId}/reparse:
     post:
       summary: Re-enqueue parse for an existing Document

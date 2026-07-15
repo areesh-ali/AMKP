@@ -118,6 +118,31 @@ describe("Ingest API (T-2.1)", () => {
     expect(res.body.byteSize).toBe(Buffer.from("multipart knowledge").length);
   });
 
+  it("GET /v1/documents/:id/content returns bytes for owner only", async () => {
+    const { keyA, keyB } = await twoTenants();
+    const created = await request(app.getHttpServer())
+      .post("/v1/ingest")
+      .set({ Authorization: `Bearer ${keyA}` })
+      .send({
+        filename: "blob.txt",
+        contentType: "text/plain",
+        contentBase64: Buffer.from("secret-bytes").toString("base64"),
+      });
+    expect(created.status).toBe(202);
+
+    const ok = await request(app.getHttpServer())
+      .get(`/v1/documents/${created.body.documentId}/content`)
+      .set({ Authorization: `Bearer ${keyA}` });
+    expect(ok.status).toBe(200);
+    expect(ok.headers["content-type"]).toMatch(/text\/plain/);
+    expect(ok.text).toBe("secret-bytes");
+
+    const leak = await request(app.getHttpServer())
+      .get(`/v1/documents/${created.body.documentId}/content`)
+      .set({ Authorization: `Bearer ${keyB}` });
+    expect(leak.status).toBe(404);
+  });
+
   it("documents are not listable across tenants", async () => {
     const { keyA, keyB } = await twoTenants();
     const contentBase64 = Buffer.from("secret-a").toString("base64");

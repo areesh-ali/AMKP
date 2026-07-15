@@ -141,6 +141,20 @@ export class AmkpClient {
     );
   }
 
+  async getDocumentContent(documentId: string): Promise<ArrayBuffer> {
+    const res = await this.fetchFn(
+      `${this.baseUrl}/v1/documents/${encodeURIComponent(documentId)}/content`,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${this.apiKey}` },
+      },
+    );
+    if (!res.ok) {
+      throw new AmkpApiError(res.status, await safeJson(res));
+    }
+    return res.arrayBuffer();
+  }
+
   /** Poll until Document status is terminal or timeout. */
   async waitForDocument(
     documentId: string,

@@ -21,6 +21,7 @@
 - Multipart **`POST /v1/ingest/upload`** (field `file`)
 - Document **status webhook** (`AMKP_DOCUMENT_WEBHOOK_URL`, optional HMAC secret)
 - Admin **`GET /v1/accounts`** list + **`GET /v1/accounts/:id`**
+- Tenant **`GET /v1/documents/:id/content`** download
 - Ops guide: `docs/operations.md`
 
 ### Epics E1–E8

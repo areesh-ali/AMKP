@@ -6,6 +6,7 @@ export * from "./table-evidence";
 export * from "./ingest-document";
 export * from "./list-documents";
 export * from "./get-document";
+export * from "./get-document-content";
 export * from "./process-ingest-job";
 export * from "./process-parse-job";
 export * from "./delete-document";

@@ -14,10 +14,13 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  Res,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
+import type { Response } from "express";
 import type {
   DeleteDocumentUseCase,
+  GetDocumentContentUseCase,
   GetDocumentUseCase,
   IngestDocumentUseCase,
   ListChunksUseCase,
@@ -32,6 +35,7 @@ import {
 import { TenantContextInterceptor } from "../tenancy/tenant-context.interceptor";
 import {
   DELETE_DOCUMENT_UC,
+  GET_DOCUMENT_CONTENT_UC,
   GET_DOCUMENT_UC,
   INGEST_DOCUMENT_UC,
   LIST_CHUNKS_UC,
@@ -96,6 +100,8 @@ export class IngestController {
     private readonly listDocuments: ListDocumentsUseCase,
     @Inject(GET_DOCUMENT_UC)
     private readonly getDocument: GetDocumentUseCase,
+    @Inject(GET_DOCUMENT_CONTENT_UC)
+    private readonly getDocumentContent: GetDocumentContentUseCase,
     @Inject(LIST_CHUNKS_UC)
     private readonly listChunks: ListChunksUseCase,
   ) {}
@@ -238,6 +244,23 @@ export class IngestController {
       status: d.status,
       createdAt: d.createdAt,
     };
+  }
+
+  @Get("documents/:documentId/content")
+  async getContentHandler(
+    @Req() req: RequestWithTenant,
+    @Param("documentId") documentId: string,
+    @Res() res: Response,
+  ) {
+    const ctx = req.tenantContext as TenantContext;
+    const file = await this.getDocumentContent.execute(ctx, documentId);
+    res.setHeader("Content-Type", file.contentType || "application/octet-stream");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${file.filename.replace(/"/g, "")}"`,
+    );
+    res.setHeader("Content-Length", String(file.content.length));
+    res.status(HttpStatus.OK).send(file.content);
   }
 
   @Delete("documents/:documentId")
