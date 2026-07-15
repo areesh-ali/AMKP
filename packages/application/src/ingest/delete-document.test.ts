@@ -25,6 +25,15 @@ class FakeDocs implements DocumentRepository {
   async listByTenantId() {
     return [...this.docs.values()];
   }
+  async listPage() {
+    return {
+      items: [...this.docs.values()],
+      total: this.docs.size,
+      limit: 50,
+      offset: 0,
+      nextCursor: null,
+    };
+  }
   async deleteForTenant(_tenantId: string, documentId: string) {
     this.deleted.push(documentId);
     this.docs.delete(documentId);

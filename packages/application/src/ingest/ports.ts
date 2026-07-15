@@ -5,6 +5,12 @@ import type {
   JobId,
   TenantId,
 } from "@amkp/domain";
+import type {
+  ListDocumentsOpts,
+  ListDocumentsPage,
+} from "./document-list-page";
+
+export type { ListDocumentsOpts, ListDocumentsPage };
 
 export interface CreateDocumentInput {
   tenantId: TenantId;
@@ -34,6 +40,11 @@ export interface DocumentRepository {
     documentId: DocumentId,
   ): Promise<Buffer | null>;
   listByTenantId(tenantId: TenantId): Promise<Document[]>;
+  /** Tenant-scoped page (DB cursor/offset). Prefer over full listByTenantId. */
+  listPage(
+    tenantId: TenantId,
+    opts?: ListDocumentsOpts,
+  ): Promise<ListDocumentsPage>;
   /** Soft-delete: remove Document row (cascades chunks) for Tenant. */
   deleteForTenant(
     tenantId: TenantId,

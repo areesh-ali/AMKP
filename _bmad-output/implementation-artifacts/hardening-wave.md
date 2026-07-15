@@ -22,7 +22,7 @@ Running unattended until the user asks to stop.
 
 ## Next candidates
 
-- Cursor-based document pagination (DB-level)
+- Cursor-based document pagination (DB-level) — **done**
 - Real OTel exporter
 - PDF.js layout engine
-- Admin tenant get-by-id endpoint
+- ~~Admin tenant get-by-id endpoint~~ — **done**

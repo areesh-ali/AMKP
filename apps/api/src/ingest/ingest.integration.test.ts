@@ -155,6 +155,35 @@ describe("Ingest API (T-2.1)", () => {
     expect(listAfter.body.items).toHaveLength(0);
   });
 
+  it("lists documents with DB cursor pagination", async () => {
+    const { keyA } = await twoTenants();
+    for (const name of ["d1.txt", "d2.txt", "d3.txt"]) {
+      const res = await request(app.getHttpServer())
+        .post("/v1/ingest")
+        .set({ Authorization: `Bearer ${keyA}` })
+        .send({
+          filename: name,
+          contentBase64: Buffer.from(name).toString("base64"),
+        });
+      expect(res.status).toBe(202);
+    }
+
+    const page1 = await request(app.getHttpServer())
+      .get("/v1/documents?limit=2")
+      .set({ Authorization: `Bearer ${keyA}` });
+    expect(page1.status).toBe(200);
+    expect(page1.body.items).toHaveLength(2);
+    expect(page1.body.total).toBe(3);
+    expect(page1.body.nextCursor).toBeTruthy();
+
+    const page2 = await request(app.getHttpServer())
+      .get(`/v1/documents?limit=2&cursor=${encodeURIComponent(page1.body.nextCursor)}`)
+      .set({ Authorization: `Bearer ${keyA}` });
+    expect(page2.status).toBe(200);
+    expect(page2.body.items).toHaveLength(1);
+    expect(page2.body.nextCursor).toBeNull();
+  });
+
   it("worker ProcessIngestJobUseCase enqueues parse queue", async () => {
     const { keyA, tenantA } = await twoTenants();
     const created = await request(app.getHttpServer())

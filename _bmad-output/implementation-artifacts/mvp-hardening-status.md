@@ -25,6 +25,7 @@ All planned epic stories (T-1.x through T-8.4) have implementation artifacts and
 | TracerPort stub | done |
 | Ops checklist | `docs/operations.md` |
 | PDF FlateDecode inflate | improved (full PDF.js still open) |
+| Document list cursor pagination | done |
 
 ## Still open (optional)
 

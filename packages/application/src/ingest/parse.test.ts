@@ -68,6 +68,17 @@ class FakeDocs implements DocumentRepository {
       .map(omitContent);
   }
 
+  async listPage(tenantId: TenantId) {
+    const items = await this.listByTenantId(tenantId);
+    return {
+      items,
+      total: items.length,
+      limit: 50,
+      offset: 0,
+      nextCursor: null,
+    };
+  }
+
   async deleteForTenant() {
     /* not used */
   }

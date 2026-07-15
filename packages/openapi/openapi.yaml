@@ -384,11 +384,18 @@ paths:
             type: integer
             minimum: 1
             maximum: 500
+            default: 50
         - name: offset
           in: query
+          description: Legacy offset pagination (ignored when cursor is set)
           schema:
             type: integer
             minimum: 0
+        - name: cursor
+          in: query
+          description: Opaque cursor from a previous page nextCursor
+          schema:
+            type: string
       responses:
         "200":
           description: Tenant-scoped document list
@@ -1033,7 +1040,7 @@ components:
           format: date-time
     DocumentListResponse:
       type: object
-      required: [items]
+      required: [items, total, limit, offset]
       properties:
         items:
           type: array
@@ -1045,6 +1052,10 @@ components:
           type: integer
         limit:
           type: integer
+        nextCursor:
+          type: string
+          nullable: true
+          description: Pass as cursor for the next page; null when exhausted
     ChunkSummary:
       type: object
       required:

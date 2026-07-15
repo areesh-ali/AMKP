@@ -112,14 +112,24 @@ export class IngestController {
     @Req() req: RequestWithTenant,
     @Query("limit") limitRaw?: string,
     @Query("offset") offsetRaw?: string,
+    @Query("cursor") cursorRaw?: string,
   ) {
     const ctx = req.tenantContext as TenantContext;
-    const items = await this.listDocuments.execute(ctx);
-    const offset = Math.max(0, Number(offsetRaw) || 0);
-    const limit = Math.min(Math.max(Number(limitRaw) || items.length, 1), 500);
-    const page = items.slice(offset, offset + limit);
+    const limit =
+      limitRaw === undefined || limitRaw === ""
+        ? undefined
+        : Number(limitRaw);
+    const offset =
+      offsetRaw === undefined || offsetRaw === ""
+        ? undefined
+        : Number(offsetRaw);
+    const page = await this.listDocuments.execute(ctx, {
+      limit,
+      offset,
+      cursor: cursorRaw || undefined,
+    });
     return {
-      items: page.map((d) => ({
+      items: page.items.map((d) => ({
         documentId: d.id,
         documentVersionId: d.id,
         sourceKey: d.sourceKey,
@@ -131,9 +141,10 @@ export class IngestController {
         status: d.status,
         createdAt: d.createdAt,
       })),
-      total: items.length,
-      offset,
-      limit: page.length,
+      total: page.total,
+      offset: page.offset,
+      limit: page.limit,
+      nextCursor: page.nextCursor,
     };
   }
 

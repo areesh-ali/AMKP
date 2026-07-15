@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { IngestDocumentUseCase } from "./ingest-document";
 import { ListDocumentsUseCase } from "./list-documents";
 import { GetDocumentUseCase } from "./get-document";
+import { paginateDocumentList } from "./document-list-page";
 import {
   DocumentNotFoundError,
   type DocumentRepository,
@@ -82,6 +83,10 @@ class FakeDocs implements DocumentRepository {
     return [...this.store.values()]
       .filter((d) => d.tenantId === tenantId)
       .map(({ content: _c, ...doc }) => doc);
+  }
+
+  async listPage(tenantId: TenantId, opts = {}) {
+    return paginateDocumentList(await this.listByTenantId(tenantId), opts);
   }
 
   async deleteForTenant() {
@@ -217,9 +222,40 @@ describe("ListDocumentsUseCase isolation", () => {
       { filename: "b.txt", content: Buffer.from("b") },
     );
 
-    const items = await list.execute(ctx);
-    expect(items).toHaveLength(1);
-    expect(items[0].filename).toBe("a.txt");
+    const page = await list.execute(ctx);
+    expect(page.items).toHaveLength(1);
+    expect(page.items[0].filename).toBe("a.txt");
+    expect(page.total).toBe(1);
+    expect(page.nextCursor).toBeNull();
+  });
+
+  it("paginates with limit and cursor", async () => {
+    const docs = new FakeDocs();
+    const queue = new FakeQueue();
+    const ingest = new IngestDocumentUseCase(docs, queue);
+    const list = new ListDocumentsUseCase(docs);
+
+    for (const name of ["a.txt", "b.txt", "c.txt"]) {
+      await ingest.execute(ctx, {
+        filename: name,
+        content: Buffer.from(name),
+      });
+    }
+
+    const first = await list.execute(ctx, { limit: 2 });
+    expect(first.items).toHaveLength(2);
+    expect(first.nextCursor).toBeTruthy();
+
+    const second = await list.execute(ctx, {
+      limit: 2,
+      cursor: first.nextCursor!,
+    });
+    expect(second.items).toHaveLength(1);
+    expect(second.nextCursor).toBeNull();
+    expect([
+      ...first.items.map((d) => d.filename),
+      ...second.items.map((d) => d.filename),
+    ]).toEqual(["a.txt", "b.txt", "c.txt"]);
   });
 });
 

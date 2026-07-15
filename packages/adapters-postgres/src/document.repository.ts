@@ -8,13 +8,18 @@ import type {
 import type {
   CreateDocumentInput,
   DocumentRepository,
+  ListDocumentsOpts,
+  ListDocumentsPage,
   ObjectStoragePort,
 } from "@amkp/application";
 import {
   DocumentNotFoundError,
+  clampDocumentListLimit,
+  decodeDocumentCursor,
   documentObjectKey,
+  encodeDocumentCursor,
 } from "@amkp/application";
-import type { PrismaClient } from "./prisma";
+import type { Prisma, PrismaClient } from "./prisma";
 import { toIso } from "./crypto";
 
 /**
@@ -107,9 +112,86 @@ export class PrismaDocumentRepository implements DocumentRepository {
   async listByTenantId(tenantId: TenantId): Promise<Document[]> {
     const rows = await this.prisma.document.findMany({
       where: { tenantId },
-      orderBy: [{ sourceKey: "asc" }, { version: "asc" }],
+      orderBy: [{ sourceKey: "asc" }, { version: "asc" }, { id: "asc" }],
     });
     return rows.map(mapDocument);
+  }
+
+  async listPage(
+    tenantId: TenantId,
+    opts: ListDocumentsOpts = {},
+  ): Promise<ListDocumentsPage> {
+    const limit = clampDocumentListLimit(opts.limit);
+    const total = await this.prisma.document.count({ where: { tenantId } });
+
+    if (opts.cursor) {
+      const decoded = decodeDocumentCursor(opts.cursor);
+      if (!decoded) {
+        return {
+          items: [],
+          total,
+          limit,
+          offset: 0,
+          nextCursor: null,
+        };
+      }
+
+      const where: Prisma.DocumentWhereInput = {
+        tenantId,
+        OR: [
+          { sourceKey: { gt: decoded.sk } },
+          {
+            sourceKey: decoded.sk,
+            version: { gt: decoded.v },
+          },
+          {
+            sourceKey: decoded.sk,
+            version: decoded.v,
+            id: { gt: decoded.id },
+          },
+        ],
+      };
+
+      const rows = await this.prisma.document.findMany({
+        where,
+        orderBy: [{ sourceKey: "asc" }, { version: "asc" }, { id: "asc" }],
+        take: limit + 1,
+      });
+      const hasMore = rows.length > limit;
+      const pageRows = hasMore ? rows.slice(0, limit) : rows;
+      const items = pageRows.map(mapDocument);
+      return {
+        items,
+        total,
+        limit,
+        offset: 0,
+        nextCursor:
+          hasMore && items.length > 0
+            ? encodeDocumentCursor(items[items.length - 1]!)
+            : null,
+      };
+    }
+
+    const offset = Math.max(0, Math.floor(opts.offset ?? 0));
+    const rows = await this.prisma.document.findMany({
+      where: { tenantId },
+      orderBy: [{ sourceKey: "asc" }, { version: "asc" }, { id: "asc" }],
+      skip: offset,
+      take: limit + 1,
+    });
+    const hasMore = rows.length > limit;
+    const pageRows = hasMore ? rows.slice(0, limit) : rows;
+    const items = pageRows.map(mapDocument);
+    return {
+      items,
+      total,
+      limit,
+      offset,
+      nextCursor:
+        hasMore && items.length > 0
+          ? encodeDocumentCursor(items[items.length - 1]!)
+          : null,
+    };
   }
 
   async deleteForTenant(

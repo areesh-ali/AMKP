@@ -6,4 +6,4 @@ export function createPrismaClient(databaseUrl: string): PrismaClient {
   return new PrismaClient({ adapter });
 }
 
-export { PrismaClient };
+export { PrismaClient, Prisma } from "./generated/prisma/client";

@@ -13,6 +13,7 @@
 - **Document delete** with vector + cache cleanup
 - Admin **`GET /v1/audit`** and **`AmkpAdminClient`**
 - Document **delete**, **reparse**, idempotent ingest, SDK `waitForDocument`
+- Document list **DB cursor pagination** (`limit`/`offset`/`cursor`/`nextCursor`)
 - Ops guide: `docs/operations.md`
 
 ### Epics E1–E8

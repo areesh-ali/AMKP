@@ -39,3 +39,7 @@ DATABASE_URL=... pnpm --filter @amkp/adapters-postgres prisma:migrate
 ## Worker
 
 Worker and API must share the same `DATABASE_URL`, vector mode, object storage, and embedding provider settings so parse upserts are visible to retrieve.
+
+## Document list pagination
+
+`GET /v1/documents` supports `limit` (default 50, max 500), legacy `offset`, and opaque `cursor` / `nextCursor` for stable DB-level paging (ordered by `sourceKey`, `version`, `id`).

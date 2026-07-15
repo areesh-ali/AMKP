@@ -73,8 +73,23 @@ export class AmkpClient {
     return this.request("GET", `/v1/traces/${encodeURIComponent(requestId)}`);
   }
 
-  async listDocuments(): Promise<{ items: unknown[] }> {
-    return this.request("GET", "/v1/documents");
+  async listDocuments(options?: {
+    limit?: number;
+    offset?: number;
+    cursor?: string;
+  }): Promise<{
+    items: unknown[];
+    total: number;
+    limit: number;
+    offset: number;
+    nextCursor: string | null;
+  }> {
+    const q = new URLSearchParams();
+    if (options?.limit !== undefined) q.set("limit", String(options.limit));
+    if (options?.offset !== undefined) q.set("offset", String(options.offset));
+    if (options?.cursor) q.set("cursor", options.cursor);
+    const qs = q.toString();
+    return this.request("GET", `/v1/documents${qs ? `?${qs}` : ""}`);
   }
 
   async deleteDocument(
