@@ -6,6 +6,9 @@
  *   AMKP_BASE_URL=http://localhost:3000 \
  *   AMKP_SUPPORT_KEY=... AMKP_DOCS_KEY=... \
  *   pnpm --filter @amkp/reference-multi-product start
+ *
+ * Optional seed:
+ *   AMKP_SEED=1  — ingest sample notes and wait for parse before retrieve
  */
 import { AmkpClient } from "@amkp/sdk-js";
 
@@ -29,6 +32,26 @@ async function main() {
     supportTenant: supportMe.tenantId,
     docsTenant: docsMe.tenantId,
   });
+
+  if (process.env.AMKP_SEED === "1") {
+    const s = await support.ingest({
+      filename: "refund.md",
+      contentType: "text/markdown",
+      contentBase64: Buffer.from(
+        "# Refunds\nEnterprise refund window is 30 days.",
+      ).toString("base64"),
+    });
+    const d = await docs.ingest({
+      filename: "start.md",
+      contentType: "text/markdown",
+      contentBase64: Buffer.from(
+        "# Getting started\nInstall the SDK and call retrieve.",
+      ).toString("base64"),
+    });
+    await support.waitForDocument(s.documentId, { timeoutMs: 60_000 });
+    await docs.waitForDocument(d.documentId, { timeoutMs: 60_000 });
+    console.log("Seeded + parsed support/docs documents");
+  }
 
   const supportHit = await support.retrieve({ query: "refund" });
   const docsHit = await docs.retrieve({ query: "getting started" });
