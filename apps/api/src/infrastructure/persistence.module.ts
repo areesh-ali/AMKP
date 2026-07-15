@@ -20,7 +20,6 @@ import {
 import {
   createPrismaClient,
   InMemoryTraceRepository,
-  LocalFsObjectStorage,
   PostgresVectorIndex,
   PrismaAccountRepository,
   PrismaApiKeyIssuer,
@@ -30,6 +29,7 @@ import {
   PrismaDocumentRepository,
   PrismaTenantRepository,
   PrismaTraceRepository,
+  createObjectStorageFromEnv,
 } from "@amkp/adapters-postgres";
 import {
   StubEmbeddingProvider,
@@ -81,12 +81,6 @@ function useEphemeralAdapters(): boolean {
   );
 }
 
-function createObjectStorage() {
-  const dir = process.env.AMKP_OBJECT_STORAGE_DIR?.trim();
-  if (!dir) return undefined;
-  return new LocalFsObjectStorage(dir);
-}
-
 @Module({
   imports: [PrismaModule],
   providers: [
@@ -113,7 +107,7 @@ function createObjectStorage() {
     {
       provide: DOCUMENT_REPOSITORY,
       useFactory: (prisma: Prisma) =>
-        new PrismaDocumentRepository(prisma, createObjectStorage()),
+        new PrismaDocumentRepository(prisma, createObjectStorageFromEnv()),
       inject: [PRISMA],
     },
     {

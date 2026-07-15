@@ -14,9 +14,11 @@ function adapterSummary() {
     retrieveCache:
       ephemeral || !process.env.REDIS_URL ? "memory" : "redis",
     traces: ephemeral ? "memory" : "postgres",
-    objectStorage: process.env.AMKP_OBJECT_STORAGE_DIR
-      ? "local_fs"
-      : "postgres_bytea",
+    objectStorage: process.env.AMKP_S3_BUCKET
+      ? "s3"
+      : process.env.AMKP_OBJECT_STORAGE_DIR
+        ? "local_fs"
+        : "postgres_bytea",
     apiKeyHash: process.env.AMKP_API_KEY_PEPPER?.trim()
       ? "hmac-sha256"
       : "sha256",

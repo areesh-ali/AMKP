@@ -20,3 +20,7 @@ export {
   PrismaAuditLog,
 } from "./trace.repository";
 export { LocalFsObjectStorage } from "./local-fs-object-storage";
+export {
+  S3ObjectStorage,
+  createObjectStorageFromEnv,
+} from "./s3-object-storage";

@@ -12,11 +12,11 @@ import {
 } from "@amkp/application";
 import {
   createPrismaClient,
-  LocalFsObjectStorage,
   PostgresVectorIndex,
   PrismaChunkRepository,
   PrismaDocumentRepository,
   PrismaTenantRepository,
+  createObjectStorageFromEnv,
 } from "@amkp/adapters-postgres";
 import { LocalParseLadder, StubEmbeddingProvider } from "@amkp/adapters-providers";
 import { BullMqJobQueue, QUEUE_NAMES } from "@amkp/adapters-redis";
@@ -41,9 +41,7 @@ async function main() {
 
   const documents: DocumentRepository = new PrismaDocumentRepository(
     prisma,
-    process.env.AMKP_OBJECT_STORAGE_DIR
-      ? new LocalFsObjectStorage(process.env.AMKP_OBJECT_STORAGE_DIR)
-      : undefined,
+    createObjectStorageFromEnv(),
   );
   const chunks: ChunkRepository = new PrismaChunkRepository(prisma);
   const tenants = new PrismaTenantRepository(prisma);
