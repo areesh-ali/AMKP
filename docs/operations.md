@@ -30,7 +30,7 @@ When rate limiting is on, retrieve/MCP/**ingest** responses include `X-RateLimit
 - `GET /health` — liveness + adapter summary (no secrets)
 - `GET /ready` — `SELECT 1` against Postgres
 - `GET /metrics` — Prometheus scrape
-- Worker: `GET :WORKER_HEALTH_PORT/health` and `/ready` (default `3001`)
+- Worker: `GET :WORKER_HEALTH_PORT/health` (adapter summary) and `/ready` (default `3001`)
 
 ## Tracing (OpenTelemetry)
 
