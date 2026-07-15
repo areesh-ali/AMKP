@@ -12,7 +12,13 @@ export type DocumentStatus =
   | "pending"
   | "accepted"
   | "parse_queued"
+  | "parsed"
   | "failed";
+
+/** Parse Ladder tiers — VLM/page-vision is opt-in later (T-2.4). */
+export type ParseTier = "tier1_text" | "tier2_layout";
+
+export type ChunkId = string;
 
 export interface Document {
   id: DocumentId;
@@ -22,6 +28,17 @@ export interface Document {
   byteSize: number;
   status: DocumentStatus;
   createdAt: string; // UTC ISO-8601
+}
+
+export interface Chunk {
+  id: ChunkId;
+  tenantId: TenantId;
+  documentId: DocumentId;
+  content: string;
+  parseTier: ParseTier;
+  parseConfidence: number;
+  ordinal: number;
+  createdAt: string;
 }
 
 export interface Account {

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@amkp/adapters-postgres": "workspace:*",
+    "@amkp/adapters-providers": "workspace:*",
     "@amkp/adapters-redis": "workspace:*",
     "@amkp/application": "workspace:*",
     "bullmq": "5.80.2"

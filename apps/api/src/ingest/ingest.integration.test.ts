@@ -40,6 +40,7 @@ describe("Ingest API (T-2.1)", () => {
 
   beforeEach(async () => {
     sharedMemoryJobQueue.jobs.length = 0;
+    await prisma.chunk.deleteMany();
     await prisma.document.deleteMany();
     await prisma.apiKey.deleteMany();
     await prisma.tenant.deleteMany();

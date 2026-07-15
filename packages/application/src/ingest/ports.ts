@@ -19,6 +19,11 @@ export interface DocumentRepository {
     tenantId: TenantId,
     documentId: DocumentId,
   ): Promise<Document | null>;
+  /** Load stored bytes for parse workers (tenant-scoped). */
+  getContentForTenant(
+    tenantId: TenantId,
+    documentId: DocumentId,
+  ): Promise<Buffer | null>;
   listByTenantId(tenantId: TenantId): Promise<Document[]>;
   updateStatus(
     tenantId: TenantId,

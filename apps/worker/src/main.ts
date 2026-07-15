@@ -1,14 +1,21 @@
 import { Worker, type Job } from "bullmq";
 import {
   ProcessIngestJobUseCase,
+  ProcessParseJobUseCase,
   type DocumentRepository,
+  type ChunkRepository,
   type IngestJobPayload,
   type JobQueuePort,
+  type ParseLadderPort,
+  type VectorIndexPort,
 } from "@amkp/application";
 import {
   createPrismaClient,
+  InMemoryVectorIndex,
+  PrismaChunkRepository,
   PrismaDocumentRepository,
 } from "@amkp/adapters-postgres";
+import { LocalParseLadder } from "@amkp/adapters-providers";
 import { BullMqJobQueue, QUEUE_NAMES } from "@amkp/adapters-redis";
 
 function connectionFromUrl(redisUrl: string) {
@@ -30,8 +37,18 @@ async function main() {
   await prisma.$connect();
 
   const documents: DocumentRepository = new PrismaDocumentRepository(prisma);
+  const chunks: ChunkRepository = new PrismaChunkRepository(prisma);
   const jobs: JobQueuePort = new BullMqJobQueue(redisUrl);
+  const ladder: ParseLadderPort = new LocalParseLadder();
+  const index: VectorIndexPort = new InMemoryVectorIndex();
+
   const processIngest = new ProcessIngestJobUseCase(documents, jobs);
+  const processParse = new ProcessParseJobUseCase(
+    documents,
+    chunks,
+    ladder,
+    index,
+  );
 
   const connection = connectionFromUrl(redisUrl);
 
@@ -50,11 +67,13 @@ async function main() {
   const parseWorker = new Worker(
     "parse",
     async (job: Job<IngestJobPayload>) => {
-      // Parse Ladder tiers land in T-2.2 — ack only for T-2.1 queue proof.
+      const { tenantId, documentId } = job.data;
+      console.log(`[parse] job=${job.id} doc=${documentId} tenant=${tenantId}`);
+      const result = await processParse.execute({ tenantId, documentId });
       console.log(
-        `[parse] stub job=${job.id} doc=${job.data.documentId} tenant=${job.data.tenantId}`,
+        `[parse] tier=${result.parseTier} chunks=${result.chunkCount} vlm=${result.usedVlm}`,
       );
-      return { ok: true, stub: true };
+      return result;
     },
     { connection },
   );
@@ -67,7 +86,7 @@ async function main() {
 
   console.log("AMKP worker starting");
   console.log("queues:", QUEUE_NAMES.join(", "));
-  console.log("consumers: ingest, parse (stub)");
+  console.log("consumers: ingest, parse (tiers 1–2)");
 
   const shutdown = async () => {
     await ingestWorker.close();

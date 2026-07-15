@@ -50,6 +50,7 @@ jobs:
           pnpm --filter @amkp/application build
           pnpm --filter @amkp/adapters-postgres build
           pnpm --filter @amkp/adapters-redis build
+          pnpm --filter @amkp/adapters-providers build
           pnpm --filter @amkp/api build
           pnpm --filter @amkp/openapi build
           pnpm --filter @amkp/worker build
@@ -60,6 +61,7 @@ jobs:
       - name: Unit + OpenAPI
         run: |
           pnpm --filter @amkp/application test
+          pnpm --filter @amkp/adapters-providers test
           pnpm --filter @amkp/openapi test
 
       - name: Auth CI suite (T-1.3)

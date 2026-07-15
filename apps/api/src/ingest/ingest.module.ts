@@ -1,12 +1,20 @@
 import { Module } from "@nestjs/common";
 import {
+  CHUNK_REPOSITORY,
   DOCUMENT_REPOSITORY,
   GetDocumentUseCase,
   IngestDocumentUseCase,
   JOB_QUEUE,
+  ListChunksUseCase,
   ListDocumentsUseCase,
+  PARSE_LADDER,
+  ProcessParseJobUseCase,
+  VECTOR_INDEX,
+  type ChunkRepository,
   type DocumentRepository,
   type JobQueuePort,
+  type ParseLadderPort,
+  type VectorIndexPort,
 } from "@amkp/application";
 import { PersistenceModule } from "../infrastructure/persistence.module";
 import { AuthModule } from "../auth/auth.module";
@@ -14,7 +22,9 @@ import { IngestController } from "./ingest.controller";
 import {
   GET_DOCUMENT_UC,
   INGEST_DOCUMENT_UC,
+  LIST_CHUNKS_UC,
   LIST_DOCUMENTS_UC,
+  PROCESS_PARSE_UC,
 } from "../tenancy/tenancy.tokens";
 
 @Module({
@@ -37,6 +47,23 @@ import {
       useFactory: (docs: DocumentRepository) => new GetDocumentUseCase(docs),
       inject: [DOCUMENT_REPOSITORY],
     },
+    {
+      provide: LIST_CHUNKS_UC,
+      useFactory: (docs: DocumentRepository, chunks: ChunkRepository) =>
+        new ListChunksUseCase(docs, chunks),
+      inject: [DOCUMENT_REPOSITORY, CHUNK_REPOSITORY],
+    },
+    {
+      provide: PROCESS_PARSE_UC,
+      useFactory: (
+        docs: DocumentRepository,
+        chunks: ChunkRepository,
+        ladder: ParseLadderPort,
+        index: VectorIndexPort,
+      ) => new ProcessParseJobUseCase(docs, chunks, ladder, index),
+      inject: [DOCUMENT_REPOSITORY, CHUNK_REPOSITORY, PARSE_LADDER, VECTOR_INDEX],
+    },
   ],
+  exports: [PROCESS_PARSE_UC],
 })
 export class IngestModule {}

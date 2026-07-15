@@ -53,6 +53,13 @@ class FakeDocs implements DocumentRepository {
     return doc;
   }
 
+  async getContentForTenant(
+    tenantId: TenantId,
+    documentId: DocumentId,
+  ): Promise<Buffer | null> {
+    return this.store.get(`${tenantId}:${documentId}`)?.content ?? null;
+  }
+
   async listByTenantId(tenantId: TenantId): Promise<Document[]> {
     return [...this.store.values()]
       .filter((d) => d.tenantId === tenantId)

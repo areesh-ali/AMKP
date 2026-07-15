@@ -14,6 +14,7 @@ import {
 import type {
   GetDocumentUseCase,
   IngestDocumentUseCase,
+  ListChunksUseCase,
   ListDocumentsUseCase,
   TenantContext,
 } from "@amkp/application";
@@ -25,6 +26,7 @@ import { TenantContextInterceptor } from "../tenancy/tenant-context.interceptor"
 import {
   GET_DOCUMENT_UC,
   INGEST_DOCUMENT_UC,
+  LIST_CHUNKS_UC,
   LIST_DOCUMENTS_UC,
 } from "../tenancy/tenancy.tokens";
 
@@ -46,6 +48,8 @@ export class IngestController {
     private readonly listDocuments: ListDocumentsUseCase,
     @Inject(GET_DOCUMENT_UC)
     private readonly getDocument: GetDocumentUseCase,
+    @Inject(LIST_CHUNKS_UC)
+    private readonly listChunks: ListChunksUseCase,
   ) {}
 
   @Post("ingest")
@@ -61,7 +65,6 @@ export class IngestController {
     } catch {
       content = Buffer.alloc(0);
     }
-    // Reject non-base64 garbage that decodes to empty when input was non-empty
     if (
       typeof body.contentBase64 === "string" &&
       body.contentBase64.length > 0 &&
@@ -116,6 +119,26 @@ export class IngestController {
       byteSize: d.byteSize,
       status: d.status,
       createdAt: d.createdAt,
+    };
+  }
+
+  @Get("documents/:documentId/chunks")
+  async listChunksHandler(
+    @Req() req: RequestWithTenant,
+    @Param("documentId") documentId: string,
+  ) {
+    const ctx = req.tenantContext as TenantContext;
+    const items = await this.listChunks.execute(ctx.tenantId, documentId);
+    return {
+      items: items.map((c) => ({
+        chunkId: c.id,
+        documentId: c.documentId,
+        parseTier: c.parseTier,
+        parseConfidence: c.parseConfidence,
+        ordinal: c.ordinal,
+        content: c.content,
+        createdAt: c.createdAt,
+      })),
     };
   }
 }

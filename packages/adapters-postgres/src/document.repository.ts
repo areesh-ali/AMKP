@@ -42,6 +42,18 @@ export class PrismaDocumentRepository implements DocumentRepository {
     return mapDocument(row);
   }
 
+  async getContentForTenant(
+    tenantId: TenantId,
+    documentId: DocumentId,
+  ): Promise<Buffer | null> {
+    const row = await this.prisma.document.findFirst({
+      where: { id: documentId, tenantId },
+      select: { content: true },
+    });
+    if (!row) return null;
+    return Buffer.from(row.content);
+  }
+
   async listByTenantId(tenantId: TenantId): Promise<Document[]> {
     const rows = await this.prisma.document.findMany({
       where: { tenantId },

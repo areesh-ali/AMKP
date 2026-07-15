@@ -3,8 +3,10 @@ import {
   ACCOUNT_REPOSITORY,
   API_KEY_ISSUER,
   API_KEY_REPOSITORY,
+  CHUNK_REPOSITORY,
   DOCUMENT_REPOSITORY,
   JOB_QUEUE,
+  PARSE_LADDER,
   TENANT_REPOSITORY,
   VECTOR_INDEX,
 } from "@amkp/application";
@@ -14,9 +16,11 @@ import {
   PrismaAccountRepository,
   PrismaApiKeyIssuer,
   PrismaApiKeyRepository,
+  PrismaChunkRepository,
   PrismaDocumentRepository,
   PrismaTenantRepository,
 } from "@amkp/adapters-postgres";
+import { LocalParseLadder } from "@amkp/adapters-providers";
 import {
   createJobQueue,
   InMemoryJobQueue,
@@ -64,6 +68,15 @@ export const sharedMemoryJobQueue = new InMemoryJobQueue();
       inject: [PRISMA],
     },
     {
+      provide: CHUNK_REPOSITORY,
+      useFactory: (prisma: Prisma) => new PrismaChunkRepository(prisma),
+      inject: [PRISMA],
+    },
+    {
+      provide: PARSE_LADDER,
+      useValue: new LocalParseLadder(),
+    },
+    {
       provide: VECTOR_INDEX,
       useValue: sharedVectorIndex,
     },
@@ -87,6 +100,8 @@ export const sharedMemoryJobQueue = new InMemoryJobQueue();
     API_KEY_ISSUER,
     API_KEY_REPOSITORY,
     DOCUMENT_REPOSITORY,
+    CHUNK_REPOSITORY,
+    PARSE_LADDER,
     VECTOR_INDEX,
     JOB_QUEUE,
   ],

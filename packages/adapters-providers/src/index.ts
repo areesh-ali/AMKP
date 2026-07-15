@@ -2,3 +2,5 @@
 export interface EmbeddingProvider {
   embed(texts: string[]): Promise<number[][]>;
 }
+
+export { LocalParseLadder, extractPdfTextLayer } from "./local-parse-ladder";

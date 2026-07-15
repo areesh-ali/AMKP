@@ -298,6 +298,29 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+  /v1/documents/{documentId}/chunks:
+    get:
+      summary: List Chunks for a Document (includes parseTier)
+      operationId: listDocumentChunks
+      security:
+        - TenantApiKeyBearer: []
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tenant-scoped chunks with parse ladder metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChunkListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /v1/me:
     get:
       summary: Resolve TenantContext from Product API key
@@ -557,6 +580,43 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/DocumentSummary"
+    ChunkSummary:
+      type: object
+      required:
+        [
+          chunkId,
+          documentId,
+          parseTier,
+          parseConfidence,
+          ordinal,
+          content,
+          createdAt,
+        ]
+      properties:
+        chunkId:
+          type: string
+        documentId:
+          type: string
+        parseTier:
+          type: string
+          enum: [tier1_text, tier2_layout]
+        parseConfidence:
+          type: number
+        ordinal:
+          type: integer
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    ChunkListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChunkSummary"
     ErrorResponse:
       type: object
       required: [error]

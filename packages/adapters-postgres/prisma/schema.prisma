@@ -42,9 +42,25 @@ model Document {
   status      String   @default("pending")
   createdAt   DateTime @default(now()) @map("created_at")
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  chunks      Chunk[]
 
   @@index([tenantId])
   @@map("documents")
+}
+
+model Chunk {
+  id              String   @id
+  tenantId        String   @map("tenant_id")
+  documentId      String   @map("document_id")
+  content         String
+  parseTier       String   @map("parse_tier")
+  parseConfidence Float    @map("parse_confidence")
+  ordinal         Int
+  createdAt       DateTime @default(now()) @map("created_at")
+  document        Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, documentId])
+  @@map("chunks")
 }
 
 model ApiKey {

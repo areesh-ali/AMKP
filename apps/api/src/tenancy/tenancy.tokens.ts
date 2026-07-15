@@ -11,3 +11,5 @@ export const RETRIEVE_UC = Symbol("RETRIEVE_UC");
 export const INGEST_DOCUMENT_UC = Symbol("INGEST_DOCUMENT_UC");
 export const LIST_DOCUMENTS_UC = Symbol("LIST_DOCUMENTS_UC");
 export const GET_DOCUMENT_UC = Symbol("GET_DOCUMENT_UC");
+export const LIST_CHUNKS_UC = Symbol("LIST_CHUNKS_UC");
+export const PROCESS_PARSE_UC = Symbol("PROCESS_PARSE_UC");
