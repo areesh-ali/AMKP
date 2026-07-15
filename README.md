@@ -6,6 +6,8 @@ Platform teams ingest multimodal documents once, retrieve typed Evidence under h
 
 **Self-serve POC Pack:** [docs/poc-pack.md](docs/poc-pack.md) — fixtures, eval APIs, Leak/ACL suite, and documented pass criteria (no sales gate).
 
+**MCP:** [docs/mcp.md](docs/mcp.md) · **SDK:** [`packages/sdk-js`](packages/sdk-js) · **Reference multi-Product app:** [`apps/reference-multi-product`](apps/reference-multi-product)
+
 ## About (GitHub)
 
 Use this for the repository **About** panel:
