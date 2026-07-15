@@ -114,7 +114,8 @@ function scoreConfidence(text: string, byteSize: number): number {
   const len = text.trim().length;
   if (len === 0) return 0;
   if (byteSize <= 0) return Math.min(1, len / 100);
-  // Text-layer PDFs often have text << file size; reward absolute yield.
   const ratio = len / Math.max(byteSize, 1);
-  return Math.max(0.35, Math.min(1, 0.4 + ratio * 4 + Math.min(len, 200) / 400));
+  const raw =
+    0.4 + ratio * 4 + Math.min(len, 200) / 400;
+  return Math.min(1, Math.max(0.35, raw));
 }

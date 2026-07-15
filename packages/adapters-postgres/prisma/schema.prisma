@@ -56,6 +56,7 @@ model Chunk {
   parseTier       String   @map("parse_tier")
   parseConfidence Float    @map("parse_confidence")
   ordinal         Int
+  tableJson       Json?    @map("table_json")
   createdAt       DateTime @default(now()) @map("created_at")
   document        Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 

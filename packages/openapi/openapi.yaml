@@ -602,13 +602,31 @@ components:
           enum: [tier1_text, tier2_layout]
         parseConfidence:
           type: number
+          minimum: 0
+          maximum: 1
         ordinal:
           type: integer
         content:
           type: string
+        table:
+          $ref: "#/components/schemas/TableEvidence"
         createdAt:
           type: string
           format: date-time
+    TableEvidence:
+      type: object
+      required: [headers, rows]
+      properties:
+        headers:
+          type: array
+          items:
+            type: string
+        rows:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
     ChunkListResponse:
       type: object
       required: [items]

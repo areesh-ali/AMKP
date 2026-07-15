@@ -38,6 +38,8 @@ export interface Chunk {
   parseTier: ParseTier;
   parseConfidence: number;
   ordinal: number;
+  /** Structured table when recoverable (FR-6 / TableEvidence). */
+  table?: TableEvidence;
   createdAt: string;
 }
 

@@ -3,6 +3,7 @@ import type {
   ChunkId,
   DocumentId,
   ParseTier,
+  TableEvidence,
   TenantId,
 } from "@amkp/domain";
 
@@ -13,6 +14,7 @@ export interface CreateChunkInput {
   parseTier: ParseTier;
   parseConfidence: number;
   ordinal: number;
+  table?: TableEvidence;
 }
 
 export interface ChunkRepository {

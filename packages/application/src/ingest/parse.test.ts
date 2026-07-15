@@ -91,6 +91,7 @@ class FakeChunks implements ChunkRepository {
       parseTier: c.parseTier,
       parseConfidence: c.parseConfidence,
       ordinal: c.ordinal,
+      table: c.table,
       createdAt: new Date().toISOString(),
     }));
     this.rows.push(...created);

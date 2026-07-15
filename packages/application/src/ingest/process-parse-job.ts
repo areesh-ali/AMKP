@@ -1,9 +1,19 @@
 import { randomUUID } from "node:crypto";
-import type { Chunk, DocumentId, ParseTier, TenantId } from "@amkp/domain";
+import type {
+  Chunk,
+  DocumentId,
+  ParseTier,
+  TableEvidence,
+  TenantId,
+} from "@amkp/domain";
 import { tenantVectorNamespace } from "@amkp/domain";
 import type { VectorIndexPort } from "../retrieve/retrieve";
 import { DocumentNotFoundError, type DocumentRepository } from "./ports";
 import type { ChunkRepository, ParseLadderPort } from "./parse-ports";
+import {
+  clampParseConfidence,
+  segmentTextWithTables,
+} from "./table-evidence";
 
 const TIER1_MIN_CHARS = 20;
 const CHUNK_SIZE = 800;
@@ -12,11 +22,13 @@ export interface ProcessParseJobResult {
   documentId: DocumentId;
   parseTier: ParseTier;
   chunkCount: number;
+  tableChunkCount: number;
   usedVlm: false;
 }
 
 /**
  * Worker-side Parse Ladder (tiers 1–2 only). Never invokes VLM (T-2.4).
+ * Emits TableEvidence chunks when tables are recoverable (FR-6 / T-2.3).
  */
 export class ProcessParseJobUseCase {
   constructor(
@@ -73,18 +85,48 @@ export class ProcessParseJobUseCase {
       }
     }
 
-    const pieces = splitIntoChunks(chosen.text, CHUNK_SIZE);
+    const confidence = clampParseConfidence(chosen.confidence);
+    const segments = segmentTextWithTables(chosen.text);
+    const inputs: Array<{
+      tenantId: TenantId;
+      documentId: DocumentId;
+      content: string;
+      parseTier: ParseTier;
+      parseConfidence: number;
+      ordinal: number;
+      table?: TableEvidence;
+    }> = [];
+
+    let ordinal = 0;
+    for (const seg of segments) {
+      if (seg.kind === "table" && seg.table) {
+        inputs.push({
+          tenantId: input.tenantId,
+          documentId: input.documentId,
+          content: seg.text,
+          parseTier,
+          parseConfidence: confidence,
+          ordinal: ordinal++,
+          table: seg.table,
+        });
+        continue;
+      }
+      for (const piece of splitIntoChunks(seg.text, CHUNK_SIZE)) {
+        inputs.push({
+          tenantId: input.tenantId,
+          documentId: input.documentId,
+          content: piece,
+          parseTier,
+          parseConfidence: confidence,
+          ordinal: ordinal++,
+        });
+      }
+    }
+
     const created = await this.chunks.replaceForDocument(
       input.tenantId,
       input.documentId,
-      pieces.map((text, ordinal) => ({
-        tenantId: input.tenantId,
-        documentId: input.documentId,
-        content: text,
-        parseTier,
-        parseConfidence: chosen.confidence,
-        ordinal,
-      })),
+      inputs,
     );
 
     const namespace = tenantVectorNamespace(input.tenantId);
@@ -96,6 +138,9 @@ export class ProcessParseJobUseCase {
         documentId: input.documentId,
         content: chunk.content,
         score: chunk.parseConfidence,
+        parseConfidence: chunk.parseConfidence,
+        parseTier: chunk.parseTier,
+        table: chunk.table,
       });
     }
 
@@ -109,6 +154,7 @@ export class ProcessParseJobUseCase {
       documentId: input.documentId,
       parseTier,
       chunkCount: created.length,
+      tableChunkCount: created.filter((c) => c.table).length,
       usedVlm: false,
     };
   }
@@ -133,7 +179,7 @@ export class ListChunksUseCase {
 }
 
 function splitIntoChunks(text: string, size: number): string[] {
-  const normalized = text.replace(/\s+/g, " ").trim();
+  const normalized = text.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
   if (!normalized) return [];
   const out: string[] = [];
   for (let i = 0; i < normalized.length; i += size) {
@@ -142,7 +188,6 @@ function splitIntoChunks(text: string, size: number): string[] {
   return out;
 }
 
-/** Stable id helper for in-memory fakes (production uses ulid in adapter). */
 export function newChunkId(): string {
   return `chk_${randomUUID().replace(/-/g, "")}`;
 }

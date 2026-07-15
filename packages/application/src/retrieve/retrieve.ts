@@ -1,6 +1,7 @@
 import type {
   EvidenceEnvelope,
   EvidenceItem,
+  TableEvidence,
   TenantId,
 } from "@amkp/domain";
 import { tenantVectorNamespace } from "@amkp/domain";
@@ -22,6 +23,9 @@ export interface IndexedChunk {
   documentId: string;
   content: string;
   score?: number;
+  parseConfidence?: number;
+  parseTier?: string;
+  table?: TableEvidence;
 }
 
 export interface VectorIndexPort {
@@ -41,6 +45,7 @@ export class RetrieveUseCase {
   /**
    * Fail-closed retrieve (AD-3 / FR-16).
    * Namespace is derived from auth TenantContext — never from client input.
+   * Surfaces TableEvidence + parseConfidence when present (FR-6 / T-2.3).
    */
   async execute(
     ctx: TenantContext | undefined | null,
@@ -68,12 +73,20 @@ export class RetrieveUseCase {
       (h) => h.namespace === namespace && h.tenantId === ctx.tenantId,
     );
 
-    const items: EvidenceItem[] = safe.map((h) => ({
-      id: h.id,
-      score: h.score ?? 1,
-      citation: { documentId: h.documentId },
-      content: h.content,
-    }));
+    const items: EvidenceItem[] = safe.map((h) => {
+      const item: EvidenceItem = {
+        id: h.id,
+        score: h.score ?? 1,
+        citation: { documentId: h.documentId },
+        content: h.content,
+      };
+      if (h.parseConfidence !== undefined) {
+        item.parseConfidence = Math.min(1, Math.max(0, h.parseConfidence));
+      }
+      if (h.parseTier) item.parseTier = h.parseTier;
+      if (h.table) item.table = h.table;
+      return item;
+    });
 
     return {
       schemaVersion: "1",

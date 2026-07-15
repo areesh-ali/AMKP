@@ -9,6 +9,7 @@ import type {
   CreateDocumentInput,
   DocumentRepository,
 } from "@amkp/application";
+import { DocumentNotFoundError } from "@amkp/application";
 import type { PrismaClient } from "./prisma";
 import { toIso } from "./crypto";
 
@@ -71,7 +72,7 @@ export class PrismaDocumentRepository implements DocumentRepository {
       where: { id: documentId, tenantId },
     });
     if (!existing) {
-      throw new Error(`Document not found: ${documentId}`);
+      throw new DocumentNotFoundError(documentId);
     }
     const row = await this.prisma.document.update({
       where: { id: documentId },

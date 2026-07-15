@@ -1,5 +1,11 @@
 import { ulid } from "ulid";
-import type { Chunk, DocumentId, ParseTier, TenantId } from "@amkp/domain";
+import type {
+  Chunk,
+  DocumentId,
+  ParseTier,
+  TableEvidence,
+  TenantId,
+} from "@amkp/domain";
 import type {
   ChunkRepository,
   CreateChunkInput,
@@ -27,6 +33,9 @@ export class PrismaChunkRepository implements ChunkRepository {
         parseTier: c.parseTier,
         parseConfidence: c.parseConfidence,
         ordinal: c.ordinal,
+        tableJson: c.table
+          ? (JSON.parse(JSON.stringify(c.table)) as object)
+          : undefined,
       })),
     });
 
@@ -53,9 +62,10 @@ function mapChunk(row: {
   parseTier: string;
   parseConfidence: number;
   ordinal: number;
+  tableJson: unknown;
   createdAt: Date;
 }): Chunk {
-  return {
+  const chunk: Chunk = {
     id: row.id,
     tenantId: row.tenantId,
     documentId: row.documentId,
@@ -64,5 +74,26 @@ function mapChunk(row: {
     parseConfidence: row.parseConfidence,
     ordinal: row.ordinal,
     createdAt: toIso(row.createdAt),
+  };
+  const table = asTableEvidence(row.tableJson);
+  if (table) chunk.table = table;
+  return chunk;
+}
+
+function asTableEvidence(value: unknown): TableEvidence | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const v = value as { headers?: unknown; rows?: unknown };
+  if (!Array.isArray(v.headers) || !Array.isArray(v.rows)) return undefined;
+  if (!v.headers.every((h) => typeof h === "string")) return undefined;
+  if (
+    !v.rows.every(
+      (r) => Array.isArray(r) && r.every((c) => typeof c === "string"),
+    )
+  ) {
+    return undefined;
+  }
+  return {
+    headers: v.headers as string[],
+    rows: v.rows as string[][],
   };
 }

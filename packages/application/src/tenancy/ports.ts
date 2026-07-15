@@ -112,7 +112,7 @@ export class MissingTenantContextError extends Error {
   readonly code = "MISSING_TENANT_CONTEXT";
 
   constructor() {
-    super("Retrieve refused: TenantContext was not resolved from auth");
+    super("Operation refused: TenantContext was not resolved from auth");
     this.name = "MissingTenantContextError";
   }
 }

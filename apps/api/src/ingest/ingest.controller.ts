@@ -138,6 +138,7 @@ export class IngestController {
         ordinal: c.ordinal,
         content: c.content,
         createdAt: c.createdAt,
+        ...(c.table ? { table: c.table } : {}),
       })),
     };
   }
