@@ -12,6 +12,7 @@
 - Per-Tenant **rate limits**, **request IDs**, security headers, soft timeouts
 - **Document delete** with vector + cache cleanup
 - Admin **`GET /v1/audit`** and **`AmkpAdminClient`**
+- Document **delete**, **reparse**, idempotent ingest, SDK `waitForDocument`
 - Ops guide: `docs/operations.md`
 
 ### Epics E1–E8

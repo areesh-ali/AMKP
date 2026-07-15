@@ -8,6 +8,7 @@ import {
   Inject,
   Param,
   Post,
+  Query,
   Req,
   UseGuards,
   UseInterceptors,
@@ -107,11 +108,18 @@ export class IngestController {
   }
 
   @Get("documents")
-  async listHandler(@Req() req: RequestWithTenant) {
+  async listHandler(
+    @Req() req: RequestWithTenant,
+    @Query("limit") limitRaw?: string,
+    @Query("offset") offsetRaw?: string,
+  ) {
     const ctx = req.tenantContext as TenantContext;
     const items = await this.listDocuments.execute(ctx);
+    const offset = Math.max(0, Number(offsetRaw) || 0);
+    const limit = Math.min(Math.max(Number(limitRaw) || items.length, 1), 500);
+    const page = items.slice(offset, offset + limit);
     return {
-      items: items.map((d) => ({
+      items: page.map((d) => ({
         documentId: d.id,
         documentVersionId: d.id,
         sourceKey: d.sourceKey,
@@ -123,6 +131,9 @@ export class IngestController {
         status: d.status,
         createdAt: d.createdAt,
       })),
+      total: items.length,
+      offset,
+      limit: page.length,
     };
   }
 
