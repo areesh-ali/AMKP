@@ -2,6 +2,7 @@ import { Worker, type Job } from "bullmq";
 import {
   ProcessIngestJobUseCase,
   ProcessParseJobUseCase,
+  InMemoryVectorIndex,
   type DocumentRepository,
   type ChunkRepository,
   type IngestJobPayload,
@@ -11,7 +12,6 @@ import {
 } from "@amkp/application";
 import {
   createPrismaClient,
-  InMemoryVectorIndex,
   LocalFsObjectStorage,
   PostgresVectorIndex,
   PrismaChunkRepository,

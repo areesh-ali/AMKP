@@ -15,11 +15,11 @@ import {
   VECTOR_INDEX,
   InMemoryAuditLog,
   InMemoryMetrics,
+  InMemoryVectorIndex,
 } from "@amkp/application";
 import {
   createPrismaClient,
   InMemoryTraceRepository,
-  InMemoryVectorIndex,
   LocalFsObjectStorage,
   PostgresVectorIndex,
   PrismaAccountRepository,
