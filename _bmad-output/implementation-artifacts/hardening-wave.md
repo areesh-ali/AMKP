@@ -17,4 +17,3 @@ compensation, README/ops sync, ingest filters, webhooks, OTel, etc.).
 - Commercial VLM beyond HTTP contract
 - Argon2 (intentionally deferred)
 - Richer layout/PDF page-vision pipelines
-- Idempotency-Key middleware (content-hash uniqueness already covers identical ingest races)

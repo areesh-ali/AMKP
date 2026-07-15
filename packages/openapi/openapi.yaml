@@ -414,6 +414,8 @@ paths:
       operationId: ingestDocument
       security:
         - TenantApiKeyBearer: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
@@ -455,6 +457,8 @@ paths:
       operationId: ingestDocumentUpload
       security:
         - TenantApiKeyBearer: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
@@ -1028,6 +1032,15 @@ components:
       schema:
         type: string
         example: key_01HZY...
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+      description: >
+        Optional client key for safe ingest retries. Matching Tenant+key
+        replays the first 202 body and sets Idempotent-Replayed: true.
   responses:
     Unauthorized:
       description: Unauthorized

@@ -297,4 +297,33 @@ describe("Ingest API (T-2.1)", () => {
     });
     expect(row?.status).toBe("parse_queued");
   });
+
+  it("replays ingest response for matching Idempotency-Key", async () => {
+    const { keyA } = await twoTenants();
+    const body = {
+      filename: "idem.txt",
+      contentBase64: Buffer.from("idem-payload").toString("base64"),
+    };
+    const first = await request(app.getHttpServer())
+      .post("/v1/ingest")
+      .set({
+        Authorization: `Bearer ${keyA}`,
+        "Idempotency-Key": "client-key-1",
+      })
+      .send(body);
+    expect(first.status).toBe(202);
+    expect(first.headers["idempotent-replayed"]).toBeUndefined();
+
+    const second = await request(app.getHttpServer())
+      .post("/v1/ingest")
+      .set({
+        Authorization: `Bearer ${keyA}`,
+        "Idempotency-Key": "client-key-1",
+      })
+      .send(body);
+    expect(second.status).toBe(202);
+    expect(second.headers["idempotent-replayed"]).toBe("true");
+    expect(second.body.documentId).toBe(first.body.documentId);
+    expect(second.body.jobId).toBe(first.body.jobId);
+  });
 });

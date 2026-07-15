@@ -20,6 +20,7 @@ import {
   type ChunkRepository,
   type DocumentRepository,
   type DocumentStatusNotifier,
+  type IdempotencyStore,
   type JobQueuePort,
   type ParseLadderPort,
   type RetrieveCachePort,
@@ -27,13 +28,16 @@ import {
   type VectorIndexPort,
 } from "@amkp/application";
 import { createDocumentStatusNotifierFromEnv } from "@amkp/adapters-providers";
+import { createIdempotencyStoreFromEnv } from "@amkp/adapters-redis";
 import { PersistenceModule } from "../infrastructure/persistence.module";
 import { AuthModule } from "../auth/auth.module";
 import { IngestController } from "./ingest.controller";
+import { IdempotencyInterceptor } from "../common/idempotency.interceptor";
 import {
   DELETE_DOCUMENT_UC,
   GET_DOCUMENT_CONTENT_UC,
   GET_DOCUMENT_UC,
+  IDEMPOTENCY_STORE,
   INGEST_DOCUMENT_UC,
   LIST_CHUNKS_UC,
   LIST_DOCUMENT_VERSIONS_UC,
@@ -47,6 +51,11 @@ import {
   imports: [PersistenceModule, AuthModule],
   controllers: [IngestController],
   providers: [
+    {
+      provide: IDEMPOTENCY_STORE,
+      useFactory: (): IdempotencyStore => createIdempotencyStoreFromEnv(),
+    },
+    IdempotencyInterceptor,
     {
       provide: INGEST_DOCUMENT_UC,
       useFactory: (docs: DocumentRepository, jobs: JobQueuePort) =>

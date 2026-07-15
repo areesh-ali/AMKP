@@ -13,3 +13,4 @@ export * from "./process-parse-job";
 export * from "./delete-document";
 export * from "./reparse-document";
 export * from "./prune-document-versions";
+export * from "./idempotency-store";

@@ -140,6 +140,10 @@ Worker and API must share the same `DATABASE_URL`, vector mode, object storage, 
 
 When set (≥1), non-deduped ingest auto-prunes older versions. Manual: `POST /v1/documents/versions/prune` with `{ "sourceKey", "keep?" }` (default keep 10 when env unset).
 
+## Idempotency-Key (ingest)
+
+Send header `Idempotency-Key` on `POST /v1/ingest` or `/v1/ingest/upload`. Matching Tenant+key replays the first `202` JSON body and sets `Idempotent-Replayed: true`. TTL via `AMKP_IDEMPOTENCY_TTL_SECONDS` (default 24h). Backed by Redis when configured; in-memory otherwise.
+
 ## Multipart ingest
 
 `POST /v1/ingest/upload` accepts `multipart/form-data` with required field `file` and optional `sourceKey` / `filename`. Size capped by `AMKP_MAX_DOCUMENT_BYTES`.

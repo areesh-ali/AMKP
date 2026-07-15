@@ -37,6 +37,7 @@ import {
 } from "../tenancy/tenant-api-key.guard";
 import { TenantContextInterceptor } from "../tenancy/tenant-context.interceptor";
 import { TenantRateLimitInterceptor } from "../common/tenant-rate-limit.interceptor";
+import { IdempotencyInterceptor } from "../common/idempotency.interceptor";
 import {
   DELETE_DOCUMENT_UC,
   GET_DOCUMENT_CONTENT_UC,
@@ -127,6 +128,7 @@ export class IngestController {
 
   @Post("ingest")
   @HttpCode(HttpStatus.ACCEPTED)
+  @UseInterceptors(IdempotencyInterceptor)
   async ingestHandler(
     @Req() req: RequestWithTenant,
     @Body() body: IngestDto,
@@ -165,6 +167,7 @@ export class IngestController {
   @Post("ingest/upload")
   @HttpCode(HttpStatus.ACCEPTED)
   @UseInterceptors(
+    IdempotencyInterceptor,
     FileInterceptor("file", {
       limits: { fileSize: maxUploadBytes() },
     }),

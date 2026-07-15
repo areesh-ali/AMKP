@@ -81,12 +81,15 @@ export class AmkpClient {
     contentType: string;
     contentBase64: string;
     sourceKey?: string;
+    idempotencyKey?: string;
   }): Promise<{
     documentId: string;
     jobId: string;
     deduped?: boolean;
   }> {
-    return this.request("POST", "/v1/ingest", input);
+    return this.request("POST", "/v1/ingest", input, {
+      idempotencyKey: input.idempotencyKey,
+    });
   }
 
   /** Multipart upload (field name `file`). */
@@ -95,6 +98,7 @@ export class AmkpClient {
     filename: string;
     sourceKey?: string;
     contentType?: string;
+    idempotencyKey?: string;
   }): Promise<{ documentId: string; jobId: string; deduped?: boolean }> {
     const form = new FormData();
     const blob =
@@ -112,6 +116,9 @@ export class AmkpClient {
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
         ...this.requestIdHeaders(),
+        ...(input.idempotencyKey
+          ? { "Idempotency-Key": input.idempotencyKey }
+          : {}),
       },
       body: form,
     });
@@ -296,17 +303,31 @@ export class AmkpClient {
     method: string,
     path: string,
     body?: unknown,
+    opts?: { idempotencyKey?: string },
   ): Promise<T> {
+    const payload =
+      body && typeof body === "object" && "idempotencyKey" in (body as object)
+        ? (() => {
+            const { idempotencyKey: _k, ...rest } = body as Record<
+              string,
+              unknown
+            >;
+            return rest;
+          })()
+        : body;
     const res = await this.fetchFn(`${this.baseUrl}${path}`, {
       method,
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
         ...this.requestIdHeaders(),
-        ...(body !== undefined
+        ...(opts?.idempotencyKey
+          ? { "Idempotency-Key": opts.idempotencyKey }
+          : {}),
+        ...(payload !== undefined
           ? { "Content-Type": "application/json" }
           : {}),
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: payload !== undefined ? JSON.stringify(payload) : undefined,
     });
     if (!res.ok) {
       throw await this.toApiError(res);
