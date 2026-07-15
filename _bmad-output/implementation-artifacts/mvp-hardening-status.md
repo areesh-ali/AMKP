@@ -15,16 +15,20 @@ All planned epic stories (T-1.x through T-8.4) have implementation artifacts and
 | EmbeddingProvider (stub + OpenAI-compatible) | done |
 | API key pepper (HMAC) | done |
 | `/ready` + adapter `/health` | done |
+| Worker `/health` + `/ready` | done |
 | Per-Tenant rate limit | done |
 | Admin audit list | done |
-| Document delete + index cleanup | done |
+| Document delete + index + cache cleanup | done |
+| Request IDs + security headers | done |
+| Soft request timeout + graceful shutdown | done |
+| Large ingest body limit | done |
+| TracerPort stub | done |
 | Ops checklist | `docs/operations.md` |
 | PDF FlateDecode inflate | improved (full PDF.js still open) |
-| TracerPort stub | done |
 
 ## Still open (optional)
 
 - Full PDF.js / layout engine
 - Argon2 for low-entropy secrets
-- OTel distributed tracing export — `TracerPort` + console/no-op stub shipped; wire `@opentelemetry/api` exporter next
+- Real `@opentelemetry/api` exporter
 - Real VLM page-vision vendor
