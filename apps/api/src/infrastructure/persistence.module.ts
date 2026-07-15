@@ -32,7 +32,7 @@ import {
   createObjectStorageFromEnv,
 } from "@amkp/adapters-postgres";
 import {
-  StubEmbeddingProvider,
+  createEmbeddingProviderFromEnv,
   LocalParseLadder,
   createPageVisionLedger,
 } from "@amkp/adapters-providers";
@@ -71,7 +71,7 @@ export const sharedMetrics = new InMemoryMetrics();
 /** Shared VLM spend ledger for asserting page-vision opt-in (T-2.4). */
 export const sharedPageVisionLedger = createPageVisionLedger();
 export const sharedParseLadder = new LocalParseLadder(sharedPageVisionLedger);
-export const sharedEmbeddingProvider = new StubEmbeddingProvider();
+export const sharedEmbeddingProvider = createEmbeddingProviderFromEnv();
 
 function useEphemeralAdapters(): boolean {
   return (

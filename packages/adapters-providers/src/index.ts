@@ -7,3 +7,7 @@ export {
   createPageVisionLedger,
 } from "./local-parse-ladder";
 export { StubEmbeddingProvider } from "./stub-embedding-provider";
+export {
+  OpenAiEmbeddingProvider,
+  createEmbeddingProviderFromEnv,
+} from "./openai-embedding-provider";
