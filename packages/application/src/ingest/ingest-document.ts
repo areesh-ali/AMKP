@@ -24,7 +24,14 @@ export interface IngestDocumentResult {
   jobId: JobId;
 }
 
-const MAX_BYTES = 10 * 1024 * 1024; // 10 MiB MVP soft limit
+const DEFAULT_MAX_BYTES = 10 * 1024 * 1024; // 10 MiB MVP soft limit
+
+export function maxDocumentBytes(): number {
+  const raw = process.env.AMKP_MAX_DOCUMENT_BYTES;
+  if (!raw) return DEFAULT_MAX_BYTES;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_MAX_BYTES;
+}
 
 export function hashDocumentContent(content: Buffer): string {
   return createHash("sha256").update(content).digest("hex");
@@ -53,8 +60,9 @@ export class IngestDocumentUseCase {
       throw new ValidationError("content is required");
     }
 
-    if (input.content.length > MAX_BYTES) {
-      throw new ValidationError(`content exceeds ${MAX_BYTES} bytes`);
+    const maxBytes = maxDocumentBytes();
+    if (input.content.length > maxBytes) {
+      throw new ValidationError(`content exceeds ${maxBytes} bytes`);
     }
 
     const contentType =
