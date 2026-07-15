@@ -10,4 +10,8 @@ export { PostgresHealthAdapter } from "./health.adapter";
 export { InMemoryVectorIndex } from "./in-memory-vector-index";
 export { PostgresVectorIndex } from "./postgres-vector-index";
 export { stubEmbedding, embeddingToPgVectorLiteral } from "./stub-embedding";
-export { InMemoryTraceRepository } from "./trace.repository";
+export {
+  InMemoryTraceRepository,
+  PrismaTraceRepository,
+  PrismaAuditLog,
+} from "./trace.repository";

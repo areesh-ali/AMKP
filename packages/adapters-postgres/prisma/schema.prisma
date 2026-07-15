@@ -110,3 +110,26 @@ model VectorChunk {
   @@index([tenantId])
   @@map("vector_chunks")
 }
+
+model Trace {
+  requestId String   @id @map("request_id")
+  tenantId  String   @map("tenant_id")
+  createdAt DateTime @map("created_at")
+  record    Json
+
+  @@index([tenantId])
+  @@map("traces")
+}
+
+model AuditEntry {
+  id       String   @id
+  action   String
+  actor    String
+  tenantId String?  @map("tenant_id")
+  detail   Json?
+  at       DateTime
+
+  @@index([tenantId])
+  @@index([at])
+  @@map("audit_entries")
+}

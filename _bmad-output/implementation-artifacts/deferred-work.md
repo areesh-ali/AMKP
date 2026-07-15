@@ -12,3 +12,5 @@
 - **Object storage for Document bytes** — BYTEA in Postgres is MVP; move to S3-compatible store before large corpora
 - **Full PDF engine** — Tj/TJ text-layer extractor is intentional cheap tier; richer layout/PDF libs deferred with page-vision (T-2.4)
 - **Real embedding provider** — stub 64-dim hash embedding until provider adapter; dims/schema stay swappable
+- ~~**In-memory Trace / audit only**~~ — **done** (`PrismaTraceRepository` + `PrismaAuditLog`; memory for tests)
+- ~~**In-memory retrieve cache only**~~ — **done** (`RedisTenantRetrieveCache` when `REDIS_URL` set outside test/memory mode)

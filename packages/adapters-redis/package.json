@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@amkp/application": "workspace:*",
+    "@amkp/domain": "workspace:*",
     "bullmq": "5.80.2",
     "ioredis": "^5.6.1"
   },

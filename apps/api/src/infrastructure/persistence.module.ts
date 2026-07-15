@@ -13,6 +13,8 @@ import {
   AUDIT_LOG,
   METRICS,
   VECTOR_INDEX,
+  InMemoryAuditLog,
+  InMemoryMetrics,
 } from "@amkp/application";
 import {
   createPrismaClient,
@@ -22,17 +24,19 @@ import {
   PrismaAccountRepository,
   PrismaApiKeyIssuer,
   PrismaApiKeyRepository,
+  PrismaAuditLog,
   PrismaChunkRepository,
   PrismaDocumentRepository,
   PrismaTenantRepository,
+  PrismaTraceRepository,
 } from "@amkp/adapters-postgres";
 import { LocalParseLadder, createPageVisionLedger } from "@amkp/adapters-providers";
 import {
   createJobQueue,
   InMemoryJobQueue,
   InMemoryTenantRetrieveCache,
+  RedisTenantRetrieveCache,
 } from "@amkp/adapters-redis";
-import { InMemoryAuditLog, InMemoryMetrics } from "@amkp/application";
 import { PRISMA } from "../tenancy/tenancy.tokens";
 import { PrismaModule } from "./prisma.module";
 
@@ -47,13 +51,13 @@ export const sharedVectorIndex = new InMemoryVectorIndex();
  */
 export const sharedMemoryJobQueue = new InMemoryJobQueue();
 
-/** Shared tenant-keyed retrieve cache (T-5.2). */
+/** Shared tenant-keyed retrieve cache (T-5.2) — tests / memory mode. */
 export const sharedRetrieveCache = new InMemoryTenantRetrieveCache();
 
-/** Shared Trace store (T-6.1 MVP in-memory). */
+/** Shared Trace store (T-6.1) — tests / memory mode. */
 export const sharedTraceRepository = new InMemoryTraceRepository();
 
-/** Shared audit log (T-4.2). */
+/** Shared audit log (T-4.2) — tests / memory mode. */
 export const sharedAuditLog = new InMemoryAuditLog();
 
 /** Shared Prometheus metrics (T-6.2). */
@@ -63,7 +67,7 @@ export const sharedMetrics = new InMemoryMetrics();
 export const sharedPageVisionLedger = createPageVisionLedger();
 export const sharedParseLadder = new LocalParseLadder(sharedPageVisionLedger);
 
-function useMemoryVectorIndex(): boolean {
+function useEphemeralAdapters(): boolean {
   return (
     process.env.AMKP_VECTOR_INDEX === "memory" ||
     process.env.NODE_ENV === "test" ||
@@ -111,7 +115,7 @@ function useMemoryVectorIndex(): boolean {
     {
       provide: VECTOR_INDEX,
       useFactory: (prisma: Prisma) => {
-        if (useMemoryVectorIndex()) {
+        if (useEphemeralAdapters()) {
           return sharedVectorIndex;
         }
         return new PostgresVectorIndex(prisma);
@@ -120,15 +124,32 @@ function useMemoryVectorIndex(): boolean {
     },
     {
       provide: RETRIEVE_CACHE,
-      useValue: sharedRetrieveCache,
+      useFactory: () => {
+        if (useEphemeralAdapters() || !process.env.REDIS_URL) {
+          return sharedRetrieveCache;
+        }
+        return new RedisTenantRetrieveCache(process.env.REDIS_URL);
+      },
     },
     {
       provide: TRACE_REPOSITORY,
-      useValue: sharedTraceRepository,
+      useFactory: (prisma: Prisma) => {
+        if (useEphemeralAdapters()) {
+          return sharedTraceRepository;
+        }
+        return new PrismaTraceRepository(prisma);
+      },
+      inject: [PRISMA],
     },
     {
       provide: AUDIT_LOG,
-      useValue: sharedAuditLog,
+      useFactory: (prisma: Prisma) => {
+        if (useEphemeralAdapters()) {
+          return sharedAuditLog;
+        }
+        return new PrismaAuditLog(prisma);
+      },
+      inject: [PRISMA],
     },
     {
       provide: METRICS,

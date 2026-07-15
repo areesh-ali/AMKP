@@ -17,3 +17,8 @@ export class InMemoryTraceRepository implements TraceRepository {
     this.byId.clear();
   }
 }
+
+export {
+  PrismaTraceRepository,
+  PrismaAuditLog,
+} from "./prisma-trace-audit";

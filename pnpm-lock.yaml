@@ -162,6 +162,9 @@ importers:
       '@amkp/application':
         specifier: workspace:*
         version: link:../application
+      '@amkp/domain':
+        specifier: workspace:*
+        version: link:../domain
       bullmq:
         specifier: 5.80.2
         version: 5.80.2
