@@ -142,6 +142,15 @@ paths:
                   minimum: 0
                   maximum: 1
                   description: Minimum top Evidence score for PreferCorrectness (T-3.3)
+                agenticReadinessPassed:
+                  type: boolean
+                  description: Mark Tenant as agentic-ready (T-4.2)
+                agenticOverride:
+                  type: boolean
+                  description: Audited override to enable agentic without readiness
+                actor:
+                  type: string
+                  description: Required when agenticOverride is true (audit actor)
       responses:
         "200":
           description: Updated tenant
@@ -255,6 +264,10 @@ paths:
                 preferCorrectness:
                   type: boolean
                   description: When true, return insufficient_evidence if top score is below Tenant threshold (FR-10)
+                mode:
+                  type: string
+                  enum: [single_pass, agentic]
+                  description: Router mode (default single_pass; agentic requires readiness or audited override)
       responses:
         "200":
           description: EvidenceEnvelope for authenticated Tenant only
@@ -265,7 +278,7 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
-          description: Missing TenantContext or tenant override
+          description: Missing TenantContext, tenant override, or agentic readiness gate
           content:
             application/json:
               schema:
@@ -417,6 +430,169 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /v1/traces/{requestId}:
+    get:
+      summary: Get retrieve Trace by requestId (Tenant-bound)
+      operationId: getTrace
+      security:
+        - TenantApiKeyBearer: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Trace for the authenticated Tenant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TraceRecord"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Trace belongs to another Tenant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/mcp/tools:
+    get:
+      summary: List product MCP tools (no admin tools)
+      operationId: listMcpTools
+      security:
+        - TenantApiKeyBearer: []
+      responses:
+        "200":
+          description: Product tool manifest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/McpToolManifest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/mcp/tools/retrieve:
+    post:
+      summary: MCP retrieve tool — EvidenceEnvelope only
+      operationId: mcpRetrieve
+      security:
+        - TenantApiKeyBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query:
+                  type: string
+                preferCorrectness:
+                  type: boolean
+                documentIds:
+                  type: array
+                  items:
+                    type: string
+                  description: Optional Document ID filter within authenticated Tenant
+      responses:
+        "200":
+          description: EvidenceEnvelope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvidenceEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/eval/golden-set:
+    post:
+      summary: Run golden-set eval against Tenant corpus
+      operationId: runGoldenEval
+      security:
+        - TenantApiKeyBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [questions]
+              properties:
+                questions:
+                  type: array
+                  items:
+                    type: object
+                    required: [id, question]
+                    properties:
+                      id:
+                        type: string
+                      question:
+                        type: string
+                      expectedDocumentIds:
+                        type: array
+                        items:
+                          type: string
+                      expectedKeywords:
+                        type: array
+                        items:
+                          type: string
+                judge:
+                  type: object
+                  properties:
+                    kind:
+                      type: string
+                      enum: [lexical_stub, llm]
+                    modelId:
+                      type: string
+      responses:
+        "200":
+          description: Golden-set report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoldenEvalReport"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/eval/table-rank:
+    post:
+      summary: TableRank multimodal vs text-only ablation
+      operationId: runTableRankEval
+      security:
+        - TenantApiKeyBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [queries]
+              properties:
+                queries:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: TableRank ablation report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TableRankEvalReport"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /metrics:
+    get:
+      summary: Prometheus metrics scrape
+      operationId: getMetrics
+      responses:
+        "200":
+          description: Prometheus text exposition format
+          content:
+            text/plain:
+              schema:
+                type: string
 components:
   securitySchemes:
     PlatformAdminBearer:
@@ -853,8 +1029,190 @@ components:
               enum: [single_pass, agentic]
             reasonCode:
               type: string
+            hops:
+              type: integer
+            terminationReason:
+              type: string
+              enum: [completed, hop_budget, cost_budget]
         # Forbidden MVP answer fields must not appear:
         # answer / finalAnswer / message / completion — not defined here
+    TraceHopStep:
+      type: object
+      required: [hop, tool, query, evidenceIds, costEstimate]
+      additionalProperties: false
+      properties:
+        hop:
+          type: integer
+        tool:
+          type: string
+        query:
+          type: string
+        evidenceIds:
+          type: array
+          items:
+            type: string
+        costEstimate:
+          $ref: "#/components/schemas/CostEstimate"
+    TraceRecord:
+      type: object
+      required:
+        [
+          requestId,
+          tenantId,
+          createdAt,
+          routerDecision,
+          evidenceIds,
+          outcomeKind,
+          costEstimate,
+          steps,
+        ]
+      additionalProperties: false
+      properties:
+        requestId:
+          type: string
+        tenantId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        routerDecision:
+          type: object
+          required: [mode, reasonCode]
+          additionalProperties: false
+          properties:
+            mode:
+              type: string
+              enum: [single_pass, agentic]
+            reasonCode:
+              type: string
+            hops:
+              type: integer
+            terminationReason:
+              type: string
+              enum: [completed, hop_budget, cost_budget]
+        evidenceIds:
+          type: array
+          items:
+            type: string
+        outcomeKind:
+          type: string
+          enum: [evidence, insufficient_evidence]
+        costEstimate:
+          $ref: "#/components/schemas/CostEstimate"
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/TraceHopStep"
+    McpToolManifest:
+      type: object
+      required: [schemaVersion, audience, tools, adminTools]
+      additionalProperties: false
+      properties:
+        schemaVersion:
+          type: string
+          enum: ["1"]
+        audience:
+          type: string
+          enum: [product]
+        tools:
+          type: array
+          items:
+            type: object
+            required: [name, description, inputSchema]
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              inputSchema:
+                type: object
+                additionalProperties: true
+        adminTools:
+          type: array
+          description: Always empty for product credentials
+          maxItems: 0
+          items:
+            type: object
+    GoldenEvalReport:
+      type: object
+      required: [tenantId, requestId, completedAt, judge, summary, outcomes]
+      properties:
+        tenantId:
+          type: string
+        requestId:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+        judge:
+          type: object
+          required: [kind, modelId]
+          properties:
+            kind:
+              type: string
+              enum: [lexical_stub, llm]
+            modelId:
+              type: string
+              nullable: true
+        summary:
+          type: object
+          required: [total, passed, failed]
+          properties:
+            total:
+              type: integer
+            passed:
+              type: integer
+            failed:
+              type: integer
+        outcomes:
+          type: array
+          items:
+            type: object
+            required:
+              [questionId, question, passed, evidenceIds, citationDocumentIds, score, notes]
+            properties:
+              questionId:
+                type: string
+              question:
+                type: string
+              passed:
+                type: boolean
+              evidenceIds:
+                type: array
+                items:
+                  type: string
+              citationDocumentIds:
+                type: array
+                items:
+                  type: string
+              score:
+                type: number
+              notes:
+                type: string
+    TableRankEvalReport:
+      type: object
+      required: [tenantId, requestId, completedAt, results, summary]
+      properties:
+        tenantId:
+          type: string
+        requestId:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        summary:
+          type: object
+          required: [avgMultimodalTableRank, avgTextOnlyTableRank]
+          properties:
+            avgMultimodalTableRank:
+              type: number
+            avgTextOnlyTableRank:
+              type: number
     ErrorResponse:
       type: object
       required: [error]

@@ -88,3 +88,25 @@ model ApiKey {
   @@unique([keyHash])
   @@map("api_keys")
 }
+
+/// Namespaced hybrid index rows (pgvector). Embedding upserted via raw SQL.
+model VectorChunk {
+  id                String                       @id
+  namespace          String
+  tenantId          String                       @map("tenant_id")
+  documentId        String                       @map("document_id")
+  documentVersionId String                       @map("document_version_id")
+  content           String
+  parseTier         String?                      @map("parse_tier")
+  parseConfidence   Float?                       @map("parse_confidence")
+  tableJson         Json?                        @map("table_json")
+  sourceKey         String?                      @map("source_key")
+  version           Int?
+  contentHash       String?                      @map("content_hash")
+  embedding         Unsupported("vector(64)")
+  createdAt         DateTime                     @default(now()) @map("created_at")
+
+  @@index([namespace])
+  @@index([tenantId])
+  @@map("vector_chunks")
+}

@@ -12,6 +12,7 @@ import {
 import {
   createPrismaClient,
   InMemoryVectorIndex,
+  PostgresVectorIndex,
   PrismaChunkRepository,
   PrismaDocumentRepository,
   PrismaTenantRepository,
@@ -42,7 +43,10 @@ async function main() {
   const tenants = new PrismaTenantRepository(prisma);
   const jobs: JobQueuePort = new BullMqJobQueue(redisUrl);
   const ladder: ParseLadderPort = new LocalParseLadder();
-  const index: VectorIndexPort = new InMemoryVectorIndex();
+  const index: VectorIndexPort =
+    process.env.AMKP_VECTOR_INDEX === "memory"
+      ? new InMemoryVectorIndex()
+      : new PostgresVectorIndex(prisma);
 
   const processIngest = new ProcessIngestJobUseCase(documents, jobs);
   const processParse = new ProcessParseJobUseCase(
@@ -89,6 +93,10 @@ async function main() {
 
   console.log("AMKP worker starting");
   console.log("queues:", QUEUE_NAMES.join(", "));
+  console.log(
+    "vector index:",
+    process.env.AMKP_VECTOR_INDEX === "memory" ? "memory" : "postgres+pgvector",
+  );
   console.log("consumers: ingest, parse (tiers 1–2)");
 
   const shutdown = async () => {

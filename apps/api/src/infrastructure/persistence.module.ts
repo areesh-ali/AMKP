@@ -18,6 +18,7 @@ import {
   createPrismaClient,
   InMemoryTraceRepository,
   InMemoryVectorIndex,
+  PostgresVectorIndex,
   PrismaAccountRepository,
   PrismaApiKeyIssuer,
   PrismaApiKeyRepository,
@@ -61,6 +62,15 @@ export const sharedMetrics = new InMemoryMetrics();
 /** Shared VLM spend ledger for asserting page-vision opt-in (T-2.4). */
 export const sharedPageVisionLedger = createPageVisionLedger();
 export const sharedParseLadder = new LocalParseLadder(sharedPageVisionLedger);
+
+function useMemoryVectorIndex(): boolean {
+  return (
+    process.env.AMKP_VECTOR_INDEX === "memory" ||
+    process.env.NODE_ENV === "test" ||
+    process.env.AMKP_JOB_QUEUE === "memory"
+  );
+}
+
 @Module({
   imports: [PrismaModule],
   providers: [
@@ -100,7 +110,13 @@ export const sharedParseLadder = new LocalParseLadder(sharedPageVisionLedger);
     },
     {
       provide: VECTOR_INDEX,
-      useValue: sharedVectorIndex,
+      useFactory: (prisma: Prisma) => {
+        if (useMemoryVectorIndex()) {
+          return sharedVectorIndex;
+        }
+        return new PostgresVectorIndex(prisma);
+      },
+      inject: [PRISMA],
     },
     {
       provide: RETRIEVE_CACHE,

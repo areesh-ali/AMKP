@@ -130,6 +130,8 @@ Currently a process stub that logs BullMQ queue names (`ingest`, `parse`, `eval`
 | `DATABASE_URL` | `postgresql://amkp:amkp@localhost:5433/amkp` | Postgres |
 | `REDIS_URL` | `redis://localhost:6379` | Redis / BullMQ |
 | `NODE_ENV` | `development` | Runtime mode |
+| `AMKP_JOB_QUEUE` | _(unset)_ | Set `memory` for in-process jobs (tests) |
+| `AMKP_VECTOR_INDEX` | _(unset → postgres)_ | Set `memory` for in-process index (tests) |
 
 ---
 
@@ -143,7 +145,7 @@ AMKP/
 ├── packages/
 │   ├── domain/              # EvidenceEnvelope + entities
 │   ├── application/         # use-cases / ports (TenantContext)
-│   ├── adapters-postgres/   # SoR + pgvector (stub → T-1.1 / T-5.1)
+│   ├── adapters-postgres/   # SoR + pgvector (`PostgresVectorIndex`)
 │   ├── adapters-redis/      # cache + queue names
 │   ├── adapters-providers/  # embeddings / VLM ports
 │   ├── sdk-js/              # official TypeScript SDK (T-8.2)
