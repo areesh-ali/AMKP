@@ -5,15 +5,21 @@ export interface AmkpClientOptions {
   /** Tenant API key (Bearer). */
   apiKey: string;
   fetch?: typeof fetch;
+  /** Optional caller request id forwarded as `x-request-id`. */
+  requestId?: string;
 }
 
 export class AmkpApiError extends Error {
+  readonly requestId: string | null;
+
   constructor(
     readonly status: number,
     readonly body: unknown,
+    requestId?: string | null,
   ) {
     super(`AMKP API ${status}`);
     this.name = "AmkpApiError";
+    this.requestId = requestId ?? extractRequestId(body);
   }
 }
 
@@ -25,16 +31,18 @@ export class AmkpClient {
   private readonly baseUrl: string;
   private readonly apiKey: string;
   private readonly fetchFn: typeof fetch;
+  private readonly requestId?: string;
 
   constructor(opts: AmkpClientOptions) {
     this.baseUrl = opts.baseUrl.replace(/\/$/, "");
     this.apiKey = opts.apiKey;
     this.fetchFn = opts.fetch ?? fetch;
+    this.requestId = opts.requestId;
   }
 
   async health(): Promise<{ ok: boolean; service?: string; adapters?: Record<string, string> }> {
     const res = await this.fetchFn(`${this.baseUrl}/health`);
-    if (!res.ok) throw new AmkpApiError(res.status, await safeJson(res));
+    if (!res.ok) throw await this.toApiError(res);
     return res.json() as Promise<{
       ok: boolean;
       service?: string;
@@ -42,10 +50,18 @@ export class AmkpClient {
     }>;
   }
 
-  async ready(): Promise<{ ok: boolean; database: string }> {
+  async ready(): Promise<{
+    ok: boolean;
+    database: string;
+    redis?: string;
+  }> {
     const res = await this.fetchFn(`${this.baseUrl}/ready`);
-    if (!res.ok) throw new AmkpApiError(res.status, await safeJson(res));
-    return res.json() as Promise<{ ok: boolean; database: string }>;
+    if (!res.ok) throw await this.toApiError(res);
+    return res.json() as Promise<{
+      ok: boolean;
+      database: string;
+      redis?: string;
+    }>;
   }
 
   async me(): Promise<{ tenantId: string; accountId: string }> {
@@ -65,7 +81,11 @@ export class AmkpClient {
     contentType: string;
     contentBase64: string;
     sourceKey?: string;
-  }): Promise<{ documentId: string; jobId: string }> {
+  }): Promise<{
+    documentId: string;
+    jobId: string;
+    deduped?: boolean;
+  }> {
     return this.request("POST", "/v1/ingest", input);
   }
 
@@ -75,7 +95,7 @@ export class AmkpClient {
     filename: string;
     sourceKey?: string;
     contentType?: string;
-  }): Promise<{ documentId: string; jobId: string }> {
+  }): Promise<{ documentId: string; jobId: string; deduped?: boolean }> {
     const form = new FormData();
     const blob =
       input.file instanceof Blob
@@ -89,13 +109,20 @@ export class AmkpClient {
 
     const res = await this.fetchFn(`${this.baseUrl}/v1/ingest/upload`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${this.apiKey}` },
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        ...this.requestIdHeaders(),
+      },
       body: form,
     });
     if (!res.ok) {
-      throw new AmkpApiError(res.status, await safeJson(res));
+      throw await this.toApiError(res);
     }
-    return res.json() as Promise<{ documentId: string; jobId: string }>;
+    return res.json() as Promise<{
+      documentId: string;
+      jobId: string;
+      deduped?: boolean;
+    }>;
   }
 
   async getTrace(requestId: string): Promise<TraceRecord> {
@@ -134,6 +161,15 @@ export class AmkpClient {
     );
   }
 
+  async listDocumentChunks(
+    documentId: string,
+  ): Promise<{ items: unknown[] }> {
+    return this.request(
+      "GET",
+      `/v1/documents/${encodeURIComponent(documentId)}/chunks`,
+    );
+  }
+
   async deleteDocument(
     documentId: string,
   ): Promise<{ documentId: string; deleted: true }> {
@@ -159,11 +195,14 @@ export class AmkpClient {
       `${this.baseUrl}/v1/documents/${encodeURIComponent(documentId)}/content`,
       {
         method: "GET",
-        headers: { Authorization: `Bearer ${this.apiKey}` },
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          ...this.requestIdHeaders(),
+        },
       },
     );
     if (!res.ok) {
-      throw new AmkpApiError(res.status, await safeJson(res));
+      throw await this.toApiError(res);
     }
     return res.arrayBuffer();
   }
@@ -236,6 +275,16 @@ export class AmkpClient {
     return this.request("POST", "/v1/eval/table-rank", input);
   }
 
+  private requestIdHeaders(): Record<string, string> {
+    return this.requestId ? { "x-request-id": this.requestId } : {};
+  }
+
+  private async toApiError(res: Response): Promise<AmkpApiError> {
+    const body = await safeJson(res);
+    const headerId = res.headers.get("x-request-id");
+    return new AmkpApiError(res.status, body, headerId);
+  }
+
   private async request<T>(
     method: string,
     path: string,
@@ -245,6 +294,7 @@ export class AmkpClient {
       method,
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
+        ...this.requestIdHeaders(),
         ...(body !== undefined
           ? { "Content-Type": "application/json" }
           : {}),
@@ -252,7 +302,7 @@ export class AmkpClient {
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
     if (!res.ok) {
-      throw new AmkpApiError(res.status, await safeJson(res));
+      throw await this.toApiError(res);
     }
     return res.json() as Promise<T>;
   }
@@ -263,6 +313,7 @@ export interface AmkpAdminClientOptions {
   /** PLATFORM_ADMIN_TOKEN bearer. */
   adminToken: string;
   fetch?: typeof fetch;
+  requestId?: string;
 }
 
 /** Platform-admin SDK surface (accounts, tenants, audit). */
@@ -270,11 +321,13 @@ export class AmkpAdminClient {
   private readonly baseUrl: string;
   private readonly adminToken: string;
   private readonly fetchFn: typeof fetch;
+  private readonly requestId?: string;
 
   constructor(opts: AmkpAdminClientOptions) {
     this.baseUrl = opts.baseUrl.replace(/\/$/, "");
     this.adminToken = opts.adminToken;
     this.fetchFn = opts.fetch ?? fetch;
+    this.requestId = opts.requestId;
   }
 
   async createAccount(name: string): Promise<{ accountId: string; name: string }> {
@@ -347,6 +400,61 @@ export class AmkpAdminClient {
     );
   }
 
+  async createApiKey(tenantId: string): Promise<{
+    apiKeyId: string;
+    tenantId: string;
+    apiKey: string;
+    createdAt: string;
+  }> {
+    return this.request(
+      "POST",
+      `/v1/tenants/${encodeURIComponent(tenantId)}/api-keys`,
+    );
+  }
+
+  async listApiKeys(tenantId: string): Promise<{ items: unknown[] }> {
+    return this.request(
+      "GET",
+      `/v1/tenants/${encodeURIComponent(tenantId)}/api-keys`,
+    );
+  }
+
+  async revokeApiKey(
+    tenantId: string,
+    apiKeyId: string,
+  ): Promise<{ apiKeyId: string; tenantId: string; revokedAt: string | null }> {
+    return this.request(
+      "POST",
+      `/v1/tenants/${encodeURIComponent(tenantId)}/api-keys/${encodeURIComponent(apiKeyId)}/revoke`,
+    );
+  }
+
+  async rotateApiKey(
+    tenantId: string,
+    apiKeyId: string,
+  ): Promise<{
+    apiKeyId: string;
+    tenantId: string;
+    apiKey: string;
+    revokedApiKeyId: string;
+    createdAt: string;
+  }> {
+    return this.request(
+      "POST",
+      `/v1/tenants/${encodeURIComponent(tenantId)}/api-keys/${encodeURIComponent(apiKeyId)}/rotate`,
+    );
+  }
+
+  private requestIdHeaders(): Record<string, string> {
+    return this.requestId ? { "x-request-id": this.requestId } : {};
+  }
+
+  private async toApiError(res: Response): Promise<AmkpApiError> {
+    const body = await safeJson(res);
+    const headerId = res.headers.get("x-request-id");
+    return new AmkpApiError(res.status, body, headerId);
+  }
+
   private async request<T>(
     method: string,
     path: string,
@@ -356,6 +464,7 @@ export class AmkpAdminClient {
       method,
       headers: {
         Authorization: `Bearer ${this.adminToken}`,
+        ...this.requestIdHeaders(),
         ...(body !== undefined
           ? { "Content-Type": "application/json" }
           : {}),
@@ -363,10 +472,25 @@ export class AmkpAdminClient {
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
     if (!res.ok) {
-      throw new AmkpApiError(res.status, await safeJson(res));
+      throw await this.toApiError(res);
     }
     return res.json() as Promise<T>;
   }
+}
+
+function extractRequestId(body: unknown): string | null {
+  if (
+    body &&
+    typeof body === "object" &&
+    "error" in body &&
+    body.error &&
+    typeof body.error === "object" &&
+    "request_id" in body.error
+  ) {
+    const id = (body.error as { request_id?: unknown }).request_id;
+    return typeof id === "string" ? id : null;
+  }
+  return null;
 }
 
 async function safeJson(res: Response): Promise<unknown> {

@@ -1168,6 +1168,7 @@ components:
           filename,
           contentType,
           byteSize,
+          deduped,
         ]
       properties:
         documentId:
@@ -1190,6 +1191,9 @@ components:
           type: string
         byteSize:
           type: integer
+        deduped:
+          type: boolean
+          description: True when content-hash matched an existing Document (noop job)
     DocumentSummary:
       type: object
       required:

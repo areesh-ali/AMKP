@@ -49,7 +49,7 @@ if (envelope.requestId) {
 | `me()` | `GET /v1/me` |
 | `ingest(...)` | `POST /v1/ingest` |
 | `ingestUpload(...)` | `POST /v1/ingest/upload` (multipart) |
-| `listDocuments({ limit, cursor, status })` / `listDocumentVersions(sourceKey)` / `getDocument` / `getDocumentContent` / `waitForDocument` / `deleteDocument` / `reparseDocument` | documents |
+| `listDocuments({ limit, cursor, status, sourceKey })` / `listDocumentVersions` / `listDocumentChunks` / `getDocument` / `getDocumentContent` / `waitForDocument` / `deleteDocument` / `reparseDocument` | documents |
 | `retrieve(...)` | `POST /v1/retrieve` |
 | `getTrace(requestId)` | `GET /v1/traces/:requestId` |
 | `listMcpTools()` / `mcpRetrieve(...)` | MCP facade |
@@ -72,5 +72,9 @@ await admin.listTenants({ accountId });
 const { apiKey } = await admin.createTenant(accountId, "support");
 await admin.getTenant(/* tenantId */);
 await admin.updateTenant(/* tenantId */, { pageVisionEnabled: true });
+await admin.listApiKeys(/* tenantId */);
+// await admin.createApiKey / revokeApiKey / rotateApiKey
 const { items } = await admin.listAudit(50, { tenantId: "ten_..." });
 ```
+
+`AmkpApiError` exposes `status`, `body`, and `requestId` (from `error.request_id` or `x-request-id`).
