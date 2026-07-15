@@ -16,8 +16,11 @@ All planned epic stories (T-1.x through T-8.4) have implementation artifacts and
 | API key pepper (HMAC) | done |
 | `/ready` + adapter `/health` | done |
 | Per-Tenant rate limit | done |
+| Admin audit list | done |
+| Document delete + index cleanup | done |
 | Ops checklist | `docs/operations.md` |
 | PDF FlateDecode inflate | improved (full PDF.js still open) |
+| TracerPort stub | done |
 
 ## Still open (optional)
 

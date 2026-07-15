@@ -134,6 +134,25 @@ describe("Ingest API (T-2.1)", () => {
       .set({ Authorization: `Bearer ${keyB}` });
     expect(leak.status).toBe(404);
     expect(leak.body.error.code).toBe("DOCUMENT_NOT_FOUND");
+
+    const delB = await request(app.getHttpServer())
+      .delete(`/v1/documents/${created.body.documentId}`)
+      .set({ Authorization: `Bearer ${keyB}` });
+    expect(delB.status).toBe(404);
+
+    const delA = await request(app.getHttpServer())
+      .delete(`/v1/documents/${created.body.documentId}`)
+      .set({ Authorization: `Bearer ${keyA}` });
+    expect(delA.status).toBe(200);
+    expect(delA.body).toEqual({
+      documentId: created.body.documentId,
+      deleted: true,
+    });
+
+    const listAfter = await request(app.getHttpServer())
+      .get("/v1/documents")
+      .set({ Authorization: `Bearer ${keyA}` });
+    expect(listAfter.body.items).toHaveLength(0);
   });
 
   it("worker ProcessIngestJobUseCase enqueues parse queue", async () => {
