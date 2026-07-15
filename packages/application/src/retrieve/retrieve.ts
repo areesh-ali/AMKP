@@ -115,6 +115,10 @@ export class RetrieveUseCase {
     if (!query) {
       throw new ValidationError("query is required");
     }
+    const maxQuery = Number(process.env.AMKP_MAX_QUERY_CHARS ?? "4000");
+    if (Number.isFinite(maxQuery) && maxQuery > 0 && query.length > maxQuery) {
+      throw new ValidationError(`query exceeds ${maxQuery} characters`);
+    }
 
     const preferCorrectness = input.preferCorrectness === true;
     const tenant = this.tenants
