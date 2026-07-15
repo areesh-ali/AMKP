@@ -250,6 +250,10 @@ paths:
       responses:
         "200":
           description: EvidenceEnvelope for authenticated Tenant only
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvidenceEnvelope"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -735,6 +739,105 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ChunkSummary"
+    Citation:
+      type: object
+      required: [documentId]
+      additionalProperties: false
+      properties:
+        documentId:
+          type: string
+        location:
+          type: string
+        page:
+          type: integer
+    CostEstimate:
+      type: object
+      required: [currency, estimatedUsd]
+      additionalProperties: false
+      properties:
+        currency:
+          type: string
+          enum: [USD]
+        estimatedUsd:
+          type: number
+        actualUsd:
+          type: number
+    EvidenceItem:
+      type: object
+      required: [id, score, citation]
+      # No MVP final-answer / chat fields (AD-4 / T-3.2)
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        score:
+          type: number
+        citation:
+          $ref: "#/components/schemas/Citation"
+        content:
+          type: string
+        table:
+          $ref: "#/components/schemas/TableEvidence"
+        parseConfidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        parseTier:
+          type: string
+        documentVersionId:
+          type: string
+    PreferCorrectnessOutcome:
+      oneOf:
+        - type: object
+          required: [kind, items]
+          additionalProperties: false
+          properties:
+            kind:
+              type: string
+              enum: [evidence]
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/EvidenceItem"
+        - type: object
+          required: [kind, reason, threshold]
+          additionalProperties: false
+          properties:
+            kind:
+              type: string
+              enum: [insufficient_evidence]
+            reason:
+              type: string
+            threshold:
+              type: number
+    EvidenceEnvelope:
+      type: object
+      required: [schemaVersion, requestId, tenantId, outcome, costEstimate]
+      # Explicitly forbid chat/generate answer fields on Retrieve
+      additionalProperties: false
+      properties:
+        schemaVersion:
+          type: string
+          enum: ["1"]
+        requestId:
+          type: string
+        tenantId:
+          type: string
+        outcome:
+          $ref: "#/components/schemas/PreferCorrectnessOutcome"
+        costEstimate:
+          $ref: "#/components/schemas/CostEstimate"
+        routerDecision:
+          type: object
+          additionalProperties: false
+          properties:
+            mode:
+              type: string
+              enum: [single_pass, agentic]
+            reasonCode:
+              type: string
+        # Forbidden MVP answer fields must not appear:
+        # answer / finalAnswer / message / completion — not defined here
     ErrorResponse:
       type: object
       required: [error]

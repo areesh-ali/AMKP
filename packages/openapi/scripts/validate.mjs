@@ -11,6 +11,8 @@ const required = [
   "/v1/accounts/{accountId}/tenants:",
   "/v1/tenants/{tenantId}/api-keys:",
   "/v1/me:",
+  "/v1/retrieve:",
+  "/v1/ingest:",
   "PlatformAdminBearer:",
   "TenantApiKeyBearer:",
   "createAccount",
@@ -21,6 +23,12 @@ const required = [
   "rotateApiKey",
   "retrieve",
   "getMe",
+  "ingestDocument",
+  "EvidenceEnvelope:",
+  "EvidenceItem:",
+  "Citation:",
+  "CostEstimate:",
+  "PreferCorrectnessOutcome:",
 ];
 
 const missing = required.filter((s) => !yaml.includes(s));
@@ -29,4 +37,50 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-console.log("openapi.yaml OK — Account/Tenant endpoints present");
+// T-3.2: citation required; no chat/answer fields on Retrieve contract
+const citationRequired =
+  yaml.includes("Citation:") &&
+  yaml.includes("required: [documentId]") &&
+  yaml.includes("required: [id, score, citation]");
+if (!citationRequired) {
+  console.error(
+    "OpenAPI validation failed: EvidenceItem must require citation.documentId",
+  );
+  process.exit(1);
+}
+
+const forbiddenAnswerFields = [
+  "\n        answer:\n",
+  "\n        finalAnswer:\n",
+  "\n        final_answer:\n",
+  "\n        completion:\n",
+  "\n        message:\n",
+];
+const envelopeIdx = yaml.indexOf("EvidenceEnvelope:");
+if (envelopeIdx < 0) {
+  console.error("OpenAPI validation failed: EvidenceEnvelope missing");
+  process.exit(1);
+}
+const envelopeSlice = yaml.slice(envelopeIdx, envelopeIdx + 2500);
+for (const field of forbiddenAnswerFields) {
+  if (envelopeSlice.includes(field)) {
+    console.error(
+      `OpenAPI validation failed: EvidenceEnvelope must not define chat answer field (${field.trim()})`,
+    );
+    process.exit(1);
+  }
+}
+
+const retrieve200UsesEnvelope =
+  yaml.includes('operationId: retrieve') &&
+  yaml.includes("#/components/schemas/EvidenceEnvelope");
+if (!retrieve200UsesEnvelope) {
+  console.error(
+    "OpenAPI validation failed: /v1/retrieve 200 must $ref EvidenceEnvelope",
+  );
+  process.exit(1);
+}
+
+console.log(
+  "openapi.yaml OK — Tenancy + Ingest + EvidenceEnvelope (no answer fields)",
+);
