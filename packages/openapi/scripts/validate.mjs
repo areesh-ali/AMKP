@@ -36,6 +36,7 @@ const required = [
   "runGoldenEval",
   "runTableRankEval",
   "getMetrics",
+  "getReady",
   "EvidenceEnvelope:",
   "EvidenceItem:",
   "Citation:",

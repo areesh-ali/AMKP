@@ -32,10 +32,20 @@ export class AmkpClient {
     this.fetchFn = opts.fetch ?? fetch;
   }
 
-  async health(): Promise<{ ok: boolean }> {
+  async health(): Promise<{ ok: boolean; service?: string; adapters?: Record<string, string> }> {
     const res = await this.fetchFn(`${this.baseUrl}/health`);
     if (!res.ok) throw new AmkpApiError(res.status, await safeJson(res));
-    return res.json() as Promise<{ ok: boolean }>;
+    return res.json() as Promise<{
+      ok: boolean;
+      service?: string;
+      adapters?: Record<string, string>;
+    }>;
+  }
+
+  async ready(): Promise<{ ok: boolean; database: string }> {
+    const res = await this.fetchFn(`${this.baseUrl}/ready`);
+    if (!res.ok) throw new AmkpApiError(res.status, await safeJson(res));
+    return res.json() as Promise<{ ok: boolean; database: string }>;
   }
 
   async me(): Promise<{ tenantId: string; accountId: string }> {
