@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   HttpDocumentStatusNotifier,
   createDocumentStatusNotifierFromEnv,
+  verifyAmkpWebhookSignature,
 } from "./http-document-webhook";
 
 describe("HttpDocumentStatusNotifier", () => {
@@ -22,6 +23,30 @@ describe("HttpDocumentStatusNotifier", () => {
     const body = JSON.parse(String(init.body));
     expect(body.documentId).toBe("doc_1");
     expect(body.status).toBe("parsed");
+  });
+
+  it("signs body when secret is set", async () => {
+    const fetchFn = vi.fn(async () => new Response(null, { status: 204 }));
+    const notifier = new HttpDocumentStatusNotifier(
+      "https://hooks.example/amkp",
+      fetchFn as unknown as typeof fetch,
+      "whsec_test",
+    );
+    await notifier.notify({
+      tenantId: "ten_a",
+      documentId: "doc_1",
+      status: "parsed",
+    });
+    const init = fetchFn.mock.calls[0]![1] as RequestInit;
+    const headers = init.headers as Record<string, string>;
+    const body = String(init.body);
+    expect(headers["X-AMKP-Signature"]).toMatch(/^sha256=[0-9a-f]+$/);
+    expect(
+      verifyAmkpWebhookSignature(body, headers["X-AMKP-Signature"], "whsec_test"),
+    ).toBe(true);
+    expect(
+      verifyAmkpWebhookSignature(body, headers["X-AMKP-Signature"], "wrong"),
+    ).toBe(false);
   });
 
   it("swallows network errors", async () => {

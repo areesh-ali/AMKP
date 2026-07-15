@@ -81,6 +81,8 @@ Set `AMKP_DOCUMENT_WEBHOOK_URL` to receive a POST after a Document reaches `pars
 
 Delivery failures are logged and do not fail the parse job.
 
+Optional `AMKP_DOCUMENT_WEBHOOK_SECRET` adds header `X-AMKP-Signature: sha256=<hmac>` over the raw JSON body. Receivers can verify with `verifyAmkpWebhookSignature` from `@amkp/adapters-providers`.
+
 ## Access logs
 
 Set `AMKP_ACCESS_LOG=1` for one JSON line per HTTP request (`method`, `path`, `status`, `duration_ms`, `request_id`).

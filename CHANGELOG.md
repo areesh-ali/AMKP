@@ -19,8 +19,8 @@
 - PDF parse via **unpdf** (PDF.js) by default; `AMKP_PDF_ENGINE=cheap` fallback
 - HTTP **page-vision** vendor via `AMKP_PAGE_VISION_URL` (tier3)
 - Multipart **`POST /v1/ingest/upload`** (field `file`)
-- Document **status webhook** (`AMKP_DOCUMENT_WEBHOOK_URL`)
-- Admin **`GET /v1/accounts`** list
+- Document **status webhook** (`AMKP_DOCUMENT_WEBHOOK_URL`, optional HMAC secret)
+- Admin **`GET /v1/accounts`** list + **`GET /v1/accounts/:id`**
 - Ops guide: `docs/operations.md`
 
 ### Epics E1–E8

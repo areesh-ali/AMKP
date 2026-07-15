@@ -19,6 +19,7 @@ export {
 export {
   HttpDocumentStatusNotifier,
   createDocumentStatusNotifierFromEnv,
+  verifyAmkpWebhookSignature,
 } from "./http-document-webhook";
 export { OtelApiTracer } from "./otel-tracer";
 export { startAmkpOtel } from "./otel-bootstrap";
