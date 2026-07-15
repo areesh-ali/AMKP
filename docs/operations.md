@@ -90,6 +90,10 @@ Optional `AMKP_DOCUMENT_WEBHOOK_SECRET` adds header `X-AMKP-Signature: sha256=<h
 
 Set `AMKP_ACCESS_LOG=1` for one JSON line per HTTP request (`method`, `path`, `status`, `duration_ms`, `request_id`).
 
+## TLS / HSTS
+
+Behind HTTPS terminators, set `AMKP_HSTS=1` (optional `AMKP_HSTS_MAX_AGE`, default 1 year) to emit `Strict-Transport-Security`.
+
 ## Migrations
 
 ```bash
