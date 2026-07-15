@@ -4,12 +4,12 @@
   "iterations": 40,
   "warmup": 5,
   "excludesCustomerLlm": true,
-  "p50Ms": 0.24,
-  "p95Ms": 0.552,
-  "p99Ms": 1.154,
-  "maxMs": 1.154,
+  "p50Ms": 0.226,
+  "p95Ms": 0.406,
+  "p99Ms": 0.647,
+  "maxMs": 0.647,
   "budgetP95Ms": 800,
   "withinBudget": true,
-  "generatedAt": "2026-07-15T17:49:10.485Z",
+  "generatedAt": "2026-07-15T18:03:15.840Z",
   "fixtureHash": "fc169ad6f40b"
 }

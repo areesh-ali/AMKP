@@ -13,9 +13,11 @@ import {
   AUDIT_LOG,
   METRICS,
   VECTOR_INDEX,
+  TRACER,
   InMemoryAuditLog,
   InMemoryMetrics,
   InMemoryVectorIndex,
+  createTracerFromEnv,
 } from "@amkp/application";
 import {
   createPrismaClient,
@@ -67,6 +69,9 @@ export const sharedAuditLog = new InMemoryAuditLog();
 
 /** Shared Prometheus metrics (T-6.2). */
 export const sharedMetrics = new InMemoryMetrics();
+
+/** Shared tracer (OTel-shaped stub). */
+export const sharedTracer = createTracerFromEnv();
 
 /** Shared VLM spend ledger for asserting page-vision opt-in (T-2.4). */
 export const sharedPageVisionLedger = createPageVisionLedger();
@@ -163,6 +168,10 @@ function useEphemeralAdapters(): boolean {
       useValue: sharedMetrics,
     },
     {
+      provide: TRACER,
+      useValue: sharedTracer,
+    },
+    {
       provide: JOB_QUEUE,
       useFactory: () => {
         if (
@@ -189,6 +198,7 @@ function useEphemeralAdapters(): boolean {
     TRACE_REPOSITORY,
     AUDIT_LOG,
     METRICS,
+    TRACER,
     JOB_QUEUE,
   ],
 })

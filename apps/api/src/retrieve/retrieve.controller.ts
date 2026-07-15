@@ -15,8 +15,9 @@ import type {
   MetricsPort,
   RetrieveUseCase,
   TenantContext,
+  TracerPort,
 } from "@amkp/application";
-import { METRICS } from "@amkp/application";
+import { METRICS, TRACER } from "@amkp/application";
 import {
   TenantApiKeyGuard,
   type RequestWithTenant,
@@ -24,6 +25,7 @@ import {
 import { TenantContextInterceptor } from "../tenancy/tenant-context.interceptor";
 import { TenantRateLimitInterceptor } from "../common/tenant-rate-limit.interceptor";
 import { RETRIEVE_UC } from "../tenancy/tenancy.tokens";
+import type { RequestWithId } from "../common/request-id.middleware";
 
 class RetrieveDto {
   query!: string;
@@ -38,15 +40,21 @@ export class RetrieveController {
   constructor(
     @Inject(RETRIEVE_UC) private readonly retrieve: RetrieveUseCase,
     @Inject(METRICS) private readonly metrics: MetricsPort,
+    @Inject(TRACER) private readonly tracer: TracerPort,
   ) {}
 
   @Post()
   @HttpCode(HttpStatus.OK)
   async retrieveHandler(
-    @Req() req: RequestWithTenant,
+    @Req() req: RequestWithTenant & RequestWithId,
     @Body() body: RetrieveDto,
   ) {
     const ctx = req.tenantContext as TenantContext;
+    const requestId = req.requestId ?? `req_${randomUUID()}`;
+    const span = this.tracer.startSpan("retrieve", {
+      tenantId: ctx.tenantId,
+      requestId,
+    });
     const t0 = performance.now();
     try {
       const envelope = await this.retrieve.execute(
@@ -56,8 +64,10 @@ export class RetrieveController {
           preferCorrectness: body.preferCorrectness === true,
           mode: body.mode === "agentic" ? "agentic" : "single_pass",
         },
-        { requestId: `req_${randomUUID()}` },
+        { requestId },
       );
+      span.setAttribute("ok", true);
+      span.setAttribute("hops", envelope.routerDecision?.hops ?? 0);
       this.metrics.observeRetrieve({
         tenantId: ctx.tenantId,
         latencyMs: performance.now() - t0,
@@ -67,6 +77,7 @@ export class RetrieveController {
       });
       return envelope;
     } catch (err) {
+      span.setAttribute("ok", false);
       this.metrics.observeRetrieve({
         tenantId: ctx.tenantId,
         latencyMs: performance.now() - t0,
@@ -75,6 +86,8 @@ export class RetrieveController {
         costUsd: 0,
       });
       throw err;
+    } finally {
+      span.end();
     }
   }
 }

@@ -23,5 +23,5 @@ All planned epic stories (T-1.x through T-8.4) have implementation artifacts and
 
 - Full PDF.js / layout engine
 - Argon2 for low-entropy secrets
-- OTel distributed tracing export
+- OTel distributed tracing export — `TracerPort` + console/no-op stub shipped; wire `@opentelemetry/api` exporter next
 - Real VLM page-vision vendor

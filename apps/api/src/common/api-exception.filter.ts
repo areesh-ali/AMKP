@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from "@nestjs/common";
 import type { Request, Response } from "express";
+import type { RequestWithId } from "./request-id.middleware";
 import {
   AccountNotFoundError,
   ApiKeyAlreadyRevokedError,
@@ -137,6 +138,8 @@ export class ApiExceptionFilter implements ExceptionFilter {
 }
 
 function requestIdFrom(req: Request): string {
+  const withId = req as RequestWithId;
+  if (withId.requestId && withId.requestId.length > 0) return withId.requestId;
   const existing = req.headers["x-request-id"];
   if (typeof existing === "string" && existing.length > 0) return existing;
   return `req_${Date.now().toString(36)}`;
