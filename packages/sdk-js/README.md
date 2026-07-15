@@ -49,7 +49,7 @@ if (envelope.requestId) {
 | `me()` | `GET /v1/me` |
 | `ingest(...)` | `POST /v1/ingest` |
 | `ingestUpload(...)` | `POST /v1/ingest/upload` (multipart) |
-| `listDocuments({ limit, cursor })` / `getDocument` / `waitForDocument` / `deleteDocument` / `reparseDocument` | documents |
+| `listDocuments({ limit, cursor })` / `getDocument` / `getDocumentContent` / `waitForDocument` / `deleteDocument` / `reparseDocument` | documents |
 | `retrieve(...)` | `POST /v1/retrieve` |
 | `getTrace(requestId)` | `GET /v1/traces/:requestId` |
 | `listMcpTools()` / `mcpRetrieve(...)` | MCP facade |
