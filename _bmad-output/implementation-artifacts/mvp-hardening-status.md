@@ -31,6 +31,10 @@ All planned epic stories (T-1.x through T-8.4) have implementation artifacts and
 | Document status webhooks (+ HMAC + failed) | done |
 | Admin list/get Account | done |
 | Ops checklist | `docs/operations.md` |
+| Redis readiness PING | done |
+| Object-storage create orphan compensation | done |
+| SDK chunks + admin API keys + requestId | done |
+| Ingest `deduped` in OpenAPI/SDK | done |
 
 ## Still open (optional)
 

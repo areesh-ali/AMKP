@@ -29,7 +29,7 @@ AMKP (Agentic Multimodal Knowledge Plane): API/SDK/MCP-first Evidence + Policy +
 | **Product** | AMKP |
 | **Repo** | `AMKP` (`package.json` → `amkp`) |
 | **Stack** | NestJS hexagonal monorepo · Postgres 16 + pgvector · Redis 7 · BullMQ |
-| **Status** | Bootstrap (Story **T-1.0**). Health endpoint only; Account/Tenant APIs are next. |
+| **Status** | MVP epics E1–E8 complete; continuous hardening on `main` |
 
 ---
 
@@ -108,7 +108,7 @@ curl -s http://localhost:3000/health
 pnpm dev:worker
 ```
 
-Currently a process stub that logs BullMQ queue names (`ingest`, `parse`, `eval`). Real consumers land in **T-2.1** / **T-7.1**.
+Currently runs BullMQ consumers for **ingest** and **parse** (tiers 1–2 + optional page-vision). Exposes `GET /health` and `GET /ready` on `WORKER_HEALTH_PORT` (default `3001`).
 
 ### Useful scripts
 
@@ -120,7 +120,7 @@ Currently a process stub that logs BullMQ queue names (`ingest`, `parse`, `eval`
 | `pnpm dev:api` | Nest API with hot reload (`tsx watch`) |
 | `pnpm dev:worker` | Worker process with hot reload |
 | `pnpm typecheck` | Typecheck all workspaces |
-| `pnpm test` | Run package tests (stubs until stories land) |
+| `pnpm test` | Run package and API integration tests |
 
 ### Env vars (`.env.example`)
 
@@ -233,15 +233,15 @@ Open in a browser (no build step):
 
 ## What exists today vs next
 
-| Ready now | Next (Sprint S1) |
+| Ready now | Optional hardening |
 | --- | --- |
-| pnpm monorepo + Nest `/health` | **T-1.1** Account & Tenant APIs |
-| Domain `EvidenceEnvelope` types | **T-1.2** Tenant-bound API keys |
-| Worker process stub + queue names | **T-1.3** Auth integration tests |
-| Compose Postgres/Redis | **T-5.1** Namespace-per-Tenant indexing |
-| SPEC + epics + architecture | **T-2.1** Ingest API + async jobs |
+| Account / Tenant / API keys, ingest, retrieve, MCP | Commercial VLM beyond HTTP page-vision |
+| Parse Ladder + TableEvidence + version watermarks | Richer layout/PDF pipelines |
+| Guarded agentic retrieve + traces + metrics | Argon2 API keys (intentionally deferred) |
+| Eval (golden-set / table-rank) + POC pack | Version retention / prune jobs |
+| TypeScript SDK + OpenAPI + reference multi-product app | |
 
-Build order: **E1 → E2 → E3 → E5 (isolation early) → E4 → E6 → E7 → E8**. Full acceptance criteria live in [`epics.md`](_bmad-output/planning-artifacts/epics.md).
+Build order for greenfield: **E1 → E2 → E3 → E5 (isolation early) → E4 → E6 → E7 → E8**. Full acceptance criteria live in [`epics.md`](_bmad-output/planning-artifacts/epics.md).
 
 ---
 

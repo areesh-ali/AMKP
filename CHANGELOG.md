@@ -28,6 +28,10 @@
 - Document list **`?status=`** filter
 - Optional **HSTS** (`AMKP_HSTS=1`) + CORP + `Cache-Control: no-store`
 - Document list **`?sourceKey=`** exact filter
+- OpenAPI / SDK **`deduped`** on ingest responses
+- SDK **`listDocumentChunks`**, admin API-key helpers, `AmkpApiError.requestId`
+- Redis **PING** on API/worker `/ready` when Redis is required
+- Object-storage **orphan compensation** if Document DB insert fails after put
 - Ops guide: `docs/operations.md`
 
 ### Epics E1–E8

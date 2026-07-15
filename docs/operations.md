@@ -28,9 +28,16 @@ When rate limiting is on, retrieve/MCP/**ingest** responses include `X-RateLimit
 ## Probes
 
 - `GET /health` — liveness + adapter summary (no secrets)
-- `GET /ready` — `SELECT 1` against Postgres
+- `GET /ready` — Postgres `SELECT 1`; also Redis `PING` when Redis is required (non-ephemeral / non-test with `REDIS_URL`)
 - `GET /metrics` — Prometheus scrape
-- Worker: `GET :WORKER_HEALTH_PORT/health` (adapter summary) and `/ready` (default `3001`)
+- Worker: `GET :WORKER_HEALTH_PORT/health` (adapter summary) and `/ready` (Postgres + Redis; default `3001`)
+
+## CORS / body limits
+
+| Concern | Env | Default |
+| --- | --- | --- |
+| CORS origins | `AMKP_CORS_ORIGINS` | reflect request origin when unset (dev) |
+| JSON/body limit | `AMKP_BODY_LIMIT` | Nest/Express default unless set |
 
 ## Tracing (OpenTelemetry)
 
@@ -72,15 +79,14 @@ Set `AMKP_DOCUMENT_WEBHOOK_URL` to receive a POST after a Document reaches `pars
   "tenantId": "ten_...",
   "documentId": "doc_...",
   "status": "parsed",
-```
-
-Also emitted with `"status": "failed"` when the worker parse job throws (after best-effort Document status update).
   "parseTier": "tier1_text",
   "chunkCount": 3,
   "usedVlm": false,
   "at": "2026-07-15T00:00:00.000Z"
 }
 ```
+
+Also emitted with `"status": "failed"` when the worker parse job throws (after best-effort Document status update).
 
 Delivery failures are logged and do not fail the parse job.
 
