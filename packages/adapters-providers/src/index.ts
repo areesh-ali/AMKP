@@ -3,6 +3,7 @@ export type { EmbeddingProvider } from "@amkp/application";
 
 export {
   LocalParseLadder,
+  extractPdf,
   extractPdfTextLayer,
   createPageVisionLedger,
 } from "./local-parse-ladder";

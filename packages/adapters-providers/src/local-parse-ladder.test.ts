@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { LocalParseLadder, extractPdfTextLayer } from "./local-parse-ladder";
+import {
+  LocalParseLadder,
+  extractPdf,
+  extractPdfTextLayer,
+} from "./local-parse-ladder";
 
 /** Minimal text-layer PDF with "(Hello AMKP text layer) Tj" */
 function buildTextPdf(phrase: string): Buffer {
@@ -41,6 +45,26 @@ describe("extractPdfTextLayer", () => {
       "latin1",
     );
     expect(extractPdfTextLayer(pdf)).toContain("Hex AMKP");
+  });
+});
+
+describe("extractPdf (unpdf)", () => {
+  it("recovers text-layer via PDF.js path", async () => {
+    const pdf = buildTextPdf("Hello AMKP text layer");
+    const text = await extractPdf(pdf);
+    expect(text).toContain("Hello AMKP text layer");
+  });
+
+  it("cheap engine still works when forced", async () => {
+    const prev = process.env.AMKP_PDF_ENGINE;
+    process.env.AMKP_PDF_ENGINE = "cheap";
+    try {
+      const pdf = buildTextPdf("Cheap engine path");
+      expect(await extractPdf(pdf)).toContain("Cheap engine path");
+    } finally {
+      if (prev === undefined) delete process.env.AMKP_PDF_ENGINE;
+      else process.env.AMKP_PDF_ENGINE = prev;
+    }
   });
 });
 

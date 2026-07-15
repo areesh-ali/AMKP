@@ -41,6 +41,15 @@
 
 Retrieve spans use `TracerPort` → `@opentelemetry/api` when OTel is enabled.
 
+## PDF parse engine
+
+| Mode | Env |
+| --- | --- |
+| unpdf / PDF.js (default) | unset |
+| Cheap FlateDecode regex | `AMKP_PDF_ENGINE=cheap` |
+
+Default path uses `unpdf` and falls back to the cheap extractor on empty/failed parse.
+
 ## Access logs
 
 Set `AMKP_ACCESS_LOG=1` for one JSON line per HTTP request (`method`, `path`, `status`, `duration_ms`, `request_id`).

@@ -32,6 +32,6 @@ All planned epic stories (T-1.x through T-8.4) have implementation artifacts and
 
 ## Still open (optional)
 
-- Full PDF.js / layout engine
+- Full PDF.js / layout engine — **improved** via `unpdf` default (`AMKP_PDF_ENGINE=cheap` for legacy regex path)
 - Argon2 for API keys (deferred — incompatible with hash-indexed lookup; use peppered HMAC)
 - Real VLM page-vision vendor

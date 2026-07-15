@@ -1,9 +1,10 @@
 /**
  * Parse Ladder extractors.
  * Tiers 1–2: never VLM. Tier3: stub page-vision with recorded spend (T-2.4).
- * PDF: inflate FlateDecode streams when present, then extract Tj/TJ/'/" text.
+ * PDF: unpdf/PDF.js by default; set AMKP_PDF_ENGINE=cheap for regex FlateDecode path.
  */
 import { inflateSync } from "node:zlib";
+import { extractText as unpdfExtractText } from "unpdf";
 import type {
   PageVisionSpendLedger,
   ParseLadderPort,
@@ -20,7 +21,7 @@ export class LocalParseLadder implements ParseLadderPort {
     contentType: string;
     content: Buffer;
   }): Promise<ParsedText> {
-    const text = extractText(input);
+    const text = await extractText(input);
     const confidence = scoreConfidence(text, input.content.length);
     return { text, confidence, usedVlm: false, spendUsd: 0 };
   }
@@ -30,7 +31,7 @@ export class LocalParseLadder implements ParseLadderPort {
     contentType: string;
     content: Buffer;
   }): Promise<ParsedText> {
-    const raw = extractText(input);
+    const raw = await extractText(input);
     const layoutAware = raw
       .split(/\f|(?:\r?\n){2,}/)
       .map((p) => p.replace(/\s+/g, " ").trim())
@@ -64,11 +65,11 @@ export class LocalParseLadder implements ParseLadderPort {
   }
 }
 
-function extractText(input: {
+async function extractText(input: {
   filename: string;
   contentType: string;
   content: Buffer;
-}): string {
+}): Promise<string> {
   const ct = (input.contentType || "").toLowerCase();
   const name = (input.filename || "").toLowerCase();
 
@@ -82,7 +83,7 @@ function extractText(input: {
   }
 
   if (ct.includes("pdf") || name.endsWith(".pdf") || isPdf(input.content)) {
-    return extractPdfTextLayer(input.content);
+    return extractPdf(input.content);
   }
 
   const asUtf8 = input.content.toString("utf8");
@@ -93,6 +94,28 @@ function extractText(input: {
 
 function isPdf(buf: Buffer): boolean {
   return buf.length >= 5 && buf.subarray(0, 5).toString("ascii") === "%PDF-";
+}
+
+/**
+ * PDF text extraction. Default: unpdf (PDF.js). Fallback: cheap FlateDecode
+ * regex path when AMKP_PDF_ENGINE=cheap or unpdf fails.
+ */
+export async function extractPdf(buf: Buffer): Promise<string> {
+  if (process.env.AMKP_PDF_ENGINE === "cheap") {
+    return extractPdfTextLayer(buf);
+  }
+  try {
+    const result = await unpdfExtractText(new Uint8Array(buf));
+    const pages = Array.isArray(result.text) ? result.text : [String(result.text ?? "")];
+    const joined = pages
+      .map((p) => String(p ?? "").trim())
+      .filter(Boolean)
+      .join("\n\n");
+    if (joined.length > 0) return joined;
+  } catch {
+    // fall through to cheap extractor
+  }
+  return extractPdfTextLayer(buf);
 }
 
 /**

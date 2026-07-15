@@ -24,5 +24,5 @@ Running unattended until the user asks to stop.
 
 - ~~Cursor-based document pagination (DB-level)~~ — **done**
 - ~~Real OTel exporter~~ — **done** (`startAmkpOtel` + `OtelApiTracer`)
-- PDF.js layout engine
+- ~~PDF.js layout engine~~ — **done** (default `unpdf`; `AMKP_PDF_ENGINE=cheap` retains regex FlateDecode)
 - ~~Admin tenant get-by-id endpoint~~ — **done**

@@ -24,7 +24,8 @@
     "@opentelemetry/resources": "^2.9.0",
     "@opentelemetry/sdk-trace-base": "^2.9.0",
     "@opentelemetry/sdk-trace-node": "^2.9.0",
-    "@opentelemetry/semantic-conventions": "^1.43.0"
+    "@opentelemetry/semantic-conventions": "^1.43.0",
+    "unpdf": "^1.6.2"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
