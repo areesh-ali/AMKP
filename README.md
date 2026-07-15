@@ -6,7 +6,7 @@ Platform teams ingest multimodal documents once, retrieve typed Evidence under h
 
 **Self-serve POC Pack:** [docs/poc-pack.md](docs/poc-pack.md) — fixtures, eval APIs, Leak/ACL suite, and documented pass criteria (no sales gate).
 
-**MCP:** [docs/mcp.md](docs/mcp.md) · **SDK:** [`packages/sdk-js`](packages/sdk-js) · **Reference multi-Product app:** [`apps/reference-multi-product`](apps/reference-multi-product)
+**Ops:** [docs/operations.md](docs/operations.md) · **MCP:** [docs/mcp.md](docs/mcp.md) · **SDK:** [`packages/sdk-js`](packages/sdk-js) · **Reference multi-Product app:** [`apps/reference-multi-product`](apps/reference-multi-product)
 
 ## About (GitHub)
 
@@ -133,6 +133,9 @@ Currently a process stub that logs BullMQ queue names (`ingest`, `parse`, `eval`
 | `AMKP_JOB_QUEUE` | _(unset)_ | Set `memory` for in-process jobs (tests) |
 | `AMKP_VECTOR_INDEX` | _(unset → postgres)_ | Set `memory` for in-process index (tests) |
 | `AMKP_OBJECT_STORAGE_DIR` | _(unset → BYTEA)_ | Local FS root for Document bytes |
+| `AMKP_S3_BUCKET` | _(unset)_ | S3/MinIO/R2 bucket (wins over local FS) |
+| `AMKP_EMBEDDING_API_KEY` | _(unset → stub)_ | OpenAI-compatible embeddings |
+| `AMKP_API_KEY_PEPPER` | _(unset)_ | HMAC pepper for API key hashes |
 
 ---
 

@@ -22,6 +22,7 @@ import {
   type RequestWithTenant,
 } from "../tenancy/tenant-api-key.guard";
 import { TenantContextInterceptor } from "../tenancy/tenant-context.interceptor";
+import { TenantRateLimitInterceptor } from "../common/tenant-rate-limit.interceptor";
 import { RETRIEVE_UC } from "../tenancy/tenancy.tokens";
 
 class RetrieveDto {
@@ -32,7 +33,7 @@ class RetrieveDto {
 
 @Controller("v1/retrieve")
 @UseGuards(TenantApiKeyGuard)
-@UseInterceptors(TenantContextInterceptor)
+@UseInterceptors(TenantContextInterceptor, TenantRateLimitInterceptor)
 export class RetrieveController {
   constructor(
     @Inject(RETRIEVE_UC) private readonly retrieve: RetrieveUseCase,

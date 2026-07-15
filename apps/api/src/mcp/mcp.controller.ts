@@ -21,6 +21,7 @@ import {
   type RequestWithTenant,
 } from "../tenancy/tenant-api-key.guard";
 import { TenantContextInterceptor } from "../tenancy/tenant-context.interceptor";
+import { TenantRateLimitInterceptor } from "../common/tenant-rate-limit.interceptor";
 import { MCP_RETRIEVE_UC } from "../tenancy/tenancy.tokens";
 
 class McpRetrieveDto {
@@ -35,7 +36,7 @@ class McpRetrieveDto {
  */
 @Controller("v1/mcp")
 @UseGuards(TenantApiKeyGuard)
-@UseInterceptors(TenantContextInterceptor)
+@UseInterceptors(TenantContextInterceptor, TenantRateLimitInterceptor)
 export class McpController {
   constructor(
     @Inject(MCP_RETRIEVE_UC) private readonly mcpRetrieve: McpRetrieveUseCase,
