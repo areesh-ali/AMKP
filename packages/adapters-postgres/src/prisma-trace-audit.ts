@@ -60,4 +60,26 @@ export class PrismaAuditLog {
       },
     });
   }
+
+  async listRecent(limit = 50): Promise<
+    Array<{
+      action: string;
+      actor: string;
+      tenantId?: string;
+      detail?: Record<string, unknown>;
+      at: string;
+    }>
+  > {
+    const rows = await this.prisma.auditEntry.findMany({
+      orderBy: { at: "desc" },
+      take: Math.min(Math.max(limit, 1), 200),
+    });
+    return rows.map((r) => ({
+      action: r.action,
+      actor: r.actor,
+      tenantId: r.tenantId ?? undefined,
+      detail: (r.detail as Record<string, unknown> | null) ?? undefined,
+      at: r.at.toISOString(),
+    }));
+  }
 }

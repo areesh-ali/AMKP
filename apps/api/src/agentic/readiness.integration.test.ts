@@ -117,6 +117,12 @@ describe("Agentic Readiness gate (T-4.2)", () => {
     expect(sharedAuditLog.entries[0]?.actor).toBe("admin@example.com");
     expect(sharedAuditLog.entries[0]?.at).toBeTruthy();
 
+    const audit = await request(app.getHttpServer())
+      .get("/v1/audit")
+      .set(auth);
+    expect(audit.status).toBe(200);
+    expect(audit.body.items[0]?.action).toBe("agentic_override_enable");
+
     const retrieve = await request(app.getHttpServer())
       .post("/v1/retrieve")
       .set({ Authorization: `Bearer ${key}` })

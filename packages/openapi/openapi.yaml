@@ -622,6 +622,49 @@ paths:
             text/plain:
               schema:
                 type: string
+  /v1/audit:
+    get:
+      summary: List recent audit entries (platform admin)
+      operationId: listAudit
+      security:
+        - PlatformAdminBearer: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        "200":
+          description: Recent audit entries newest-first
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required: [action, actor, at]
+                      properties:
+                        action:
+                          type: string
+                        actor:
+                          type: string
+                        tenantId:
+                          type: string
+                        detail:
+                          type: object
+                          additionalProperties: true
+                        at:
+                          type: string
+                          format: date-time
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 components:
   securitySchemes:
     PlatformAdminBearer:
