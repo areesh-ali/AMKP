@@ -26,7 +26,7 @@ import {
   createDocumentStatusNotifierFromEnv,
   startAmkpOtel,
 } from "@amkp/adapters-providers";
-import { BullMqJobQueue, QUEUE_NAMES } from "@amkp/adapters-redis";
+import { BullMqJobQueue, QUEUE_NAMES, pingRedis } from "@amkp/adapters-redis";
 
 function connectionFromUrl(redisUrl: string) {
   const u = new URL(redisUrl);
@@ -176,8 +176,6 @@ async function main() {
     if (req.url === "/ready") {
       try {
         await prisma.$queryRaw`SELECT 1`;
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ ok: true, service: "worker", database: "up" }));
       } catch {
         res.writeHead(503, { "Content-Type": "application/json" });
         res.end(
@@ -189,7 +187,32 @@ async function main() {
             },
           }),
         );
+        return;
       }
+      try {
+        await pingRedis(redisUrl);
+      } catch {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            error: {
+              code: "NOT_READY",
+              message: "redis unavailable",
+              request_id: "worker_ready",
+            },
+          }),
+        );
+        return;
+      }
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          ok: true,
+          service: "worker",
+          database: "up",
+          redis: "up",
+        }),
+      );
       return;
     }
     res.writeHead(404).end();

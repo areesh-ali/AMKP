@@ -46,22 +46,34 @@ export class PrismaDocumentRepository implements DocumentRepository {
       });
     }
 
-    const row = await this.prisma.document.create({
-      data: {
-        id,
-        tenantId: input.tenantId,
-        filename: input.filename,
-        contentType: input.contentType,
-        byteSize: input.content.length,
-        content: this.storage ? Buffer.alloc(0) : input.content,
-        storageKey,
-        sourceKey: input.sourceKey,
-        version: input.version,
-        contentHash: input.contentHash,
-        status: "pending",
-      },
-    });
-    return mapDocument(row);
+    try {
+      const row = await this.prisma.document.create({
+        data: {
+          id,
+          tenantId: input.tenantId,
+          filename: input.filename,
+          contentType: input.contentType,
+          byteSize: input.content.length,
+          content: this.storage ? Buffer.alloc(0) : input.content,
+          storageKey,
+          sourceKey: input.sourceKey,
+          version: input.version,
+          contentHash: input.contentHash,
+          status: "pending",
+        },
+      });
+      return mapDocument(row);
+    } catch (err) {
+      // Compensate orphan blob if DB insert fails after a successful put.
+      if (this.storage && storageKey) {
+        try {
+          await this.storage.delete(storageKey);
+        } catch {
+          // best-effort; surface the original DB error
+        }
+      }
+      throw err;
+    }
   }
 
   async findByIdForTenant(

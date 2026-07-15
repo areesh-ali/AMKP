@@ -1,5 +1,6 @@
 import { Controller, Get, Inject, ServiceUnavailableException } from "@nestjs/common";
 import { createPrismaClient } from "@amkp/adapters-postgres";
+import { pingRedis, redisRequiredForReady } from "@amkp/adapters-redis";
 import { PRISMA } from "./tenancy/tenancy.tokens";
 
 type Prisma = ReturnType<typeof createPrismaClient>;
@@ -62,7 +63,6 @@ export class HealthController {
   async ready() {
     try {
       await this.prisma.$queryRaw`SELECT 1`;
-      return { ok: true, service: "api", database: "up" };
     } catch {
       throw new ServiceUnavailableException({
         error: {
@@ -72,5 +72,33 @@ export class HealthController {
         },
       });
     }
+
+    const redisUrl = process.env.REDIS_URL?.trim();
+    if (redisRequiredForReady() && redisUrl) {
+      try {
+        await pingRedis(redisUrl);
+      } catch {
+        throw new ServiceUnavailableException({
+          error: {
+            code: "NOT_READY",
+            message: "redis unavailable",
+            request_id: "ready",
+          },
+        });
+      }
+      return {
+        ok: true,
+        service: "api",
+        database: "up",
+        redis: "up",
+      };
+    }
+
+    return {
+      ok: true,
+      service: "api",
+      database: "up",
+      redis: redisUrl ? "skipped" : "not_configured",
+    };
   }
 }

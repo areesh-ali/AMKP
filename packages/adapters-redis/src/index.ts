@@ -81,3 +81,4 @@ export function createJobQueue(redisUrl?: string): JobQueuePort {
 
 export { InMemoryTenantRetrieveCache } from "./retrieve-cache";
 export { RedisTenantRetrieveCache } from "./redis-retrieve-cache";
+export { pingRedis, redisRequiredForReady } from "./ping-redis";
