@@ -11,6 +11,7 @@ import {
   TENANT_REPOSITORY,
   TRACE_REPOSITORY,
   AUDIT_LOG,
+  METRICS,
   VECTOR_INDEX,
 } from "@amkp/application";
 import {
@@ -30,7 +31,7 @@ import {
   InMemoryJobQueue,
   InMemoryTenantRetrieveCache,
 } from "@amkp/adapters-redis";
-import { InMemoryAuditLog } from "@amkp/application";
+import { InMemoryAuditLog, InMemoryMetrics } from "@amkp/application";
 import { PRISMA } from "../tenancy/tenancy.tokens";
 import { PrismaModule } from "./prisma.module";
 
@@ -53,6 +54,9 @@ export const sharedTraceRepository = new InMemoryTraceRepository();
 
 /** Shared audit log (T-4.2). */
 export const sharedAuditLog = new InMemoryAuditLog();
+
+/** Shared Prometheus metrics (T-6.2). */
+export const sharedMetrics = new InMemoryMetrics();
 
 /** Shared VLM spend ledger for asserting page-vision opt-in (T-2.4). */
 export const sharedPageVisionLedger = createPageVisionLedger();
@@ -111,6 +115,10 @@ export const sharedParseLadder = new LocalParseLadder(sharedPageVisionLedger);
       useValue: sharedAuditLog,
     },
     {
+      provide: METRICS,
+      useValue: sharedMetrics,
+    },
+    {
       provide: JOB_QUEUE,
       useFactory: () => {
         if (
@@ -136,6 +144,7 @@ export const sharedParseLadder = new LocalParseLadder(sharedPageVisionLedger);
     RETRIEVE_CACHE,
     TRACE_REPOSITORY,
     AUDIT_LOG,
+    METRICS,
     JOB_QUEUE,
   ],
 })

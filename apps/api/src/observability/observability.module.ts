@@ -8,10 +8,11 @@ import { AuthModule } from "../auth/auth.module";
 import { PersistenceModule } from "../infrastructure/persistence.module";
 import { GET_TRACE_UC } from "../tenancy/tenancy.tokens";
 import { TraceController } from "./trace.controller";
+import { MetricsController } from "./metrics.controller";
 
 @Module({
   imports: [PersistenceModule, AuthModule],
-  controllers: [TraceController],
+  controllers: [TraceController, MetricsController],
   providers: [
     {
       provide: GET_TRACE_UC,

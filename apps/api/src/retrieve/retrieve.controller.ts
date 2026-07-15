@@ -10,7 +10,13 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
-import type { RetrieveUseCase, TenantContext } from "@amkp/application";
+import { performance } from "node:perf_hooks";
+import type {
+  MetricsPort,
+  RetrieveUseCase,
+  TenantContext,
+} from "@amkp/application";
+import { METRICS } from "@amkp/application";
 import {
   TenantApiKeyGuard,
   type RequestWithTenant,
@@ -30,6 +36,7 @@ class RetrieveDto {
 export class RetrieveController {
   constructor(
     @Inject(RETRIEVE_UC) private readonly retrieve: RetrieveUseCase,
+    @Inject(METRICS) private readonly metrics: MetricsPort,
   ) {}
 
   @Post()
@@ -39,14 +46,34 @@ export class RetrieveController {
     @Body() body: RetrieveDto,
   ) {
     const ctx = req.tenantContext as TenantContext;
-    return this.retrieve.execute(
-      ctx,
-      {
-        query: body.query,
-        preferCorrectness: body.preferCorrectness === true,
-        mode: body.mode === "agentic" ? "agentic" : "single_pass",
-      },
-      { requestId: `req_${randomUUID()}` },
-    );
+    const t0 = performance.now();
+    try {
+      const envelope = await this.retrieve.execute(
+        ctx,
+        {
+          query: body.query,
+          preferCorrectness: body.preferCorrectness === true,
+          mode: body.mode === "agentic" ? "agentic" : "single_pass",
+        },
+        { requestId: `req_${randomUUID()}` },
+      );
+      this.metrics.observeRetrieve({
+        tenantId: ctx.tenantId,
+        latencyMs: performance.now() - t0,
+        ok: true,
+        agenticHops: envelope.routerDecision?.hops ?? 0,
+        costUsd: envelope.costEstimate.estimatedUsd,
+      });
+      return envelope;
+    } catch (err) {
+      this.metrics.observeRetrieve({
+        tenantId: ctx.tenantId,
+        latencyMs: performance.now() - t0,
+        ok: false,
+        agenticHops: 0,
+        costUsd: 0,
+      });
+      throw err;
+    }
   }
 }
