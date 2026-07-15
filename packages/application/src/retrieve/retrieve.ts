@@ -17,6 +17,7 @@ import {
 import { buildRetrieveCostEstimate } from "./cost-estimate";
 import { evidenceEnvelopeToTrace } from "../observability/get-trace";
 import type { TraceRepository } from "../observability/trace-ports";
+import { decideRetrieveRoute } from "../agentic/router";
 
 export interface RetrieveQuery {
   query: string;
@@ -107,8 +108,20 @@ export class RetrieveUseCase {
     }
 
     const preferCorrectness = input.preferCorrectness === true;
+    const tenant = this.tenants
+      ? await this.tenants.findById(ctx.tenantId)
+      : null;
+    const route = decideRetrieveRoute({
+      requestedMode: input.mode,
+      tenant,
+    });
+    // MVP agentic path not yet implemented — force single-pass execution.
+    if (route.mode === "agentic") {
+      // Reserved for T-4.3+; still record the decision intent.
+    }
     const threshold = preferCorrectness
-      ? await this.resolvePreferCorrectnessThreshold(ctx.tenantId)
+      ? (tenant?.preferCorrectnessThreshold ??
+        (await this.resolvePreferCorrectnessThreshold(ctx.tenantId)))
       : undefined;
 
     if (this.cache) {
@@ -176,6 +189,11 @@ export class RetrieveUseCase {
       hitCount: items.length,
     });
 
+    const routerDecision = {
+      mode: route.mode,
+      reasonCode: route.reasonCode,
+    };
+
     let envelope: EvidenceEnvelope;
 
     if (preferCorrectness) {
@@ -193,7 +211,7 @@ export class RetrieveUseCase {
             threshold: thr,
           },
           costEstimate,
-          routerDecision: { mode: "single_pass", reasonCode: "default" },
+          routerDecision,
         };
       } else {
         envelope = {
@@ -202,7 +220,7 @@ export class RetrieveUseCase {
           tenantId: ctx.tenantId,
           outcome: { kind: "evidence", items },
           costEstimate,
-          routerDecision: { mode: "single_pass", reasonCode: "default" },
+          routerDecision,
         };
       }
     } else {
@@ -212,7 +230,7 @@ export class RetrieveUseCase {
         tenantId: ctx.tenantId,
         outcome: { kind: "evidence", items },
         costEstimate,
-        routerDecision: { mode: "single_pass", reasonCode: "default" },
+        routerDecision,
       };
     }
 

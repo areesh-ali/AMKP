@@ -21,6 +21,7 @@ import { RETRIEVE_UC } from "../tenancy/tenancy.tokens";
 class RetrieveDto {
   query!: string;
   preferCorrectness?: boolean;
+  mode?: "single_pass" | "agentic";
 }
 
 @Controller("v1/retrieve")
@@ -43,6 +44,7 @@ export class RetrieveController {
       {
         query: body.query,
         preferCorrectness: body.preferCorrectness === true,
+        mode: body.mode === "agentic" ? "agentic" : "single_pass",
       },
       { requestId: `req_${randomUUID()}` },
     );
