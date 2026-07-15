@@ -155,6 +155,17 @@ export class PostgresVectorIndex implements VectorIndexPort {
   async clear(): Promise<void> {
     await this.prisma.$executeRawUnsafe(`TRUNCATE TABLE vector_chunks`);
   }
+
+  async deleteByDocument(input: {
+    namespace: string;
+    documentId: string;
+  }): Promise<void> {
+    await this.prisma.$executeRawUnsafe(
+      `DELETE FROM vector_chunks WHERE namespace = $1 AND document_id = $2`,
+      input.namespace,
+      input.documentId,
+    );
+  }
 }
 
 function lexicalScore(content: string, terms: string[]): number {

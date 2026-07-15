@@ -15,6 +15,7 @@ export const RUN_TABLE_RANK_EVAL_UC = Symbol("RUN_TABLE_RANK_EVAL_UC");
 export const INGEST_DOCUMENT_UC = Symbol("INGEST_DOCUMENT_UC");
 export const LIST_DOCUMENTS_UC = Symbol("LIST_DOCUMENTS_UC");
 export const GET_DOCUMENT_UC = Symbol("GET_DOCUMENT_UC");
+export const DELETE_DOCUMENT_UC = Symbol("DELETE_DOCUMENT_UC");
 export const LIST_CHUNKS_UC = Symbol("LIST_CHUNKS_UC");
 export const PROCESS_PARSE_UC = Symbol("PROCESS_PARSE_UC");
 export const UPDATE_TENANT_UC = Symbol("UPDATE_TENANT_UC");

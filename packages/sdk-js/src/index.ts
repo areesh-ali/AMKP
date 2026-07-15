@@ -77,6 +77,15 @@ export class AmkpClient {
     return this.request("GET", "/v1/documents");
   }
 
+  async deleteDocument(
+    documentId: string,
+  ): Promise<{ documentId: string; deleted: true }> {
+    return this.request(
+      "DELETE",
+      `/v1/documents/${encodeURIComponent(documentId)}`,
+    );
+  }
+
   async listMcpTools(): Promise<unknown> {
     return this.request("GET", "/v1/mcp/tools");
   }

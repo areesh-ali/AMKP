@@ -34,6 +34,11 @@ export interface DocumentRepository {
     documentId: DocumentId,
   ): Promise<Buffer | null>;
   listByTenantId(tenantId: TenantId): Promise<Document[]>;
+  /** Soft-delete: remove Document row (cascades chunks) for Tenant. */
+  deleteForTenant(
+    tenantId: TenantId,
+    documentId: DocumentId,
+  ): Promise<void>;
   updateStatus(
     tenantId: TenantId,
     documentId: DocumentId,

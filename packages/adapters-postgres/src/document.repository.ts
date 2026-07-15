@@ -112,6 +112,23 @@ export class PrismaDocumentRepository implements DocumentRepository {
     return rows.map(mapDocument);
   }
 
+  async deleteForTenant(
+    tenantId: TenantId,
+    documentId: DocumentId,
+  ): Promise<void> {
+    const row = await this.prisma.document.findFirst({
+      where: { id: documentId, tenantId },
+      select: { id: true, storageKey: true },
+    });
+    if (!row) {
+      throw new DocumentNotFoundError(documentId);
+    }
+    if (row.storageKey && this.storage) {
+      await this.storage.delete(row.storageKey);
+    }
+    await this.prisma.document.delete({ where: { id: documentId } });
+  }
+
   async updateStatus(
     tenantId: TenantId,
     documentId: DocumentId,

@@ -31,6 +31,7 @@ const required = [
   "retrieve",
   "getMe",
   "ingestDocument",
+  "deleteDocument",
   "getTrace",
   "listMcpTools",
   "mcpRetrieve",

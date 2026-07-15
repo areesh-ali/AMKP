@@ -7,3 +7,4 @@ export * from "./list-documents";
 export * from "./get-document";
 export * from "./process-ingest-job";
 export * from "./process-parse-job";
+export * from "./delete-document";

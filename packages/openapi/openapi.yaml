@@ -391,6 +391,35 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Delete Document (Tenant-scoped; removes chunks + index rows)
+      operationId: deleteDocument
+      security:
+        - TenantApiKeyBearer: []
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [documentId, deleted]
+                properties:
+                  documentId:
+                    type: string
+                  deleted:
+                    type: boolean
+                    enum: [true]
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /v1/documents/{documentId}/chunks:
     get:
       summary: List Chunks for a Document (includes parseTier)

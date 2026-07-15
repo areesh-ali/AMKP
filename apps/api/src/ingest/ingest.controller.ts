@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -12,6 +13,7 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import type {
+  DeleteDocumentUseCase,
   GetDocumentUseCase,
   IngestDocumentUseCase,
   ListChunksUseCase,
@@ -24,6 +26,7 @@ import {
 } from "../tenancy/tenant-api-key.guard";
 import { TenantContextInterceptor } from "../tenancy/tenant-context.interceptor";
 import {
+  DELETE_DOCUMENT_UC,
   GET_DOCUMENT_UC,
   INGEST_DOCUMENT_UC,
   LIST_CHUNKS_UC,
@@ -46,6 +49,8 @@ export class IngestController {
   constructor(
     @Inject(INGEST_DOCUMENT_UC)
     private readonly ingest: IngestDocumentUseCase,
+    @Inject(DELETE_DOCUMENT_UC)
+    private readonly deleteDocument: DeleteDocumentUseCase,
     @Inject(LIST_DOCUMENTS_UC)
     private readonly listDocuments: ListDocumentsUseCase,
     @Inject(GET_DOCUMENT_UC)
@@ -135,6 +140,16 @@ export class IngestController {
       status: d.status,
       createdAt: d.createdAt,
     };
+  }
+
+  @Delete("documents/:documentId")
+  @HttpCode(HttpStatus.OK)
+  async deleteHandler(
+    @Req() req: RequestWithTenant,
+    @Param("documentId") documentId: string,
+  ) {
+    const ctx = req.tenantContext as TenantContext;
+    return this.deleteDocument.execute(ctx, documentId);
   }
 
   @Get("documents/:documentId/chunks")

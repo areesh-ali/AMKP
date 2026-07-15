@@ -41,6 +41,20 @@ export class InMemoryVectorIndex implements VectorIndexPort {
   clear(): void {
     this.byId.clear();
   }
+
+  async deleteByDocument(input: {
+    namespace: string;
+    documentId: string;
+  }): Promise<void> {
+    for (const [key, chunk] of this.byId) {
+      if (
+        chunk.namespace === input.namespace &&
+        chunk.documentId === input.documentId
+      ) {
+        this.byId.delete(key);
+      }
+    }
+  }
 }
 
 function lexicalScore(content: string, terms: string[]): number {

@@ -106,6 +106,10 @@ class FakeDocs implements DocumentRepository {
     return [];
   }
 
+  async deleteForTenant() {
+    /* not used */
+  }
+
   async updateStatus(
     tenantId: TenantId,
     documentId: DocumentId,

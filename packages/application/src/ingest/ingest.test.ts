@@ -84,6 +84,10 @@ class FakeDocs implements DocumentRepository {
       .map(({ content: _c, ...doc }) => doc);
   }
 
+  async deleteForTenant() {
+    /* not used */
+  }
+
   async updateStatus(
     tenantId: TenantId,
     documentId: DocumentId,

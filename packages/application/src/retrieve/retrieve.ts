@@ -54,6 +54,11 @@ export interface VectorIndexPort {
     query: string;
     limit?: number;
   }): Promise<IndexedChunk[]>;
+  /** Remove all indexed chunks for a Document within a Tenant namespace. */
+  deleteByDocument?(input: {
+    namespace: string;
+    documentId: string;
+  }): Promise<void>;
 }
 
 export const VECTOR_INDEX = Symbol("VECTOR_INDEX");

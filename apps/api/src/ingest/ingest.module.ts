@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import {
   CHUNK_REPOSITORY,
   DOCUMENT_REPOSITORY,
+  DeleteDocumentUseCase,
   GetDocumentUseCase,
   IngestDocumentUseCase,
   JOB_QUEUE,
@@ -22,6 +23,7 @@ import { PersistenceModule } from "../infrastructure/persistence.module";
 import { AuthModule } from "../auth/auth.module";
 import { IngestController } from "./ingest.controller";
 import {
+  DELETE_DOCUMENT_UC,
   GET_DOCUMENT_UC,
   INGEST_DOCUMENT_UC,
   LIST_CHUNKS_UC,
@@ -48,6 +50,12 @@ import {
       provide: GET_DOCUMENT_UC,
       useFactory: (docs: DocumentRepository) => new GetDocumentUseCase(docs),
       inject: [DOCUMENT_REPOSITORY],
+    },
+    {
+      provide: DELETE_DOCUMENT_UC,
+      useFactory: (docs: DocumentRepository, index: VectorIndexPort) =>
+        new DeleteDocumentUseCase(docs, index),
+      inject: [DOCUMENT_REPOSITORY, VECTOR_INDEX],
     },
     {
       provide: LIST_CHUNKS_UC,
