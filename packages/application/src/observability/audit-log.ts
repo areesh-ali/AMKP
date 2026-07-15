@@ -15,7 +15,10 @@ export interface AuditLogPort {
     at?: string;
   }): Promise<void>;
   /** Recent entries newest-first (admin inspection). */
-  listRecent?(limit?: number): Promise<AuditEntry[]>;
+  listRecent?(
+    limit?: number,
+    opts?: { tenantId?: string },
+  ): Promise<AuditEntry[]>;
 }
 
 export const AUDIT_LOG = Symbol("AUDIT_LOG");
@@ -37,8 +40,15 @@ export class InMemoryAuditLog implements AuditLogPort {
     });
   }
 
-  async listRecent(limit = 50): Promise<AuditEntry[]> {
-    return [...this.entries].reverse().slice(0, limit);
+  async listRecent(
+    limit = 50,
+    opts?: { tenantId?: string },
+  ): Promise<AuditEntry[]> {
+    let rows = [...this.entries].reverse();
+    if (opts?.tenantId) {
+      rows = rows.filter((e) => e.tenantId === opts.tenantId);
+    }
+    return rows.slice(0, limit);
   }
 
   clear(): void {

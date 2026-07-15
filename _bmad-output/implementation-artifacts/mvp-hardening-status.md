@@ -27,9 +27,11 @@ All planned epic stories (T-1.x through T-8.4) have implementation artifacts and
 | PDF FlateDecode inflate | improved (full PDF.js still open) |
 | Document list cursor pagination | done |
 | OpenTelemetry OTLP export | done |
+| Access log (`AMKP_ACCESS_LOG`) | done |
+| Audit list tenant filter | done |
 
 ## Still open (optional)
 
 - Full PDF.js / layout engine
-- Argon2 for low-entropy secrets
+- Argon2 for API keys (deferred — incompatible with hash-indexed lookup; use peppered HMAC)
 - Real VLM page-vision vendor

@@ -232,12 +232,36 @@ export class AmkpAdminClient {
     return this.request("POST", `/v1/accounts/${accountId}/tenants`, { name });
   }
 
-  async listAudit(limit = 50): Promise<{ items: unknown[] }> {
-    return this.request("GET", `/v1/audit?limit=${encodeURIComponent(String(limit))}`);
+  async listAudit(
+    limit = 50,
+    opts?: { tenantId?: string },
+  ): Promise<{ items: unknown[] }> {
+    const q = new URLSearchParams();
+    q.set("limit", String(limit));
+    if (opts?.tenantId) q.set("tenantId", opts.tenantId);
+    return this.request("GET", `/v1/audit?${q.toString()}`);
   }
 
   async getTenant(tenantId: string): Promise<unknown> {
     return this.request("GET", `/v1/tenants/${encodeURIComponent(tenantId)}`);
+  }
+
+  async updateTenant(
+    tenantId: string,
+    body: {
+      pageVisionEnabled?: boolean;
+      agenticEnabled?: boolean;
+      preferCorrectnessThreshold?: number;
+      agenticReadinessPassed?: boolean;
+      agenticOverride?: boolean;
+      actor?: string;
+    },
+  ): Promise<unknown> {
+    return this.request(
+      "PATCH",
+      `/v1/tenants/${encodeURIComponent(tenantId)}`,
+      body,
+    );
   }
 
   private async request<T>(

@@ -15,6 +15,7 @@
 - Document **delete**, **reparse**, idempotent ingest, SDK `waitForDocument`
 - Document list **DB cursor pagination** (`limit`/`offset`/`cursor`/`nextCursor`)
 - **OpenTelemetry** OTLP HTTP exporter (`OTEL_EXPORTER_OTLP_ENDPOINT` / `AMKP_OTEL`)
+- Admin audit **tenantId** filter, SDK `updateTenant`, optional `AMKP_ACCESS_LOG`
 - Ops guide: `docs/operations.md`
 
 ### Epics E1–E8

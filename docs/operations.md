@@ -41,6 +41,10 @@
 
 Retrieve spans use `TracerPort` → `@opentelemetry/api` when OTel is enabled.
 
+## Access logs
+
+Set `AMKP_ACCESS_LOG=1` for one JSON line per HTTP request (`method`, `path`, `status`, `duration_ms`, `request_id`).
+
 ## Migrations
 
 ```bash

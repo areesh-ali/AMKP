@@ -61,7 +61,10 @@ export class PrismaAuditLog {
     });
   }
 
-  async listRecent(limit = 50): Promise<
+  async listRecent(
+    limit = 50,
+    opts?: { tenantId?: string },
+  ): Promise<
     Array<{
       action: string;
       actor: string;
@@ -71,6 +74,7 @@ export class PrismaAuditLog {
     }>
   > {
     const rows = await this.prisma.auditEntry.findMany({
+      where: opts?.tenantId ? { tenantId: opts.tenantId } : undefined,
       orderBy: { at: "desc" },
       take: Math.min(Math.max(limit, 1), 200),
     });

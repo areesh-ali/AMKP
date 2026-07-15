@@ -4,6 +4,7 @@ import { json } from "express";
 import { startAmkpOtel } from "@amkp/adapters-providers";
 import { AppModule } from "./app.module";
 import { ApiExceptionFilter } from "./common/api-exception.filter";
+import { accessLogMiddleware } from "./common/access-log.middleware";
 import { requestIdMiddleware } from "./common/request-id.middleware";
 import { securityHeadersMiddleware } from "./common/security-headers.middleware";
 import { requestTimeoutMiddleware } from "./common/request-timeout.middleware";
@@ -15,6 +16,7 @@ async function bootstrap() {
   const rawLimit = process.env.AMKP_BODY_LIMIT ?? "25mb";
   app.use(json({ limit: rawLimit }));
   app.use(requestIdMiddleware);
+  app.use(accessLogMiddleware);
   app.use(requestTimeoutMiddleware);
   app.use(securityHeadersMiddleware);
   app.useGlobalFilters(new ApiExceptionFilter());

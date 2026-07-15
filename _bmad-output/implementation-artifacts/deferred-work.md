@@ -3,7 +3,7 @@
 ## Deferred from: code review of T-1.2/1.3/5.1 (2026-07-15)
 
 - ~~**InMemoryVectorIndex as production VECTOR_INDEX**~~ — **done** (`PostgresVectorIndex` + `vector_chunks`; memory retained for tests)
-- ~~**API key hash pepper / argon2**~~ — **done** (`AMKP_API_KEY_PEPPER` → HMAC-SHA256; unset keeps SHA-256 for local/dev). Argon2 optional later for low-entropy secrets.
+- **API key hash pepper / argon2** — pepper **done** (`AMKP_API_KEY_PEPPER` → HMAC-SHA256). Argon2 remains deferred: Tenant keys are high-entropy and looked up by deterministic hash; Argon2 needs per-row salts and cannot support indexed equality lookup without a separate lookup digest.
 - ~~**Move InMemoryVectorIndex out of adapters-postgres package**~~ — **done** (lives in `@amkp/application`; postgres re-exports for compat)
 
 ## Deferred from: code review of T-2.1/T-2.2 (2026-07-15)
