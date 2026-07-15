@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -10,9 +11,11 @@ import {
   Post,
   Query,
   Req,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
 import type {
   DeleteDocumentUseCase,
   GetDocumentUseCase,
@@ -43,6 +46,39 @@ class IngestDto {
   contentBase64!: string;
   /** Stable source identity for versioning (defaults to filename). */
   sourceKey?: string;
+}
+
+function mapIngestResult(result: {
+  document: {
+    id: string;
+    sourceKey: string;
+    version: number;
+    contentHash: string;
+    status: string;
+    filename: string;
+    contentType: string;
+    byteSize: number;
+  };
+  jobId: string;
+}) {
+  return {
+    documentId: result.document.id,
+    documentVersionId: result.document.id,
+    sourceKey: result.document.sourceKey,
+    version: result.document.version,
+    contentHash: result.document.contentHash,
+    jobId: result.jobId,
+    status: result.document.status,
+    filename: result.document.filename,
+    contentType: result.document.contentType,
+    byteSize: result.document.byteSize,
+    deduped: String(result.jobId).startsWith("noop_"),
+  };
+}
+
+function maxUploadBytes(): number {
+  const raw = Number(process.env.AMKP_MAX_DOCUMENT_BYTES ?? 10 * 1024 * 1024);
+  return Number.isFinite(raw) && raw > 0 ? raw : 10 * 1024 * 1024;
 }
 
 @Controller("v1")
@@ -92,19 +128,54 @@ export class IngestController {
       sourceKey: body.sourceKey,
     });
 
-    return {
-      documentId: result.document.id,
-      documentVersionId: result.document.id,
-      sourceKey: result.document.sourceKey,
-      version: result.document.version,
-      contentHash: result.document.contentHash,
-      jobId: result.jobId,
-      status: result.document.status,
-      filename: result.document.filename,
-      contentType: result.document.contentType,
-      byteSize: result.document.byteSize,
-      deduped: String(result.jobId).startsWith("noop_"),
-    };
+    return mapIngestResult(result);
+  }
+
+  /**
+   * Multipart ingest: field `file` (required), optional `sourceKey` / `filename`.
+   * Prefer this over base64 JSON for large documents.
+   */
+  @Post("ingest/upload")
+  @HttpCode(HttpStatus.ACCEPTED)
+  @UseInterceptors(
+    FileInterceptor("file", {
+      limits: { fileSize: maxUploadBytes() },
+    }),
+  )
+  async ingestUploadHandler(
+    @Req() req: RequestWithTenant,
+    @UploadedFile()
+    file:
+      | {
+          originalname?: string;
+          mimetype?: string;
+          buffer: Buffer;
+          size: number;
+        }
+      | undefined,
+    @Body() body: { sourceKey?: string; filename?: string },
+  ) {
+    if (!file?.buffer?.length) {
+      throw new BadRequestException({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "multipart field 'file' is required",
+        },
+      });
+    }
+    const ctx = req.tenantContext as TenantContext;
+    const filename =
+      (typeof body.filename === "string" && body.filename.trim()) ||
+      file.originalname ||
+      "upload.bin";
+    const result = await this.ingest.execute(ctx, {
+      filename,
+      contentType: file.mimetype || "application/octet-stream",
+      content: file.buffer,
+      sourceKey:
+        typeof body.sourceKey === "string" ? body.sourceKey : undefined,
+    });
+    return mapIngestResult(result);
   }
 
   @Get("documents")

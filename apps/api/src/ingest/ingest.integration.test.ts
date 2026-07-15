@@ -103,6 +103,21 @@ describe("Ingest API (T-2.1)", () => {
     );
   });
 
+  it("POST /v1/ingest/upload accepts multipart file", async () => {
+    const { keyA } = await twoTenants();
+    const res = await request(app.getHttpServer())
+      .post("/v1/ingest/upload")
+      .set({ Authorization: `Bearer ${keyA}` })
+      .field("sourceKey", "handbook")
+      .attach("file", Buffer.from("multipart knowledge"), "handbook.txt");
+
+    expect(res.status).toBe(202);
+    expect(res.body.documentId).toMatch(/^doc_/);
+    expect(res.body.filename).toBe("handbook.txt");
+    expect(res.body.sourceKey).toBe("handbook");
+    expect(res.body.byteSize).toBe(Buffer.from("multipart knowledge").length);
+  });
+
   it("documents are not listable across tenants", async () => {
     const { keyA, keyB } = await twoTenants();
     const contentBase64 = Buffer.from("secret-a").toString("base64");

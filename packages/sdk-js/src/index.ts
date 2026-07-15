@@ -69,6 +69,35 @@ export class AmkpClient {
     return this.request("POST", "/v1/ingest", input);
   }
 
+  /** Multipart upload (field name `file`). */
+  async ingestUpload(input: {
+    file: Blob | Buffer | Uint8Array;
+    filename: string;
+    sourceKey?: string;
+    contentType?: string;
+  }): Promise<{ documentId: string; jobId: string }> {
+    const form = new FormData();
+    const blob =
+      input.file instanceof Blob
+        ? input.file
+        : new Blob([Uint8Array.from(input.file)], {
+            type: input.contentType ?? "application/octet-stream",
+          });
+    form.append("file", blob, input.filename);
+    if (input.sourceKey) form.append("sourceKey", input.sourceKey);
+    if (input.filename) form.append("filename", input.filename);
+
+    const res = await this.fetchFn(`${this.baseUrl}/v1/ingest/upload`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${this.apiKey}` },
+      body: form,
+    });
+    if (!res.ok) {
+      throw new AmkpApiError(res.status, await safeJson(res));
+    }
+    return res.json() as Promise<{ documentId: string; jobId: string }>;
+  }
+
   async getTrace(requestId: string): Promise<TraceRecord> {
     return this.request("GET", `/v1/traces/${encodeURIComponent(requestId)}`);
   }

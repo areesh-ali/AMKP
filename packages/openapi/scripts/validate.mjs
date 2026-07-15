@@ -32,6 +32,7 @@ const required = [
   "retrieve",
   "getMe",
   "ingestDocument",
+  "ingestDocumentUpload",
   "deleteDocument",
   "reparseDocument",
   "getTrace",

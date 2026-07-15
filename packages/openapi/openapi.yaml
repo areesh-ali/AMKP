@@ -371,6 +371,43 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /v1/ingest/upload:
+    post:
+      summary: Ingest a Document via multipart upload
+      operationId: ingestDocumentUpload
+      security:
+        - TenantApiKeyBearer: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                filename:
+                  type: string
+                  description: Override original filename
+                sourceKey:
+                  type: string
+      responses:
+        "202":
+          description: Document accepted; ingest job enqueued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IngestResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /v1/documents:
     get:
       summary: List Documents for authenticated Tenant

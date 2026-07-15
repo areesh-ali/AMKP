@@ -78,3 +78,7 @@ Worker and API must share the same `DATABASE_URL`, vector mode, object storage, 
 ## Document list pagination
 
 `GET /v1/documents` supports `limit` (default 50, max 500), legacy `offset`, and opaque `cursor` / `nextCursor` for stable DB-level paging (ordered by `sourceKey`, `version`, `id`).
+
+## Multipart ingest
+
+`POST /v1/ingest/upload` accepts `multipart/form-data` with required field `file` and optional `sourceKey` / `filename`. Size capped by `AMKP_MAX_DOCUMENT_BYTES`.
