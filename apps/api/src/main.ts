@@ -5,12 +5,14 @@ import { AppModule } from "./app.module";
 import { ApiExceptionFilter } from "./common/api-exception.filter";
 import { requestIdMiddleware } from "./common/request-id.middleware";
 import { securityHeadersMiddleware } from "./common/security-headers.middleware";
+import { requestTimeoutMiddleware } from "./common/request-timeout.middleware";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bodyParser: false });
   const rawLimit = process.env.AMKP_BODY_LIMIT ?? "25mb";
   app.use(json({ limit: rawLimit }));
   app.use(requestIdMiddleware);
+  app.use(requestTimeoutMiddleware);
   app.use(securityHeadersMiddleware);
   app.useGlobalFilters(new ApiExceptionFilter());
 
@@ -26,6 +28,15 @@ async function bootstrap() {
   await app.listen(port);
   // eslint-disable-next-line no-console
   console.log(`AMKP api listening on :${port}`);
+
+  const shutdown = async (signal: string) => {
+    // eslint-disable-next-line no-console
+    console.log(`AMKP api shutting down (${signal})`);
+    await app.close();
+    process.exit(0);
+  };
+  process.on("SIGINT", () => void shutdown("SIGINT"));
+  process.on("SIGTERM", () => void shutdown("SIGTERM"));
 }
 
 void bootstrap();
