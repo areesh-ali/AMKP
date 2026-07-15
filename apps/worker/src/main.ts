@@ -1,3 +1,4 @@
+import { createServer } from "node:http";
 import { Worker, type Job } from "bullmq";
 import {
   ProcessIngestJobUseCase,
@@ -107,7 +108,40 @@ async function main() {
   );
   console.log("consumers: ingest, parse (tiers 1–2)");
 
+  const healthPort = Number(process.env.WORKER_HEALTH_PORT ?? 3001);
+  const health = createServer(async (req, res) => {
+    if (req.url === "/health") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, service: "worker" }));
+      return;
+    }
+    if (req.url === "/ready") {
+      try {
+        await prisma.$queryRaw`SELECT 1`;
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: true, service: "worker", database: "up" }));
+      } catch {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            error: {
+              code: "NOT_READY",
+              message: "database unavailable",
+              request_id: "worker_ready",
+            },
+          }),
+        );
+      }
+      return;
+    }
+    res.writeHead(404).end();
+  });
+  health.listen(healthPort, () => {
+    console.log(`worker health on :${healthPort}`);
+  });
+
   const shutdown = async () => {
+    health.close();
     await ingestWorker.close();
     await parseWorker.close();
     if ("close" in jobs && typeof jobs.close === "function") {

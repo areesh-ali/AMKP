@@ -25,6 +25,7 @@
 - `GET /health` — liveness + adapter summary (no secrets)
 - `GET /ready` — `SELECT 1` against Postgres
 - `GET /metrics` — Prometheus scrape
+- Worker: `GET :WORKER_HEALTH_PORT/health` and `/ready` (default `3001`)
 
 ## Migrations
 
