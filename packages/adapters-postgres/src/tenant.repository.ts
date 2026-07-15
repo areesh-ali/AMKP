@@ -1,6 +1,9 @@
 import { ulid } from "ulid";
 import type { AccountId, Tenant, TenantId } from "@amkp/domain";
-import { tenantVectorNamespace } from "@amkp/domain";
+import {
+  DEFAULT_PREFER_CORRECTNESS_THRESHOLD,
+  tenantVectorNamespace,
+} from "@amkp/domain";
 import { TenantNotFoundError, type TenantRepository } from "@amkp/application";
 import type { PrismaClient } from "./prisma";
 import { toIso } from "./crypto";
@@ -22,6 +25,7 @@ export class PrismaTenantRepository implements TenantRepository {
         name: input.name,
         agenticEnabled: input.agenticEnabled ?? false,
         pageVisionEnabled: input.pageVisionEnabled ?? false,
+        preferCorrectnessThreshold: DEFAULT_PREFER_CORRECTNESS_THRESHOLD,
         vectorNamespace: tenantVectorNamespace(id),
       },
     });
@@ -49,6 +53,7 @@ export class PrismaTenantRepository implements TenantRepository {
     patch: {
       pageVisionEnabled?: boolean;
       agenticEnabled?: boolean;
+      preferCorrectnessThreshold?: number;
     },
   ): Promise<Tenant> {
     const existing = await this.prisma.tenant.findUnique({
@@ -66,6 +71,9 @@ export class PrismaTenantRepository implements TenantRepository {
         ...(patch.agenticEnabled !== undefined
           ? { agenticEnabled: patch.agenticEnabled }
           : {}),
+        ...(patch.preferCorrectnessThreshold !== undefined
+          ? { preferCorrectnessThreshold: patch.preferCorrectnessThreshold }
+          : {}),
       },
     });
     return mapTenant(row);
@@ -78,6 +86,7 @@ function mapTenant(row: {
   name: string;
   agenticEnabled: boolean;
   pageVisionEnabled: boolean;
+  preferCorrectnessThreshold: number;
   vectorNamespace: string;
   createdAt: Date;
 }): Tenant {
@@ -87,6 +96,7 @@ function mapTenant(row: {
     name: row.name,
     agenticEnabled: row.agenticEnabled,
     pageVisionEnabled: row.pageVisionEnabled,
+    preferCorrectnessThreshold: row.preferCorrectnessThreshold,
     vectorNamespace: row.vectorNamespace,
     createdAt: toIso(row.createdAt),
   };

@@ -1,7 +1,9 @@
 import { Module } from "@nestjs/common";
 import {
   RetrieveUseCase,
+  TENANT_REPOSITORY,
   VECTOR_INDEX,
+  type TenantRepository,
   type VectorIndexPort,
 } from "@amkp/application";
 import { PersistenceModule } from "../infrastructure/persistence.module";
@@ -15,8 +17,9 @@ import { RETRIEVE_UC } from "../tenancy/tenancy.tokens";
   providers: [
     {
       provide: RETRIEVE_UC,
-      useFactory: (index: VectorIndexPort) => new RetrieveUseCase(index),
-      inject: [VECTOR_INDEX],
+      useFactory: (index: VectorIndexPort, tenants: TenantRepository) =>
+        new RetrieveUseCase(index, tenants),
+      inject: [VECTOR_INDEX, TENANT_REPOSITORY],
     },
   ],
   exports: [RETRIEVE_UC],

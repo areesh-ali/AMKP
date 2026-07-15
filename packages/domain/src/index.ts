@@ -68,10 +68,18 @@ export interface Tenant {
    * Default false — scanned decks must not spend VLM when disabled.
    */
   pageVisionEnabled: boolean;
+  /**
+   * Minimum top Evidence score for PreferCorrectness (FR-10 / T-3.3).
+   * Default 0.5 — below this, Retrieve returns insufficient_evidence.
+   */
+  preferCorrectnessThreshold: number;
   /** AD-3: dedicated vector namespace/collection for this Tenant */
   vectorNamespace: string;
   createdAt: string; // UTC ISO-8601
 }
+
+/** Default PreferCorrectness score floor for new Tenants. */
+export const DEFAULT_PREFER_CORRECTNESS_THRESHOLD = 0.5;
 
 /** Canonical namespace for a Tenant (fail-closed data plane). */
 export function tenantVectorNamespace(tenantId: TenantId): string {

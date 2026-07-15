@@ -20,6 +20,7 @@ import { RETRIEVE_UC } from "../tenancy/tenancy.tokens";
 
 class RetrieveDto {
   query!: string;
+  preferCorrectness?: boolean;
 }
 
 @Controller("v1/retrieve")
@@ -39,7 +40,10 @@ export class RetrieveController {
     const ctx = req.tenantContext as TenantContext;
     return this.retrieve.execute(
       ctx,
-      { query: body.query },
+      {
+        query: body.query,
+        preferCorrectness: body.preferCorrectness === true,
+      },
       { requestId: `req_${randomUUID()}` },
     );
   }

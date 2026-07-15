@@ -35,6 +35,7 @@ class CreateTenantDto {
 class UpdateTenantDto {
   pageVisionEnabled?: boolean;
   agenticEnabled?: boolean;
+  preferCorrectnessThreshold?: number;
 }
 
 @Controller("v1")
@@ -79,6 +80,7 @@ export class TenancyController {
       name: result.tenant.name,
       agenticEnabled: result.tenant.agenticEnabled,
       pageVisionEnabled: result.tenant.pageVisionEnabled,
+      preferCorrectnessThreshold: result.tenant.preferCorrectnessThreshold,
       apiKey: result.apiKey,
       createdAt: result.tenant.createdAt,
     };
@@ -95,6 +97,7 @@ export class TenancyController {
         name: t.name,
         agenticEnabled: t.agenticEnabled,
         pageVisionEnabled: t.pageVisionEnabled,
+        preferCorrectnessThreshold: t.preferCorrectnessThreshold,
         createdAt: t.createdAt,
       })),
     };
@@ -110,6 +113,7 @@ export class TenancyController {
       tenantId,
       pageVisionEnabled: body.pageVisionEnabled,
       agenticEnabled: body.agenticEnabled,
+      preferCorrectnessThreshold: body.preferCorrectnessThreshold,
     });
     return {
       tenantId: tenant.id,
@@ -117,6 +121,7 @@ export class TenancyController {
       name: tenant.name,
       agenticEnabled: tenant.agenticEnabled,
       pageVisionEnabled: tenant.pageVisionEnabled,
+      preferCorrectnessThreshold: tenant.preferCorrectnessThreshold,
       createdAt: tenant.createdAt,
     };
   }

@@ -21,9 +21,10 @@ model Tenant {
   id                String     @id
   accountId         String     @map("account_id")
   name              String
-  agenticEnabled    Boolean    @default(false) @map("agentic_enabled")
-  pageVisionEnabled Boolean    @default(false) @map("page_vision_enabled")
-  vectorNamespace   String     @unique @map("vector_namespace")
+  agenticEnabled               Boolean  @default(false) @map("agentic_enabled")
+  pageVisionEnabled            Boolean  @default(false) @map("page_vision_enabled")
+  preferCorrectnessThreshold   Float    @default(0.5) @map("prefer_correctness_threshold")
+  vectorNamespace              String   @unique @map("vector_namespace")
   createdAt         DateTime   @default(now()) @map("created_at")
   account           Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
   apiKeys           ApiKey[]

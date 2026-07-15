@@ -4,9 +4,16 @@ import type {
   TableEvidence,
   TenantId,
 } from "@amkp/domain";
-import { tenantVectorNamespace } from "@amkp/domain";
+import {
+  DEFAULT_PREFER_CORRECTNESS_THRESHOLD,
+  tenantVectorNamespace,
+} from "@amkp/domain";
 import type { TenantContext } from "../tenancy/types";
-import { MissingTenantContextError, ValidationError } from "../tenancy/ports";
+import {
+  MissingTenantContextError,
+  ValidationError,
+  type TenantRepository,
+} from "../tenancy/ports";
 
 export interface RetrieveQuery {
   query: string;
@@ -46,11 +53,15 @@ export interface VectorIndexPort {
 export const VECTOR_INDEX = Symbol("VECTOR_INDEX");
 
 export class RetrieveUseCase {
-  constructor(private readonly index: VectorIndexPort) {}
+  constructor(
+    private readonly index: VectorIndexPort,
+    private readonly tenants?: TenantRepository,
+  ) {}
 
   /**
    * Fail-closed retrieve (AD-3 / FR-16).
    * Prefers latest Document version per sourceKey by default (FR-7 / T-2.5).
+   * PreferCorrectness (FR-10 / T-3.3) refuses when top score < Tenant threshold.
    */
   async execute(
     ctx: TenantContext | undefined | null,
@@ -104,24 +115,50 @@ export class RetrieveUseCase {
       return item;
     });
 
-    const emptyOutcome =
-      input.preferCorrectness === true
-        ? {
-            kind: "insufficient_evidence" as const,
-            reason: "no_matches",
-            threshold: 0,
-          }
-        : { kind: "evidence" as const, items: [] };
+    if (input.preferCorrectness === true) {
+      const threshold = await this.resolvePreferCorrectnessThreshold(
+        ctx.tenantId,
+      );
+      const topScore = items[0]?.score ?? 0;
+      if (items.length === 0 || topScore < threshold) {
+        return {
+          schemaVersion: "1",
+          requestId: options.requestId,
+          tenantId: ctx.tenantId,
+          outcome: {
+            kind: "insufficient_evidence",
+            reason:
+              items.length === 0 ? "no_matches" : "below_threshold",
+            threshold,
+          },
+          costEstimate: { currency: "USD", estimatedUsd: 0 },
+          routerDecision: { mode: "single_pass", reasonCode: "default" },
+        };
+      }
+    }
 
     return {
       schemaVersion: "1",
       requestId: options.requestId,
       tenantId: ctx.tenantId,
-      outcome:
-        items.length > 0 ? { kind: "evidence", items } : emptyOutcome,
+      outcome: { kind: "evidence", items },
       costEstimate: { currency: "USD", estimatedUsd: 0 },
       routerDecision: { mode: "single_pass", reasonCode: "default" },
     };
+  }
+
+  private async resolvePreferCorrectnessThreshold(
+    tenantId: TenantId,
+  ): Promise<number> {
+    if (!this.tenants) {
+      return DEFAULT_PREFER_CORRECTNESS_THRESHOLD;
+    }
+    const tenant = await this.tenants.findById(tenantId);
+    const t = tenant?.preferCorrectnessThreshold;
+    if (typeof t === "number" && !Number.isNaN(t)) {
+      return t;
+    }
+    return DEFAULT_PREFER_CORRECTNESS_THRESHOLD;
   }
 }
 

@@ -152,6 +152,7 @@ const tenants = {
       name: "t",
       agenticEnabled: false,
       pageVisionEnabled: false,
+      preferCorrectnessThreshold: 0.5,
       vectorNamespace: `ns_${id}`,
       createdAt: new Date().toISOString(),
     };

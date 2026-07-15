@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { tenantVectorNamespace } from "@amkp/domain";
+import {
+  DEFAULT_PREFER_CORRECTNESS_THRESHOLD,
+  tenantVectorNamespace,
+  type Tenant,
+} from "@amkp/domain";
 import {
   MissingTenantContextError,
   RetrieveUseCase,
   type IndexedChunk,
   type VectorIndexPort,
 } from "./retrieve";
-import { ValidationError } from "../tenancy/ports";
+import { ValidationError, type TenantRepository } from "../tenancy/ports";
 
 class FakeIndex implements VectorIndexPort {
   constructor(private readonly chunks: IndexedChunk[] = []) {}
@@ -21,6 +25,35 @@ class FakeIndex implements VectorIndexPort {
       .slice(0, input.limit ?? 10)
       .map((c) => ({ ...c, score: c.score ?? 1 }));
   }
+}
+
+function fakeTenants(
+  threshold = DEFAULT_PREFER_CORRECTNESS_THRESHOLD,
+): TenantRepository {
+  return {
+    async create() {
+      throw new Error("unused");
+    },
+    async listByAccountId() {
+      return [];
+    },
+    async findById(id) {
+      const t: Tenant = {
+        id,
+        accountId: "acc_1",
+        name: "t",
+        agenticEnabled: false,
+        pageVisionEnabled: false,
+        preferCorrectnessThreshold: threshold,
+        vectorNamespace: tenantVectorNamespace(id),
+        createdAt: new Date().toISOString(),
+      };
+      return t;
+    },
+    async updateSettings() {
+      throw new Error("unused");
+    },
+  };
 }
 
 describe("RetrieveUseCase fail-closed isolation", () => {
@@ -99,13 +132,90 @@ describe("RetrieveUseCase fail-closed isolation", () => {
   });
 
   it("preferCorrectness empty yields insufficient_evidence", async () => {
-    const uc = new RetrieveUseCase(new FakeIndex([]));
+    const uc = new RetrieveUseCase(new FakeIndex([]), fakeTenants(0.5));
     const envelope = await uc.execute(
       { tenantId: "ten_A", accountId: "acc_1" },
       { query: "nothing-here", preferCorrectness: true },
       { requestId: "req_pc" },
     );
     expect(envelope.outcome.kind).toBe("insufficient_evidence");
+    if (envelope.outcome.kind === "insufficient_evidence") {
+      expect(envelope.outcome.threshold).toBe(0.5);
+      expect(envelope.outcome.reason).toBe("no_matches");
+    }
+  });
+
+  it("preferCorrectness below Tenant threshold yields insufficient_evidence", async () => {
+    const ten = "ten_A";
+    const ns = tenantVectorNamespace(ten);
+    const index = new FakeIndex([
+      {
+        id: "weak",
+        tenantId: ten,
+        namespace: ns,
+        documentId: "d1",
+        content: "alpha weak",
+        score: 0.2,
+      },
+    ]);
+    const uc = new RetrieveUseCase(index, fakeTenants(0.5));
+    const envelope = await uc.execute(
+      { tenantId: ten, accountId: "acc_1" },
+      { query: "alpha", preferCorrectness: true },
+      { requestId: "req_low" },
+    );
+    expect(envelope.outcome.kind).toBe("insufficient_evidence");
+    if (envelope.outcome.kind === "insufficient_evidence") {
+      expect(envelope.outcome.threshold).toBe(0.5);
+      expect(envelope.outcome.reason).toBe("below_threshold");
+    }
+  });
+
+  it("preferCorrectness above Tenant threshold returns evidence", async () => {
+    const ten = "ten_A";
+    const ns = tenantVectorNamespace(ten);
+    const index = new FakeIndex([
+      {
+        id: "strong",
+        tenantId: ten,
+        namespace: ns,
+        documentId: "d1",
+        content: "alpha strong",
+        score: 0.8,
+      },
+    ]);
+    const uc = new RetrieveUseCase(index, fakeTenants(0.5));
+    const envelope = await uc.execute(
+      { tenantId: ten, accountId: "acc_1" },
+      { query: "alpha", preferCorrectness: true },
+      { requestId: "req_ok" },
+    );
+    expect(envelope.outcome.kind).toBe("evidence");
+    if (envelope.outcome.kind === "evidence") {
+      expect(envelope.outcome.items[0]?.id).toBe("strong");
+    }
+  });
+
+  it("uses per-Tenant threshold from settings", async () => {
+    const ten = "ten_A";
+    const ns = tenantVectorNamespace(ten);
+    const index = new FakeIndex([
+      {
+        id: "mid",
+        tenantId: ten,
+        namespace: ns,
+        documentId: "d1",
+        content: "alpha mid",
+        score: 0.4,
+      },
+    ]);
+    const uc = new RetrieveUseCase(index, fakeTenants(0.3));
+    const envelope = await uc.execute(
+      { tenantId: ten, accountId: "acc_1" },
+      { query: "alpha", preferCorrectness: true },
+      { requestId: "req_cfg" },
+    );
+    expect(envelope.outcome.kind).toBe("evidence");
   });
 
   it("reranks by score descending", async () => {

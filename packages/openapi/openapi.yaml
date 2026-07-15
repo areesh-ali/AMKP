@@ -120,7 +120,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
   /v1/tenants/{tenantId}:
     patch:
-      summary: Update Tenant settings (page-vision / agentic flags)
+      summary: Update Tenant settings (page-vision / agentic / PreferCorrectness)
       operationId: updateTenantSettings
       security:
         - PlatformAdminBearer: []
@@ -137,6 +137,11 @@ paths:
                   type: boolean
                 agenticEnabled:
                   type: boolean
+                preferCorrectnessThreshold:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                  description: Minimum top Evidence score for PreferCorrectness (T-3.3)
       responses:
         "200":
           description: Updated tenant
@@ -247,6 +252,9 @@ paths:
               properties:
                 query:
                   type: string
+                preferCorrectness:
+                  type: boolean
+                  description: When true, return insufficient_evidence if top score is below Tenant threshold (FR-10)
       responses:
         "200":
           description: EvidenceEnvelope for authenticated Tenant only
@@ -475,6 +483,7 @@ components:
           name,
           agenticEnabled,
           pageVisionEnabled,
+          preferCorrectnessThreshold,
           apiKey,
           createdAt,
         ]
@@ -492,6 +501,10 @@ components:
           type: boolean
           example: false
           description: Opt-in Parse Ladder page-vision / VLM tier (T-2.4)
+        preferCorrectnessThreshold:
+          type: number
+          example: 0.5
+          description: PreferCorrectness score floor (T-3.3)
         apiKey:
           type: string
           description: Plaintext returned once on create; stored hashed only
@@ -507,6 +520,7 @@ components:
           name,
           agenticEnabled,
           pageVisionEnabled,
+          preferCorrectnessThreshold,
           createdAt,
         ]
       properties:
@@ -520,6 +534,9 @@ components:
           type: boolean
         pageVisionEnabled:
           type: boolean
+        preferCorrectnessThreshold:
+          type: number
+          example: 0.5
         createdAt:
           type: string
           format: date-time

@@ -11,6 +11,7 @@ import {
   RevokeApiKeyUseCase,
   RotateApiKeyUseCase,
   UpdateTenantSettingsUseCase,
+  ValidationError,
   type AccountRepository,
   type ApiKeyIssuer,
   type ApiKeyRepository,
@@ -47,6 +48,7 @@ function createFakes() {
         name,
         agenticEnabled,
         pageVisionEnabled,
+        preferCorrectnessThreshold: 0.5,
         vectorNamespace: `ns_ten_TEST${seq}`,
         createdAt: new Date().toISOString(),
       };
@@ -69,6 +71,9 @@ function createFakes() {
           : {}),
         ...(patch.agenticEnabled !== undefined
           ? { agenticEnabled: patch.agenticEnabled }
+          : {}),
+        ...(patch.preferCorrectnessThreshold !== undefined
+          ? { preferCorrectnessThreshold: patch.preferCorrectnessThreshold }
           : {}),
       };
       tenants.set(tenantId, next);
@@ -296,5 +301,43 @@ describe("API key lifecycle", () => {
       pageVisionEnabled: true,
     });
     expect(next.pageVisionEnabled).toBe(true);
+  });
+
+  it("updates preferCorrectnessThreshold via UpdateTenantSettingsUseCase", async () => {
+    const { accountRepo, tenantRepo } = createFakes();
+    const createAccount = new CreateAccountUseCase(accountRepo);
+    const createTenant = new CreateTenantUseCase(
+      accountRepo,
+      tenantRepo,
+      {
+        async issueForTenant(tenantId) {
+          return {
+            apiKeyId: `key_${tenantId}`,
+            plaintext: `amkp_${tenantId}`,
+            tenantId,
+          };
+        },
+      },
+    );
+    const account = await createAccount.execute({ name: "A" });
+    const { tenant } = await createTenant.execute({
+      accountId: account.id,
+      name: "docs",
+    });
+    expect(tenant.preferCorrectnessThreshold).toBe(0.5);
+
+    const update = new UpdateTenantSettingsUseCase(tenantRepo);
+    const next = await update.execute({
+      tenantId: tenant.id,
+      preferCorrectnessThreshold: 0.75,
+    });
+    expect(next.preferCorrectnessThreshold).toBe(0.75);
+
+    await expect(
+      update.execute({
+        tenantId: tenant.id,
+        preferCorrectnessThreshold: 1.5,
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
   });
 });
