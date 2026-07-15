@@ -5,6 +5,7 @@ export * from "./object-storage";
 export * from "./table-evidence";
 export * from "./ingest-document";
 export * from "./list-documents";
+export * from "./list-document-versions";
 export * from "./get-document";
 export * from "./get-document-content";
 export * from "./process-ingest-job";

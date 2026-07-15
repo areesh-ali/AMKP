@@ -224,6 +224,30 @@ describe("Ingest API (T-2.1)", () => {
     expect(page2.body.nextCursor).toBeNull();
   });
 
+  it("lists document versions by sourceKey", async () => {
+    const { keyA } = await twoTenants();
+    for (const content of ["v1", "v2"]) {
+      const res = await request(app.getHttpServer())
+        .post("/v1/ingest")
+        .set({ Authorization: `Bearer ${keyA}` })
+        .send({
+          filename: "policy.md",
+          sourceKey: "policy",
+          contentBase64: Buffer.from(content).toString("base64"),
+        });
+      expect(res.status).toBe(202);
+    }
+    const versions = await request(app.getHttpServer())
+      .get("/v1/documents/versions?sourceKey=policy")
+      .set({ Authorization: `Bearer ${keyA}` });
+    expect(versions.status).toBe(200);
+    expect(versions.body.sourceKey).toBe("policy");
+    expect(versions.body.items).toHaveLength(2);
+    expect(versions.body.items.map((i: { version: number }) => i.version)).toEqual([
+      1, 2,
+    ]);
+  });
+
   it("worker ProcessIngestJobUseCase enqueues parse queue", async () => {
     const { keyA, tenantA } = await twoTenants();
     const created = await request(app.getHttpServer())

@@ -85,6 +85,12 @@ class FakeDocs implements DocumentRepository {
       .map(({ content: _c, ...doc }) => doc);
   }
 
+  async listBySourceKey(tenantId: TenantId, sourceKey: string) {
+    return (await this.listByTenantId(tenantId)).filter(
+      (d) => d.sourceKey === sourceKey,
+    );
+  }
+
   async listPage(tenantId: TenantId, opts = {}) {
     return paginateDocumentList(await this.listByTenantId(tenantId), opts);
   }

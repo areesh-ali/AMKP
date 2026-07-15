@@ -24,6 +24,7 @@ import type {
   GetDocumentUseCase,
   IngestDocumentUseCase,
   ListChunksUseCase,
+  ListDocumentVersionsUseCase,
   ListDocumentsUseCase,
   ReparseDocumentUseCase,
   TenantContext,
@@ -40,6 +41,7 @@ import {
   GET_DOCUMENT_UC,
   INGEST_DOCUMENT_UC,
   LIST_CHUNKS_UC,
+  LIST_DOCUMENT_VERSIONS_UC,
   LIST_DOCUMENTS_UC,
   REPARSE_DOCUMENT_UC,
 } from "../tenancy/tenancy.tokens";
@@ -99,6 +101,8 @@ export class IngestController {
     private readonly reparseDocument: ReparseDocumentUseCase,
     @Inject(LIST_DOCUMENTS_UC)
     private readonly listDocuments: ListDocumentsUseCase,
+    @Inject(LIST_DOCUMENT_VERSIONS_UC)
+    private readonly listDocumentVersions: ListDocumentVersionsUseCase,
     @Inject(GET_DOCUMENT_UC)
     private readonly getDocument: GetDocumentUseCase,
     @Inject(GET_DOCUMENT_CONTENT_UC)
@@ -223,6 +227,33 @@ export class IngestController {
       offset: page.offset,
       limit: page.limit,
       nextCursor: page.nextCursor,
+    };
+  }
+
+  @Get("documents/versions")
+  async listVersionsHandler(
+    @Req() req: RequestWithTenant,
+    @Query("sourceKey") sourceKey?: string,
+  ) {
+    const ctx = req.tenantContext as TenantContext;
+    const items = await this.listDocumentVersions.execute(
+      ctx,
+      sourceKey ?? "",
+    );
+    return {
+      sourceKey: (sourceKey ?? "").trim(),
+      items: items.map((d) => ({
+        documentId: d.id,
+        documentVersionId: d.id,
+        sourceKey: d.sourceKey,
+        version: d.version,
+        contentHash: d.contentHash,
+        filename: d.filename,
+        contentType: d.contentType,
+        byteSize: d.byteSize,
+        status: d.status,
+        createdAt: d.createdAt,
+      })),
     };
   }
 

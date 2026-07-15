@@ -33,6 +33,9 @@ class FakeDocs implements DocumentRepository {
   async listByTenantId() {
     return [];
   }
+  async listBySourceKey() {
+    return [];
+  }
   async listPage() {
     return { items: [], total: 0, limit: 50, offset: 0, nextCursor: null };
   }

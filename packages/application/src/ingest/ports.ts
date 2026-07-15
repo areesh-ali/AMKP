@@ -40,6 +40,11 @@ export interface DocumentRepository {
     documentId: DocumentId,
   ): Promise<Buffer | null>;
   listByTenantId(tenantId: TenantId): Promise<Document[]>;
+  /** All versions for tenant+sourceKey, ascending by version. */
+  listBySourceKey(
+    tenantId: TenantId,
+    sourceKey: string,
+  ): Promise<Document[]>;
   /** Tenant-scoped page (DB cursor/offset). Prefer over full listByTenantId. */
   listPage(
     tenantId: TenantId,

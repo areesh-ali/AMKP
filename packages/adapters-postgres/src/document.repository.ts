@@ -117,6 +117,17 @@ export class PrismaDocumentRepository implements DocumentRepository {
     return rows.map(mapDocument);
   }
 
+  async listBySourceKey(
+    tenantId: TenantId,
+    sourceKey: string,
+  ): Promise<Document[]> {
+    const rows = await this.prisma.document.findMany({
+      where: { tenantId, sourceKey },
+      orderBy: [{ version: "asc" }, { id: "asc" }],
+    });
+    return rows.map(mapDocument);
+  }
+
   async listPage(
     tenantId: TenantId,
     opts: ListDocumentsOpts = {},

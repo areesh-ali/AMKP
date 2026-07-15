@@ -8,6 +8,7 @@ import {
   IngestDocumentUseCase,
   JOB_QUEUE,
   ListChunksUseCase,
+  ListDocumentVersionsUseCase,
   ListDocumentsUseCase,
   PARSE_LADDER,
   ProcessParseJobUseCase,
@@ -34,6 +35,7 @@ import {
   GET_DOCUMENT_UC,
   INGEST_DOCUMENT_UC,
   LIST_CHUNKS_UC,
+  LIST_DOCUMENT_VERSIONS_UC,
   LIST_DOCUMENTS_UC,
   PROCESS_PARSE_UC,
   REPARSE_DOCUMENT_UC,
@@ -52,6 +54,12 @@ import {
     {
       provide: LIST_DOCUMENTS_UC,
       useFactory: (docs: DocumentRepository) => new ListDocumentsUseCase(docs),
+      inject: [DOCUMENT_REPOSITORY],
+    },
+    {
+      provide: LIST_DOCUMENT_VERSIONS_UC,
+      useFactory: (docs: DocumentRepository) =>
+        new ListDocumentVersionsUseCase(docs),
       inject: [DOCUMENT_REPOSITORY],
     },
     {

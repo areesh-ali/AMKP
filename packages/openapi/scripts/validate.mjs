@@ -35,6 +35,8 @@ const required = [
   "getMe",
   "ingestDocument",
   "ingestDocumentUpload",
+  "listDocuments",
+  "listDocumentVersions",
   "getDocument",
   "getDocumentContent",
   "deleteDocument",

@@ -493,6 +493,41 @@ paths:
                 $ref: "#/components/schemas/DocumentListResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /v1/documents/versions:
+    get:
+      summary: List Document versions for a sourceKey
+      operationId: listDocumentVersions
+      security:
+        - TenantApiKeyBearer: []
+      parameters:
+        - name: sourceKey
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Versions ascending by version
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sourceKey, items]
+                properties:
+                  sourceKey:
+                    type: string
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DocumentSummary"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /v1/documents/{documentId}:
     get:
       summary: Get Document by ID (Tenant-scoped)

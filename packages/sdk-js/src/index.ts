@@ -121,6 +121,15 @@ export class AmkpClient {
     return this.request("GET", `/v1/documents${qs ? `?${qs}` : ""}`);
   }
 
+  async listDocumentVersions(
+    sourceKey: string,
+  ): Promise<{ sourceKey: string; items: unknown[] }> {
+    return this.request(
+      "GET",
+      `/v1/documents/versions?sourceKey=${encodeURIComponent(sourceKey)}`,
+    );
+  }
+
   async deleteDocument(
     documentId: string,
   ): Promise<{ documentId: string; deleted: true }> {
