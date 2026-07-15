@@ -64,3 +64,20 @@ Cursor Grok 4.5 (Amelia)
 ### Change Log
 
 - 2026-07-15: Implemented T-5.1 — status → review
+- 2026-07-15: Code review patches applied (ALS interceptor, namespace from auth, empty-query reject, rotate-revoked reject, override dual-field, auth retrieve coverage)
+
+### Review Findings
+
+- [x] [Review][Patch] Fix TenantContext ALS interceptor subscribe-inside-run
+- [x] [Review][Patch] Derive retrieve namespace from auth tenantId only
+- [x] [Review][Patch] Reject empty retrieve query
+- [x] [Review][Patch] Reject rotate of already-revoked key
+- [x] [Review][Patch] Check both tenantId and tenant_id for override
+- [x] [Review][Patch] Auth CI covers retrieve override + revoke
+- [x] [Review][Patch] Unique api_keys.key_hash + findActive filters revoked
+- [x] [Review][Patch] Distinguish invalid vs revoked; ValidationError → 400; hide 500 details
+- [x] [Review][Patch] timingSafeEqual for admin token
+- [x] [Review][Defer] InMemoryVectorIndex production binding — deferred, MVP until pgvector
+- [x] [Review][Defer] OpenAPI EvidenceEnvelope schema — deferred to T-8.1
+- [x] [Review][Defer] Hash pepper — deferred
+- [x] [Review][Defer] Move in-memory index package — deferred
