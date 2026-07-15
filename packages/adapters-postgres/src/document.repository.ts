@@ -133,7 +133,12 @@ export class PrismaDocumentRepository implements DocumentRepository {
     opts: ListDocumentsOpts = {},
   ): Promise<ListDocumentsPage> {
     const limit = clampDocumentListLimit(opts.limit);
-    const total = await this.prisma.document.count({ where: { tenantId } });
+    const statusFilter = opts.status?.trim() || undefined;
+    const baseWhere = {
+      tenantId,
+      ...(statusFilter ? { status: statusFilter } : {}),
+    };
+    const total = await this.prisma.document.count({ where: baseWhere });
 
     if (opts.cursor) {
       const decoded = decodeDocumentCursor(opts.cursor);
@@ -148,7 +153,7 @@ export class PrismaDocumentRepository implements DocumentRepository {
       }
 
       const where: Prisma.DocumentWhereInput = {
-        tenantId,
+        ...baseWhere,
         OR: [
           { sourceKey: { gt: decoded.sk } },
           {
@@ -185,7 +190,7 @@ export class PrismaDocumentRepository implements DocumentRepository {
 
     const offset = Math.max(0, Math.floor(opts.offset ?? 0));
     const rows = await this.prisma.document.findMany({
-      where: { tenantId },
+      where: baseWhere,
       orderBy: [{ sourceKey: "asc" }, { version: "asc" }, { id: "asc" }],
       skip: offset,
       take: limit + 1,

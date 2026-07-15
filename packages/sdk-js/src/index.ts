@@ -106,6 +106,7 @@ export class AmkpClient {
     limit?: number;
     offset?: number;
     cursor?: string;
+    status?: string;
   }): Promise<{
     items: unknown[];
     total: number;
@@ -117,6 +118,7 @@ export class AmkpClient {
     if (options?.limit !== undefined) q.set("limit", String(options.limit));
     if (options?.offset !== undefined) q.set("offset", String(options.offset));
     if (options?.cursor) q.set("cursor", options.cursor);
+    if (options?.status) q.set("status", options.status);
     const qs = q.toString();
     return this.request("GET", `/v1/documents${qs ? `?${qs}` : ""}`);
   }

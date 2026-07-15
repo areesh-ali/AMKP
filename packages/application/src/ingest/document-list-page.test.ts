@@ -44,4 +44,15 @@ describe("paginateDocumentList", () => {
     expect(page.items[0]?.id).toBe("doc_b");
     expect(page.offset).toBe(1);
   });
+
+  it("filters by status", () => {
+    const mixed = [
+      doc({ id: "doc_a", sourceKey: "a.txt", status: "pending" }),
+      doc({ id: "doc_b", sourceKey: "b.txt", status: "parsed" }),
+    ];
+    const page = paginateDocumentList(mixed, { status: "parsed" });
+    expect(page.items).toHaveLength(1);
+    expect(page.items[0]?.id).toBe("doc_b");
+    expect(page.total).toBe(1);
+  });
 });

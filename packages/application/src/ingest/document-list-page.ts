@@ -7,6 +7,8 @@ export interface ListDocumentsOpts {
   offset?: number;
   /** Opaque cursor from a previous page's nextCursor. */
   cursor?: string | null;
+  /** Optional status filter (pending|parsing|parsed|failed|…). */
+  status?: string;
 }
 
 export interface ListDocumentsPage {
@@ -68,7 +70,11 @@ export function paginateDocumentList(
   items: Document[],
   opts: ListDocumentsOpts = {},
 ): ListDocumentsPage {
-  const sorted = [...items].sort(compareDocuments);
+  let sorted = [...items].sort(compareDocuments);
+  if (opts.status) {
+    const status = opts.status.trim();
+    sorted = sorted.filter((d) => d.status === status);
+  }
   const limit = clampDocumentListLimit(opts.limit);
   let offset = Math.max(0, Math.floor(opts.offset ?? 0));
 
