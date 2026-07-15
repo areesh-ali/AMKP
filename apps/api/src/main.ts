@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import { json } from "express";
+import { startAmkpOtel } from "@amkp/adapters-providers";
 import { AppModule } from "./app.module";
 import { ApiExceptionFilter } from "./common/api-exception.filter";
 import { requestIdMiddleware } from "./common/request-id.middleware";
@@ -8,6 +9,8 @@ import { securityHeadersMiddleware } from "./common/security-headers.middleware"
 import { requestTimeoutMiddleware } from "./common/request-timeout.middleware";
 
 async function bootstrap() {
+  const shutdownOtel = await startAmkpOtel({ serviceName: "amkp-api" });
+
   const app = await NestFactory.create(AppModule, { bodyParser: false });
   const rawLimit = process.env.AMKP_BODY_LIMIT ?? "25mb";
   app.use(json({ limit: rawLimit }));
@@ -33,6 +36,7 @@ async function bootstrap() {
     // eslint-disable-next-line no-console
     console.log(`AMKP api shutting down (${signal})`);
     await app.close();
+    await shutdownOtel();
     process.exit(0);
   };
   process.on("SIGINT", () => void shutdown("SIGINT"));

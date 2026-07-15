@@ -17,7 +17,6 @@ import {
   InMemoryAuditLog,
   InMemoryMetrics,
   InMemoryVectorIndex,
-  createTracerFromEnv,
 } from "@amkp/application";
 import {
   createPrismaClient,
@@ -34,6 +33,7 @@ import {
   createObjectStorageFromEnv,
 } from "@amkp/adapters-postgres";
 import {
+  createAmkpTracerFromEnv,
   createEmbeddingProviderFromEnv,
   LocalParseLadder,
   createPageVisionLedger,
@@ -70,8 +70,8 @@ export const sharedAuditLog = new InMemoryAuditLog();
 /** Shared Prometheus metrics (T-6.2). */
 export const sharedMetrics = new InMemoryMetrics();
 
-/** Shared tracer (OTel-shaped stub). */
-export const sharedTracer = createTracerFromEnv();
+/** Shared tracer (console / OTel API / no-op). */
+export const sharedTracer = createAmkpTracerFromEnv();
 
 /** Shared VLM spend ledger for asserting page-vision opt-in (T-2.4). */
 export const sharedPageVisionLedger = createPageVisionLedger();

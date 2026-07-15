@@ -22,6 +22,7 @@ import {
 import {
   LocalParseLadder,
   createEmbeddingProviderFromEnv,
+  startAmkpOtel,
 } from "@amkp/adapters-providers";
 import { BullMqJobQueue, QUEUE_NAMES } from "@amkp/adapters-redis";
 
@@ -36,6 +37,8 @@ function connectionFromUrl(redisUrl: string) {
 }
 
 async function main() {
+  const shutdownOtel = await startAmkpOtel({ serviceName: "amkp-worker" });
+
   const redisUrl = process.env.REDIS_URL ?? "redis://localhost:6379";
   const databaseUrl =
     process.env.DATABASE_URL ?? "postgresql://amkp:amkp@localhost:5433/amkp";
@@ -148,6 +151,7 @@ async function main() {
       await (jobs as BullMqJobQueue).close();
     }
     await prisma.$disconnect();
+    await shutdownOtel();
     process.exit(0);
   };
   process.on("SIGINT", shutdown);

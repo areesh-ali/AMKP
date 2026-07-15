@@ -30,6 +30,17 @@
 - `GET /metrics` — Prometheus scrape
 - Worker: `GET :WORKER_HEALTH_PORT/health` and `/ready` (default `3001`)
 
+## Tracing (OpenTelemetry)
+
+| Mode | Env |
+| --- | --- |
+| Off (default) | unset |
+| Console debug | `AMKP_TRACE_CONSOLE=1` |
+| OTLP export | `OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4318` (or `AMKP_OTEL=1` → localhost:4318) |
+| Service name | `OTEL_SERVICE_NAME` (default `amkp-api`) |
+
+Retrieve spans use `TracerPort` → `@opentelemetry/api` when OTel is enabled.
+
 ## Migrations
 
 ```bash

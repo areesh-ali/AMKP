@@ -14,3 +14,4 @@
 - ~~**Real embedding provider**~~ — **done** (`OpenAiEmbeddingProvider` via `AMKP_EMBEDDING_*`; stub remains default). Changing dims requires a vector column migration.
 - ~~**In-memory Trace / audit only**~~ — **done** (`PrismaTraceRepository` + `PrismaAuditLog`; memory for tests)
 - ~~**In-memory retrieve cache only**~~ — **done** (`RedisTenantRetrieveCache` when `REDIS_URL` set outside test/memory mode)
+- ~~**Real OTel exporter**~~ — **done** (`OtelApiTracer` + OTLP HTTP via `startAmkpOtel`)

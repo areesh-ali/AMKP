@@ -26,10 +26,10 @@ All planned epic stories (T-1.x through T-8.4) have implementation artifacts and
 | Ops checklist | `docs/operations.md` |
 | PDF FlateDecode inflate | improved (full PDF.js still open) |
 | Document list cursor pagination | done |
+| OpenTelemetry OTLP export | done |
 
 ## Still open (optional)
 
 - Full PDF.js / layout engine
 - Argon2 for low-entropy secrets
-- Real `@opentelemetry/api` exporter
 - Real VLM page-vision vendor

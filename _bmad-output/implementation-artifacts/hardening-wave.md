@@ -22,7 +22,7 @@ Running unattended until the user asks to stop.
 
 ## Next candidates
 
-- Cursor-based document pagination (DB-level) — **done**
-- Real OTel exporter
+- ~~Cursor-based document pagination (DB-level)~~ — **done**
+- ~~Real OTel exporter~~ — **done** (`startAmkpOtel` + `OtelApiTracer`)
 - PDF.js layout engine
 - ~~Admin tenant get-by-id endpoint~~ — **done**
