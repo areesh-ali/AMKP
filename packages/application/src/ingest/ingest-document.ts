@@ -1,0 +1,70 @@
+import { randomUUID } from "node:crypto";
+import type { Document, JobId } from "@amkp/domain";
+import type { TenantContext } from "../tenancy/types";
+import {
+  MissingTenantContextError,
+  ValidationError,
+} from "../tenancy/ports";
+import type { DocumentRepository, JobQueuePort } from "./ports";
+
+export interface IngestDocumentInput {
+  filename: string;
+  contentType?: string;
+  /** Raw bytes (decoded from base64 at the HTTP edge). */
+  content: Buffer;
+}
+
+export interface IngestDocumentResult {
+  document: Document;
+  jobId: JobId;
+}
+
+const MAX_BYTES = 10 * 1024 * 1024; // 10 MiB MVP soft limit
+
+export class IngestDocumentUseCase {
+  constructor(
+    private readonly documents: DocumentRepository,
+    private readonly jobs: JobQueuePort,
+  ) {}
+
+  async execute(
+    ctx: TenantContext | undefined | null,
+    input: IngestDocumentInput,
+  ): Promise<IngestDocumentResult> {
+    if (!ctx?.tenantId || !ctx.accountId) {
+      throw new MissingTenantContextError();
+    }
+
+    const filename = input.filename?.trim();
+    if (!filename) {
+      throw new ValidationError("filename is required");
+    }
+
+    if (!input.content || input.content.length === 0) {
+      throw new ValidationError("content is required");
+    }
+
+    if (input.content.length > MAX_BYTES) {
+      throw new ValidationError(`content exceeds ${MAX_BYTES} bytes`);
+    }
+
+    const contentType =
+      input.contentType?.trim() || "application/octet-stream";
+
+    const document = await this.documents.create({
+      tenantId: ctx.tenantId,
+      filename,
+      contentType,
+      content: input.content,
+    });
+
+    const jobId = `job_${randomUUID().replace(/-/g, "")}`;
+    const enqueued = await this.jobs.enqueue(
+      "ingest",
+      { tenantId: ctx.tenantId, documentId: document.id },
+      { jobId },
+    );
+
+    return { document, jobId: enqueued.jobId };
+  }
+}

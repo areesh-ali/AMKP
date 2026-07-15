@@ -222,6 +222,82 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /v1/ingest:
+    post:
+      summary: Ingest a Document (async job)
+      operationId: ingestDocument
+      security:
+        - TenantApiKeyBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [filename, contentBase64]
+              properties:
+                filename:
+                  type: string
+                  example: handbook.pdf
+                contentType:
+                  type: string
+                  example: application/pdf
+                contentBase64:
+                  type: string
+                  description: Base64-encoded document bytes
+      responses:
+        "202":
+          description: Document accepted; ingest job enqueued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IngestResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/documents:
+    get:
+      summary: List Documents for authenticated Tenant
+      operationId: listDocuments
+      security:
+        - TenantApiKeyBearer: []
+      responses:
+        "200":
+          description: Tenant-scoped document list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/documents/{documentId}:
+    get:
+      summary: Get Document by ID (Tenant-scoped)
+      operationId: getDocument
+      security:
+        - TenantApiKeyBearer: []
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Document metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /v1/me:
     get:
       summary: Resolve TenantContext from Product API key
@@ -439,6 +515,48 @@ components:
           type: string
         accountId:
           type: string
+    IngestResponse:
+      type: object
+      required: [documentId, jobId, status, filename, contentType, byteSize]
+      properties:
+        documentId:
+          type: string
+        jobId:
+          type: string
+        status:
+          type: string
+        filename:
+          type: string
+        contentType:
+          type: string
+        byteSize:
+          type: integer
+    DocumentSummary:
+      type: object
+      required:
+        [documentId, filename, contentType, byteSize, status, createdAt]
+      properties:
+        documentId:
+          type: string
+        filename:
+          type: string
+        contentType:
+          type: string
+        byteSize:
+          type: integer
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    DocumentListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentSummary"
     ErrorResponse:
       type: object
       required: [error]

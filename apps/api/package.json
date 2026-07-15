@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@amkp/adapters-postgres": "workspace:*",
+    "@amkp/adapters-redis": "workspace:*",
     "@amkp/application": "workspace:*",
     "@amkp/domain": "workspace:*",
     "@nestjs/common": "^11.1.28",

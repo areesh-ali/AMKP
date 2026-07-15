@@ -3,6 +3,8 @@ import {
   ACCOUNT_REPOSITORY,
   API_KEY_ISSUER,
   API_KEY_REPOSITORY,
+  DOCUMENT_REPOSITORY,
+  JOB_QUEUE,
   TENANT_REPOSITORY,
   VECTOR_INDEX,
 } from "@amkp/application";
@@ -12,8 +14,13 @@ import {
   PrismaAccountRepository,
   PrismaApiKeyIssuer,
   PrismaApiKeyRepository,
+  PrismaDocumentRepository,
   PrismaTenantRepository,
 } from "@amkp/adapters-postgres";
+import {
+  createJobQueue,
+  InMemoryJobQueue,
+} from "@amkp/adapters-redis";
 import { PRISMA } from "../tenancy/tenancy.tokens";
 import { PrismaModule } from "./prisma.module";
 
@@ -21,6 +28,12 @@ type Prisma = ReturnType<typeof createPrismaClient>;
 
 /** Shared singleton so isolation tests plant chunks into the Nest-bound index. */
 export const sharedVectorIndex = new InMemoryVectorIndex();
+
+/**
+ * Shared queue for tests / memory mode. When REDIS_URL is set and
+ * AMKP_JOB_QUEUE !== "memory", BullMQ is used instead.
+ */
+export const sharedMemoryJobQueue = new InMemoryJobQueue();
 
 @Module({
   imports: [PrismaModule],
@@ -46,8 +59,26 @@ export const sharedVectorIndex = new InMemoryVectorIndex();
       inject: [PRISMA],
     },
     {
+      provide: DOCUMENT_REPOSITORY,
+      useFactory: (prisma: Prisma) => new PrismaDocumentRepository(prisma),
+      inject: [PRISMA],
+    },
+    {
       provide: VECTOR_INDEX,
       useValue: sharedVectorIndex,
+    },
+    {
+      provide: JOB_QUEUE,
+      useFactory: () => {
+        if (
+          process.env.AMKP_JOB_QUEUE === "memory" ||
+          process.env.NODE_ENV === "test" ||
+          !process.env.REDIS_URL
+        ) {
+          return sharedMemoryJobQueue;
+        }
+        return createJobQueue(process.env.REDIS_URL);
+      },
     },
   ],
   exports: [
@@ -55,7 +86,9 @@ export const sharedVectorIndex = new InMemoryVectorIndex();
     TENANT_REPOSITORY,
     API_KEY_ISSUER,
     API_KEY_REPOSITORY,
+    DOCUMENT_REPOSITORY,
     VECTOR_INDEX,
+    JOB_QUEUE,
   ],
 })
 export class PersistenceModule {}

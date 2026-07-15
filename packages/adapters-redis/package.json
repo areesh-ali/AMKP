@@ -17,7 +17,13 @@
     "lint": "echo \"lint: stub\"",
     "test": "echo \"test: stub\""
   },
+  "dependencies": {
+    "@amkp/application": "workspace:*",
+    "bullmq": "5.80.2",
+    "ioredis": "^5.6.1"
+  },
   "devDependencies": {
+    "@types/node": "^24.0.0",
     "typescript": "5.8.3"
   }
 }

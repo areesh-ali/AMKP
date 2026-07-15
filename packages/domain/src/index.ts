@@ -3,9 +3,26 @@
 export type AccountId = string;
 export type TenantId = string;
 export type DocumentId = string;
+export type JobId = string;
 export type EvidenceId = string;
 export type RequestId = string;
 export type ApiKeyId = string;
+
+export type DocumentStatus =
+  | "pending"
+  | "accepted"
+  | "parse_queued"
+  | "failed";
+
+export interface Document {
+  id: DocumentId;
+  tenantId: TenantId;
+  filename: string;
+  contentType: string;
+  byteSize: number;
+  status: DocumentStatus;
+  createdAt: string; // UTC ISO-8601
+}
 
 export interface Account {
   id: AccountId;

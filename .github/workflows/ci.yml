@@ -26,6 +26,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://amkp:amkp@localhost:5433/amkp
       PLATFORM_ADMIN_TOKEN: ci-admin-token
+      AMKP_JOB_QUEUE: memory
       NODE_ENV: test
 
     steps:
@@ -48,8 +49,10 @@ jobs:
           pnpm --filter @amkp/domain build
           pnpm --filter @amkp/application build
           pnpm --filter @amkp/adapters-postgres build
+          pnpm --filter @amkp/adapters-redis build
           pnpm --filter @amkp/api build
           pnpm --filter @amkp/openapi build
+          pnpm --filter @amkp/worker build
 
       - name: Migrate
         run: pnpm --filter @amkp/adapters-postgres exec prisma migrate deploy

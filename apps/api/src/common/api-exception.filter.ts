@@ -12,6 +12,7 @@ import {
   ApiKeyInvalidError,
   ApiKeyNotFoundError,
   ApiKeyRevokedError,
+  DocumentNotFoundError,
   MissingTenantContextError,
   TenantNotFoundError,
   ValidationError,
@@ -39,7 +40,8 @@ export class ApiExceptionFilter implements ExceptionFilter {
     if (
       exception instanceof AccountNotFoundError ||
       exception instanceof TenantNotFoundError ||
-      exception instanceof ApiKeyNotFoundError
+      exception instanceof ApiKeyNotFoundError ||
+      exception instanceof DocumentNotFoundError
     ) {
       res.status(HttpStatus.NOT_FOUND).json({
         error: {
