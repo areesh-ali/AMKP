@@ -64,5 +64,8 @@ jobs:
           pnpm --filter @amkp/adapters-providers test
           pnpm --filter @amkp/openapi test
 
-      - name: Auth CI suite (T-1.3)
+      - name: Auth + isolation + Leak suite (T-1.3 / T-5.x)
         run: pnpm --filter @amkp/api test
+
+      - name: Leak suite reminder
+        run: echo "Leak suite runs inside @amkp/api tests (Retrieve/cache/MCP). Set AMKP_LEAK_ALERT_WEBHOOK to page on failure."

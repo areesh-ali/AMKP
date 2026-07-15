@@ -8,6 +8,7 @@ export const REVOKE_API_KEY_UC = Symbol("REVOKE_API_KEY_UC");
 export const ROTATE_API_KEY_UC = Symbol("ROTATE_API_KEY_UC");
 export const RESOLVE_TENANT_UC = Symbol("RESOLVE_TENANT_UC");
 export const RETRIEVE_UC = Symbol("RETRIEVE_UC");
+export const MCP_RETRIEVE_UC = Symbol("MCP_RETRIEVE_UC");
 export const INGEST_DOCUMENT_UC = Symbol("INGEST_DOCUMENT_UC");
 export const LIST_DOCUMENTS_UC = Symbol("LIST_DOCUMENTS_UC");
 export const GET_DOCUMENT_UC = Symbol("GET_DOCUMENT_UC");

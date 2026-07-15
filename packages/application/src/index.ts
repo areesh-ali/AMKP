@@ -8,6 +8,7 @@ export type { TenantId } from "@amkp/domain";
 export * from "./tenancy";
 export * from "./retrieve";
 export * from "./ingest";
+export * from "./mcp";
 
 export interface RetrievePort {
   retrieve(ctx: TenantContext, input: RetrieveQuery): Promise<EvidenceEnvelope>;
