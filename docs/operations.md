@@ -72,6 +72,9 @@ Set `AMKP_DOCUMENT_WEBHOOK_URL` to receive a POST after a Document reaches `pars
   "tenantId": "ten_...",
   "documentId": "doc_...",
   "status": "parsed",
+```
+
+Also emitted with `"status": "failed"` when the worker parse job throws (after best-effort Document status update).
   "parseTier": "tier1_text",
   "chunkCount": 3,
   "usedVlm": false,

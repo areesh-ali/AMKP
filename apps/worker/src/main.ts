@@ -66,13 +66,14 @@ async function main() {
       : new PostgresVectorIndex(prisma, embedder);
 
   const processIngest = new ProcessIngestJobUseCase(documents, jobs);
+  const statusNotifier = createDocumentStatusNotifierFromEnv();
   const processParse = new ProcessParseJobUseCase(
     documents,
     chunks,
     ladder,
     index,
     tenants,
-    createDocumentStatusNotifierFromEnv(),
+    statusNotifier,
   );
 
   const connection = connectionFromUrl(redisUrl);
@@ -94,11 +95,25 @@ async function main() {
     async (job: Job<IngestJobPayload>) => {
       const { tenantId, documentId } = job.data;
       console.log(`[parse] job=${job.id} doc=${documentId} tenant=${tenantId}`);
-      const result = await processParse.execute({ tenantId, documentId });
-      console.log(
-        `[parse] tier=${result.parseTier} chunks=${result.chunkCount} vlm=${result.usedVlm}`,
-      );
-      return result;
+      try {
+        const result = await processParse.execute({ tenantId, documentId });
+        console.log(
+          `[parse] tier=${result.parseTier} chunks=${result.chunkCount} vlm=${result.usedVlm}`,
+        );
+        return result;
+      } catch (err) {
+        try {
+          await documents.updateStatus(tenantId, documentId, "failed");
+        } catch {
+          /* best-effort status */
+        }
+        await statusNotifier?.notify({
+          tenantId,
+          documentId,
+          status: "failed",
+        });
+        throw err;
+      }
     },
     { connection },
   );
