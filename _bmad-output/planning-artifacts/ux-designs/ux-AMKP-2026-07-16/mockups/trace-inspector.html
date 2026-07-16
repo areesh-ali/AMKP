@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AMKP — Trace inspector</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+:root{--ink:#0B1220;--ink-soft:#1A2332;--paper:#F5F7FA;--elev:#fff;--line:#D5DCE6;--muted:#5C6B7A;--teal:#0F766E;--teal-soft:#CCFBF1;--teal-fg:#F0FDFA;--signal:#C2410C;--signal-soft:#FFEDD5;--ok:#15803D;--warn:#A16207;--danger:#B91C1C}
+*{box-sizing:border-box}body{margin:0;font-family:"DM Sans",sans-serif;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.55}
+.display{font-family:Fraunces,serif;font-weight:600;letter-spacing:-0.02em}
+.mono{font-family:"IBM Plex Mono",monospace;font-size:13px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);padding:10px 16px;background:var(--elev)}
+.btn-primary{background:var(--teal);color:var(--teal-fg);border-color:var(--teal)}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--ink-soft);color:#E8EEF5;padding:4px 10px;border-radius:4px;font-size:13px}
+.pill{display:inline-block;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:500}
+.card{background:var(--elev);border:1px solid var(--line);border-radius:8px}
+.ev{border-left:3px solid var(--teal);padding:14px 16px;margin:0 0 10px}
+
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+aside{background:var(--elev);border-right:1px solid var(--line);padding:20px 16px}
+aside .logo{font-size:22px;margin:0 0 24px}
+nav a{display:block;padding:8px 10px;border-radius:4px;color:var(--ink);text-decoration:none;margin-bottom:4px;font-size:14px}
+nav a.active{background:var(--teal-soft);color:var(--teal);font-weight:600}
+.top{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--line);background:var(--elev)}
+.main{padding:24px;max-width:720px}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
+.meta .card{padding:14px 16px}
+.meta dt{font-size:12px;color:var(--muted);margin:0}
+.meta dd{margin:4px 0 0;font-weight:600}
+.tl{border-left:2px solid var(--line);margin-left:12px;padding-left:20px}
+.hop{position:relative;margin-bottom:20px}
+.hop::before{content:"";position:absolute;left:-27px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--teal)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <p class="display logo">AMKP</p>
+    <nav>
+      <a href="#">Retrieve</a>
+      <a class="active" href="#">Traces</a>
+    </nav>
+  </aside>
+  <div>
+    <header class="top">
+      <strong>Trace inspector</strong>
+      <span class="chip">Tenant · support</span>
+    </header>
+    <div class="main">
+      <p class="mono" style="color:var(--muted)">requestId · req_01HZYEXAMPLE</p>
+      <h1 class="display" style="font-size:28px;margin:8px 0 20px">Single-pass retrieve</h1>
+      <dl class="meta">
+        <div class="card"><dt>Router</dt><dd>single_pass · default</dd></div>
+        <div class="card"><dt>CostEstimate</dt><dd class="pill" style="background:var(--signal-soft);color:var(--signal)">USD 0.002</dd></div>
+        <div class="card"><dt>Outcome</dt><dd>evidence · 2 items</dd></div>
+        <div class="card"><dt>Evidence IDs</dt><dd class="mono" style="font-weight:400;font-size:12px">ev_1, ev_2</dd></div>
+      </dl>
+      <h2 style="font-size:16px">Steps</h2>
+      <div class="tl">
+        <div class="hop">
+          <strong>Hop 0 · hybrid search</strong>
+          <p style="color:var(--muted);margin:4px 0 0;font-size:14px">Namespace ns_ten_support · topK rerank</p>
+        </div>
+        <div class="hop">
+          <strong>Complete</strong>
+          <p style="color:var(--muted);margin:4px 0 0;font-size:14px">No agentic escalation · PreferCorrectness satisfied</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

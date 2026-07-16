@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AMKP — Knowledge Studio (flow prototype)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --canvas:#F7F6F3;--elev:#fff;--ink:#1A1917;--muted:#6B6560;--line:#E5E2DC;
+  --teal:#0F766E;--teal-soft:#CCFBF1;--teal-fg:#F0FDFA;
+  --working:#A16207;--working-soft:#FEF9C3;--cost:#C2410C;--cost-soft:#FFEDD5;
+  --ok:#15803D;--ok-soft:#DCFCE7;--sidebar:260px;--stream:720px;
+}
+*{box-sizing:border-box}body{margin:0;font-family:"DM Sans",sans-serif;background:var(--canvas);color:var(--ink);font-size:15px;line-height:1.55}
+button,input,textarea{font:inherit}.mono{font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+.display{font-family:Fraunces,serif;font-weight:600;letter-spacing:-.02em}
+.app{display:grid;grid-template-columns:var(--sidebar) 1fr;min-height:100vh}
+aside{background:var(--elev);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:8px}
+.logo{font-size:22px;margin:0 0 12px}
+nav button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:8px 10px;border-radius:4px;color:var(--ink);cursor:pointer}
+nav button.active{background:var(--teal-soft);color:var(--teal);font-weight:600}
+.threads{margin-top:16px;flex:1;overflow:auto}
+.threads h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 8px;padding:0 10px}
+.thread{padding:8px 10px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--muted)}
+.thread.on{background:var(--canvas);color:var(--ink)}
+main{display:flex;flex-direction:column;min-height:100vh}
+.top{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-bottom:1px solid var(--line);background:var(--elev)}
+.chip{display:inline-flex;gap:6px;align-items:center;background:#1A2332;color:#E8EEF5;padding:4px 10px;border-radius:4px;font-size:13px}
+.stream-wrap{flex:1;display:flex;justify-content:center;padding:28px 24px 140px;overflow:auto}
+.stream{width:min(100%,var(--stream))}
+.empty h1{font-size:32px;margin:48px 0 8px}
+.empty p{color:var(--muted);margin:0 0 24px}
+.msg{margin:0 0 16px}
+.msg.user{background:var(--elev);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.working{background:var(--working-soft);border:1px solid #f1e4a8;border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.working summary{cursor:pointer;color:var(--working);font-weight:600;font-size:13px}
+.pill{display:inline-block;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:500}
+.cost{background:var(--cost-soft);color:var(--cost)}
+.ok{background:var(--ok-soft);color:var(--ok)}
+.ev{background:var(--elev);border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:8px;padding:14px 16px;margin:0 0 10px}
+.ev .meta{color:var(--muted);font-size:12px;margin-bottom:6px}
+.actions{display:flex;gap:10px;align-items:center;margin:16px 0 8px;flex-wrap:wrap}
+.composer{position:fixed;left:var(--sidebar);right:0;bottom:0;background:var(--elev);border-top:1px solid var(--line);padding:14px 24px 18px;display:flex;justify-content:center}
+.composer-inner{width:min(100%,var(--stream));display:grid;gap:10px}
+.box{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--canvas);display:grid;gap:8px}
+textarea{width:100%;border:0;background:transparent;resize:none;min-height:56px;outline:none}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px}
+.btn{border:1px solid var(--line);background:var(--elev);border-radius:8px;padding:8px 14px;cursor:pointer}
+.btn.primary{background:var(--teal);color:var(--teal-fg);border-color:var(--teal)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.attach{font-size:13px;color:var(--muted)}
+.screen{display:none}.screen.on{display:block}
+.table{width:100%;border-collapse:collapse;background:var(--elev);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.table th,.table td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.table th{color:var(--muted);font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.panel{max-width:720px}
+.hop{border-left:2px solid var(--line);margin-left:10px;padding-left:18px;margin-bottom:16px;position:relative}
+.hop::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--teal);position:absolute;left:-6px;top:4px}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <p class="display logo">AMKP</p>
+    <nav>
+      <button type="button" data-go="studio" class="active">Studio</button>
+      <button type="button" data-go="docs">Documents</button>
+      <button type="button" data-go="trace">Traces</button>
+      <button type="button" data-go="eval">Eval</button>
+    </nav>
+    <div class="threads">
+      <h3>Threads</h3>
+      <div class="thread on" id="thread-label">Refund window · just now</div>
+      <div class="thread">New thread</div>
+    </div>
+  </aside>
+  <main>
+    <header class="top">
+      <strong id="top-title">Knowledge Studio</strong>
+      <span class="chip"><span style="opacity:.7">Tenant</span> support</span>
+    </header>
+
+    <!-- DOCUMENTS -->
+    <div class="stream-wrap screen" id="screen-docs">
+      <div class="panel" style="width:100%;max-width:900px">
+        <div class="actions">
+          <button class="btn primary" type="button" id="btn-upload">Upload fixture</button>
+          <span class="hint">CAP-3 · drag-drop or button · Active Tenant only</span>
+        </div>
+        <table class="table">
+          <thead><tr><th>Document</th><th>Status</th><th>Version</th></tr></thead>
+          <tbody id="doc-rows">
+            <tr><td colspan="3" style="color:var(--muted)">No documents yet — upload to begin.</td></tr>
+          </tbody>
+        </table>
+        <p class="hint">After parse → open Document detail → Ask in Studio.</p>
+        <div class="actions">
+          <button class="btn" type="button" id="btn-to-detail" disabled>Open document detail</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCUMENT DETAIL -->
+    <div class="stream-wrap screen" id="screen-detail">
+      <div class="panel">
+        <p class="mono" style="color:var(--muted)">doc_refund · v1</p>
+        <h1 class="display" style="font-size:28px;margin:8px 0 12px">refund-policy.pdf</h1>
+        <p><span class="pill ok" id="detail-status">pending</span></p>
+        <p style="color:var(--muted);font-size:14px;margin:16px 0">Chunks ready when status is parsed. TableEvidence path available for structured rows.</p>
+        <button class="btn primary" type="button" data-go="studio" id="btn-ask" disabled>Ask in Studio</button>
+      </div>
+    </div>
+
+    <!-- STUDIO / THREAD -->
+    <div class="stream-wrap screen on" id="screen-studio">
+      <div class="stream" id="stream">
+        <div class="empty" id="empty">
+          <h1 class="display">Ask the plane</h1>
+          <p>You’ll get Evidence with citations and cost — not an ungrounded answer.</p>
+        </div>
+        <div id="turns"></div>
+      </div>
+    </div>
+
+    <!-- TRACE -->
+    <div class="stream-wrap screen" id="screen-trace">
+      <div class="panel">
+        <p class="mono" style="color:var(--muted)">requestId · req_01HZYEXAMPLE</p>
+        <h1 class="display" style="font-size:28px;margin:8px 0 20px">Single-pass retrieve</h1>
+        <div class="actions"><span class="pill cost">est. $0.002</span><span class="pill ok">evidence · 2</span></div>
+        <div class="hop"><strong>Hop 0 · hybrid search</strong><p style="color:var(--muted);margin:4px 0 0;font-size:14px">Namespace ns_ten_support · topK rerank</p></div>
+        <div class="hop"><strong>Complete</strong><p style="color:var(--muted);margin:4px 0 0;font-size:14px">No agentic escalation · PreferCorrectness satisfied</p></div>
+        <button class="btn" type="button" data-go="studio">Back to thread</button>
+      </div>
+    </div>
+
+    <!-- EVAL stub -->
+    <div class="stream-wrap screen" id="screen-eval">
+      <div class="panel">
+        <h1 class="display" style="font-size:28px">Eval console</h1>
+        <p style="color:var(--muted)">Golden-set / TableRank — designed in scenario 04.</p>
+      </div>
+    </div>
+
+    <div class="composer" id="composer">
+      <div class="composer-inner">
+        <div class="box">
+          <textarea id="q" placeholder="Ask about your Tenant knowledge…"></textarea>
+          <div class="row">
+            <span class="attach" id="attach-label">[+ attach] none</span>
+            <label><input type="checkbox" id="pc" checked/> PreferCorrectness</label>
+            <label><input type="radio" name="mode" value="single_pass" checked/> single_pass</label>
+            <label><input type="radio" name="mode" value="agentic"/> agentic</label>
+            <button class="btn primary" type="button" id="btn-run">Run ⌘⏎</button>
+          </div>
+        </div>
+        <p class="hint">Flow prototype · Claude grammar · Evidence climax · not production UI</p>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+const $ = (s) => document.querySelector(s);
+const screens = ["docs","detail","studio","trace","eval"];
+let uploaded = false, parsed = false, attached = false;
+
+function show(name){
+  screens.forEach(s => $("#screen-"+s).classList.toggle("on", s===name));
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("active", b.dataset.go===name || (name==="detail" && b.dataset.go==="docs") || (name==="trace" && b.dataset.go==="trace")));
+  $("#composer").style.display = (name==="studio") ? "flex" : "none";
+  $("#top-title").textContent = ({docs:"Documents",detail:"Document detail",studio:"Knowledge Studio",trace:"Trace inspector",eval:"Eval"})[name];
+}
+document.querySelectorAll("[data-go]").forEach(el => el.addEventListener("click", () => show(el.dataset.go)));
+
+$("#btn-upload").onclick = () => {
+  uploaded = true; parsed = false;
+  $("#doc-rows").innerHTML = `<tr><td>refund-policy.pdf</td><td><span class="pill" style="background:var(--working-soft);color:var(--working)">pending</span></td><td class="mono">v1</td></tr>`;
+  $("#btn-to-detail").disabled = false;
+  $("#detail-status").textContent = "pending";
+  $("#detail-status").className = "pill";
+  $("#detail-status").style.background = "var(--working-soft)";
+  $("#detail-status").style.color = "var(--working)";
+  $("#btn-ask").disabled = true;
+  setTimeout(() => {
+    parsed = true;
+    $("#doc-rows").innerHTML = `<tr><td>refund-policy.pdf</td><td><span class="pill ok">parsed</span></td><td class="mono">v1</td></tr>`;
+    $("#detail-status").textContent = "parsed";
+    $("#detail-status").className = "pill ok";
+    $("#detail-status").style.background = "";
+    $("#detail-status").style.color = "";
+    $("#btn-ask").disabled = false;
+    attached = true;
+    $("#attach-label").textContent = "[+ attach] refund-policy.pdf";
+  }, 1200);
+};
+$("#btn-to-detail").onclick = () => show("detail");
+
+async function runRetrieve(){
+  const q = $("#q").value.trim() || "What is the refund window for enterprise seats?";
+  $("#empty")?.remove();
+  const turns = $("#turns");
+  turns.innerHTML = "";
+  const user = document.createElement("div");
+  user.className = "msg user";
+  user.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:6px">You · Tenant support</div>${q}${attached?'<div class="mono" style="margin-top:8px;color:var(--muted)">attached · refund-policy.pdf</div>':''}`;
+  turns.appendChild(user);
+
+  const steps = ["Routing · single_pass","Hop 0 · hybrid search","Rerank · topK","PreferCorrectness check"];
+  for (const s of steps){
+    const w = document.createElement("details");
+    w.className = "working"; w.open = true;
+    w.innerHTML = `<summary>Working · ${s}</summary><p class="mono" style="margin:8px 0 0;color:var(--muted)">ns_ten_support</p>`;
+    turns.appendChild(w);
+    await new Promise(r => setTimeout(r, 450));
+    w.open = false;
+  }
+
+  const header = document.createElement("div");
+  header.className = "actions";
+  header.innerHTML = `<strong>Evidence</strong><span class="mono" style="color:var(--muted)">req_01HZYEXAMPLE</span><span class="pill cost">est. $0.002</span>`;
+  turns.appendChild(header);
+
+  turns.insertAdjacentHTML("beforeend", `
+    <article class="ev"><div class="meta">score 0.91 · <span class="mono">doc_refund · p.4</span></div>
+      <p style="margin:0">Enterprise seats may request a refund within <strong>30 days</strong> of the invoice date…</p></article>
+    <article class="ev"><div class="meta">score 0.74 · <span class="mono">doc_refund · table:2</span></div>
+      <p style="margin:0">TableEvidence: plan → window days → enterprise = 30…</p></article>
+    <div class="actions"><button class="btn primary" type="button" data-go="trace" id="open-trace">Open Trace →</button></div>
+    <p class="hint">Climax = Evidence + citations + cost. Optional gloss is secondary — omitted here on purpose.</p>
+  `);
+  $("#open-trace").onclick = () => show("trace");
+  $("#thread-label").textContent = q.slice(0,42) + (q.length>42?"…":"");
+}
+
+$("#btn-run").onclick = () => { show("studio"); runRetrieve(); };
+document.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); show("studio"); runRetrieve(); }
+});
+
+// Start on Documents to show whole sunshine path
+show("docs");
+</script>
+</body>
+</html>

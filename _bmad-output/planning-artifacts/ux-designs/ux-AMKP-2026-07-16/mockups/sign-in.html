@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AMKP — Sign in</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+:root{--ink:#0B1220;--ink-soft:#1A2332;--paper:#F5F7FA;--elev:#fff;--line:#D5DCE6;--muted:#5C6B7A;--teal:#0F766E;--teal-soft:#CCFBF1;--teal-fg:#F0FDFA;--signal:#C2410C;--signal-soft:#FFEDD5;--ok:#15803D;--warn:#A16207;--danger:#B91C1C}
+*{box-sizing:border-box}body{margin:0;font-family:"DM Sans",sans-serif;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.55}
+.display{font-family:Fraunces,serif;font-weight:600;letter-spacing:-0.02em}
+.mono{font-family:"IBM Plex Mono",monospace;font-size:13px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);padding:10px 16px;background:var(--elev)}
+.btn-primary{background:var(--teal);color:var(--teal-fg);border-color:var(--teal)}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--ink-soft);color:#E8EEF5;padding:4px 10px;border-radius:4px;font-size:13px}
+.pill{display:inline-block;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:500}
+.card{background:var(--elev);border:1px solid var(--line);border-radius:8px}
+.ev{border-left:3px solid var(--teal);padding:14px 16px;margin:0 0 10px}
+
+.wrap{min-height:100vh;display:grid;place-items:center;padding:32px;background:
+  radial-gradient(1200px 600px at 10% -10%, #ccfbf166, transparent),
+  radial-gradient(900px 500px at 100% 0%, #d5dce633, transparent),
+  var(--paper)}
+.panel{width:min(420px,100%);padding:40px 36px;box-shadow:0 8px 24px rgba(11,18,32,.06)}
+.brand{font-size:40px;margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 28px}
+label{display:block;font-size:13px;font-weight:500;margin:0 0 6px}
+input{width:100%;padding:12px;border:1px solid var(--line);border-radius:8px;margin-bottom:16px;font:inherit}
+.roles{display:flex;gap:8px;margin-bottom:20px}
+.roles label{display:flex;align-items:center;gap:6px;margin:0;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);cursor:pointer}
+.note{font-size:13px;color:var(--muted);margin-top:16px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <form class="panel card" onsubmit="return false">
+    <h1 class="display brand">AMKP</h1>
+    <p class="sub">Enterprise knowledge plane — Console</p>
+    <div class="roles" role="radiogroup" aria-label="Role">
+      <label><input type="radio" name="role" checked/> Platform Admin</label>
+      <label><input type="radio" name="role"/> Tenant Operator</label>
+    </div>
+    <label for="tok">Credential</label>
+    <input id="tok" class="mono" type="password" placeholder="PLATFORM_ADMIN_TOKEN or amkp_…" aria-required="true"/>
+    <button class="btn-primary" type="submit" style="width:100%">Continue</button>
+    <p class="note">SDK &amp; MCP remain available for builders. Console operates the plane — it does not replace them.</p>
+  </form>
+</main>
+</body>
+</html>

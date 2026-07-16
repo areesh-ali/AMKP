@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #f7f6f3;
+  --color-elevated: #ffffff;
+  --color-ink: #1a1917;
+  --color-muted: #6b6560;
+  --color-line: #e5e2dc;
+  --color-teal: #0f766e;
+  --color-teal-soft: #ccfbf1;
+  --color-teal-fg: #f0fdfa;
+  --color-working: #a16207;
+  --color-working-soft: #fef9c3;
+  --color-cost: #c2410c;
+  --color-cost-soft: #ffedd5;
+  --color-ok: #15803d;
+  --color-ok-soft: #dcfce7;
+  --color-danger: #b91c1c;
+  --color-tenant: #1a2332;
+  --color-tenant-fg: #e8eef5;
+
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-ui: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --spacing-sidebar: 260px;
+  --container-stream: 760px;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    margin: 0;
+    min-height: 100%;
+  }
+
+  body {
+    @apply bg-canvas font-ui text-[15px] leading-normal text-ink antialiased;
+  }
+
+  a {
+    @apply text-teal;
+  }
+}

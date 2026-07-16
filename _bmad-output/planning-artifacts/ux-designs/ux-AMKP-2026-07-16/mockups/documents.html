@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AMKP — Documents</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+:root{--ink:#0B1220;--ink-soft:#1A2332;--paper:#F5F7FA;--elev:#fff;--line:#D5DCE6;--muted:#5C6B7A;--teal:#0F766E;--teal-soft:#CCFBF1;--teal-fg:#F0FDFA;--signal:#C2410C;--signal-soft:#FFEDD5;--ok:#15803D;--warn:#A16207;--danger:#B91C1C}
+*{box-sizing:border-box}body{margin:0;font-family:"DM Sans",sans-serif;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.55}
+.display{font-family:Fraunces,serif;font-weight:600;letter-spacing:-0.02em}
+.mono{font-family:"IBM Plex Mono",monospace;font-size:13px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);padding:10px 16px;background:var(--elev)}
+.btn-primary{background:var(--teal);color:var(--teal-fg);border-color:var(--teal)}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--ink-soft);color:#E8EEF5;padding:4px 10px;border-radius:4px;font-size:13px}
+.pill{display:inline-block;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:500}
+.card{background:var(--elev);border:1px solid var(--line);border-radius:8px}
+.ev{border-left:3px solid var(--teal);padding:14px 16px;margin:0 0 10px}
+
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+aside{background:var(--elev);border-right:1px solid var(--line);padding:20px 16px}
+aside .logo{font-size:22px;margin:0 0 24px}
+nav a{display:block;padding:8px 10px;border-radius:4px;color:var(--ink);text-decoration:none;margin-bottom:4px;font-size:14px}
+nav a.active{background:var(--teal-soft);color:var(--teal);font-weight:600}
+.top{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--line);background:var(--elev)}
+.main{padding:24px}
+table{width:100%;border-collapse:collapse;background:var(--elev);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px}
+th{color:var(--muted);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.st-p{background:#DCFCE7;color:var(--ok)}.st-w{background:#FEF9C3;color:var(--warn)}
+.bar{display:flex;gap:12px;align-items:center;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <p class="display logo">AMKP</p>
+    <nav>
+      <a class="active" href="#">Documents</a>
+      <a href="#">Retrieve</a>
+      <a href="#">Traces</a>
+      <a href="#">Eval</a>
+      <a href="#">Policy</a>
+    </nav>
+  </aside>
+  <div>
+    <header class="top">
+      <strong>Workspace · Documents</strong>
+      <span class="chip" title="Active Tenant"><span style="opacity:.7">Tenant</span> support</span>
+    </header>
+    <div class="main">
+      <div class="bar">
+        <button class="btn-primary">Upload</button>
+        <button>Filter: parsed</button>
+        <span style="color:var(--muted);font-size:13px">CAP-3 · Knowledge workspace</span>
+      </div>
+      <table>
+        <thead><tr><th>Document</th><th>Status</th><th>Version</th><th>Updated</th></tr></thead>
+        <tbody>
+          <tr><td>refund-policy.pdf</td><td><span class="pill st-p">parsed</span></td><td class="mono">v3</td><td>2m ago</td></tr>
+          <tr><td>q2-revenue-table.xlsx</td><td><span class="pill st-p">parsed</span></td><td class="mono">v1</td><td>1h ago</td></tr>
+          <tr><td>scanned-deck.pdf</td><td><span class="pill st-w">pending</span></td><td class="mono">v1</td><td>just now</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

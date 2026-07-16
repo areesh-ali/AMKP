@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AMKP — Retrieve studio</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+:root{--ink:#0B1220;--ink-soft:#1A2332;--paper:#F5F7FA;--elev:#fff;--line:#D5DCE6;--muted:#5C6B7A;--teal:#0F766E;--teal-soft:#CCFBF1;--teal-fg:#F0FDFA;--signal:#C2410C;--signal-soft:#FFEDD5;--ok:#15803D;--warn:#A16207;--danger:#B91C1C}
+*{box-sizing:border-box}body{margin:0;font-family:"DM Sans",sans-serif;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.55}
+.display{font-family:Fraunces,serif;font-weight:600;letter-spacing:-0.02em}
+.mono{font-family:"IBM Plex Mono",monospace;font-size:13px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);padding:10px 16px;background:var(--elev)}
+.btn-primary{background:var(--teal);color:var(--teal-fg);border-color:var(--teal)}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--ink-soft);color:#E8EEF5;padding:4px 10px;border-radius:4px;font-size:13px}
+.pill{display:inline-block;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:500}
+.card{background:var(--elev);border:1px solid var(--line);border-radius:8px}
+.ev{border-left:3px solid var(--teal);padding:14px 16px;margin:0 0 10px}
+
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+aside{background:var(--elev);border-right:1px solid var(--line);padding:20px 16px}
+aside .logo{font-size:22px;margin:0 0 24px}
+nav a{display:block;padding:8px 10px;border-radius:4px;color:var(--ink);text-decoration:none;margin-bottom:4px;font-size:14px}
+nav a.active{background:var(--teal-soft);color:var(--teal);font-weight:600}
+.top{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--line);background:var(--elev)}
+.split{display:grid;grid-template-columns:1fr 1.2fr;gap:0;min-height:calc(100vh - 57px)}
+.pane{padding:24px;border-right:1px solid var(--line)}
+.pane:last-child{border-right:0}
+textarea{width:100%;min-height:120px;padding:12px;border:1px solid var(--line);border-radius:8px;font:inherit;resize:vertical}
+.row{display:flex;gap:16px;align-items:center;margin:12px 0 20px;flex-wrap:wrap;font-size:14px}
+.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.cost{background:var(--signal-soft);color:var(--signal)}
+.score{color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <p class="display logo">AMKP</p>
+    <nav>
+      <a href="#">Documents</a>
+      <a class="active" href="#">Retrieve</a>
+      <a href="#">Traces</a>
+      <a href="#">Eval</a>
+    </nav>
+  </aside>
+  <div>
+    <header class="top">
+      <strong>Retrieve studio</strong>
+      <span class="chip">Tenant · support</span>
+    </header>
+    <div class="split">
+      <section class="pane">
+        <label for="q" style="font-weight:600">Query</label>
+        <textarea id="q">What is the refund window for enterprise seats?</textarea>
+        <div class="row">
+          <label><input type="checkbox" checked/> PreferCorrectness</label>
+          <label><input type="radio" name="m" checked/> single_pass</label>
+          <label><input type="radio" name="m"/> agentic</label>
+        </div>
+        <button class="btn-primary">Run Retrieve ⌘⏎</button>
+        <p style="color:var(--muted);font-size:13px;margin-top:16px">Primary contract: Evidence + citations + cost — not a final answer.</p>
+      </section>
+      <section class="pane" style="background:#fafbfc">
+        <div class="head">
+          <span>Evidence <span class="mono" style="color:var(--muted)">req_01H…</span></span>
+          <span class="pill cost">est. $0.002</span>
+        </div>
+        <article class="card ev">
+          <div class="score">score 0.91 · <span class="mono">doc_refund · p.4</span></div>
+          <p style="margin:8px 0 0">Enterprise seats may request a refund within <strong>30 days</strong> of the invoice date…</p>
+        </article>
+        <article class="card ev">
+          <div class="score">score 0.74 · <span class="mono">doc_refund · table:2</span></div>
+          <p style="margin:8px 0 0">TableEvidence: plan → window days → enterprise=30…</p>
+        </article>
+        <p style="margin-top:16px"><a href="trace-inspector.html" style="color:var(--teal)">Open Trace →</a></p>
+      </section>
+    </div>
+  </div>
+</div>
+</body>
+</html>

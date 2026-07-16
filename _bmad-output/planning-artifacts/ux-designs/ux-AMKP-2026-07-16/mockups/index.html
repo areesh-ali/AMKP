@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AMKP Console — Mockup gallery</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600&display=swap");
+:root{--ink:#0B1220;--paper:#F5F7FA;--elev:#fff;--line:#D5DCE6;--muted:#5C6B7A;--teal:#0F766E;--teal-soft:#CCFBF1}
+*{box-sizing:border-box}body{margin:0;font-family:"DM Sans",sans-serif;background:var(--paper);color:var(--ink);padding:48px 32px;line-height:1.55}
+h1{font-family:Fraunces,serif;font-size:36px;font-weight:600;letter-spacing:-0.02em;margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 32px;max-width:520px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;max-width:960px}
+a.card{display:block;padding:20px;background:var(--elev);border:1px solid var(--line);border-radius:8px;text-decoration:none;color:inherit;transition:border-color .15s}
+a.card:hover{border-color:var(--teal)}
+a.card strong{display:block;margin-bottom:6px;color:var(--teal)}
+a.card span{font-size:13px;color:var(--muted)}
+.cap{display:inline-block;background:var(--teal-soft);color:var(--teal);font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;margin-bottom:10px}
+</style>
+</head>
+<body>
+  <h1>AMKP</h1>
+  <p class="sub">Console mockup gallery — Evidence-first ops. Spines in parent folder win on conflict.</p>
+  <div class="grid">
+    <a class="card" href="sign-in.html">
+      <span class="cap">CAP-1</span>
+      <strong>Sign-in</strong>
+      <span>Brand hero · role · credential vault</span>
+    </a>
+    <a class="card" href="documents.html">
+      <span class="cap">CAP-3</span>
+      <strong>Documents</strong>
+      <span>Shell · Active Tenant · status table</span>
+    </a>
+    <a class="card" href="retrieve-studio.html">
+      <span class="cap">CAP-4</span>
+      <strong>Retrieve studio</strong>
+      <span>Split pane · Evidence · cost pill</span>
+    </a>
+    <a class="card" href="trace-inspector.html">
+      <span class="cap">CAP-5</span>
+      <strong>Trace inspector</strong>
+      <span>requestId · hops · cost</span>
+    </a>
+  </div>
+</body>
+</html>

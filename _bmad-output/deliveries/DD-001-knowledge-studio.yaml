@@ -1,0 +1,39 @@
+id: DD-001
+name: Knowledge Studio (Ken Operator climax)
+status: ready-for-implementation
+handed_off: 2026-07-16
+designer: Freya
+brand: AMKP
+product: AMKP Console
+spec: _bmad-output/specs/spec-amkp-console/SPEC.md
+
+flow:
+  scenario: 02-kens-knowledge-studio
+  pages:
+    - 2.1-documents
+    - 2.2-document-detail
+    - 2.3-knowledge-studio
+    - 2.4-thread-retrieve-detail
+    - 2.5-trace-inspector
+  prototype: _bmad-output/C-UX-Scenarios/02-kens-knowledge-studio/prototype-knowledge-studio.html
+
+interaction_principle:
+  shell: Claude-like (threads, composer, attach, working steps, artifacts)
+  climax: Evidence + citations + CostEstimate
+  non_goal: Free-form ungrounded chat as primary contract
+
+design_system: _bmad-output/D-Design-System/00-design-system.md
+visual_direction: _bmad-output/A-Product-Brief/visual-direction.md
+
+caps: [CAP-3, CAP-4, CAP-5]
+sdk: "@amkp/sdk-js"
+app_path: apps/console
+
+acceptance_climax: >
+  Operator with Active Tenant support uploads a fixture, runs Retrieve in Studio,
+  sees working steps, Evidence cards with citations and cost pill, opens Trace hops.
+
+related_deliveries_next:
+  - DD-002 Maya Admin standup (01)
+  - DD-003 Priya onboarding (03)
+  - DD-004 Ken eval and policy (04)

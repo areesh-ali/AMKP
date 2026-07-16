@@ -1,0 +1,39 @@
+id: TS-001
+delivery: DD-001
+name: Ken proves multimodal retrieve in Knowledge Studio
+persona: Ken
+device: desktop
+
+preconditions:
+  - Console signed in as Tenant Operator
+  - Active Tenant chip shows support
+  - Plane API reachable via VITE_AMKP_BASE_URL
+
+steps:
+  - id: 1
+    page: Documents
+    action: Upload multimodal fixture
+    expect: Row appears; status reaches parsed
+  - id: 2
+    page: Document detail
+    action: Confirm chunks/version; click Ask in Studio
+    expect: Studio opens with tenant context
+  - id: 3
+    page: Knowledge Studio
+    action: Enter query; PreferCorrectness on; Run
+    expect: Working steps visible (not blank spinner)
+  - id: 4
+    page: Thread / Retrieve detail
+    action: Inspect results
+    expect: Ranked Evidence cards + cost pill; no ungrounded answer as sole climax
+  - id: 5
+    page: Trace inspector
+    action: Open Trace from requestId
+    expect: Router mode + hop timeline + cost
+
+fail_if:
+  - Cross-Tenant documents or evidence appear
+  - CostEstimate missing on success path
+  - Primary UI is a free-form answer bubble without Evidence
+
+pass: All five steps succeed under Active Tenant support
