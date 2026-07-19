@@ -148,13 +148,7 @@ export class AmkpClient {
     cursor?: string;
     status?: string;
     sourceKey?: string;
-  }): Promise<{
-    items: unknown[];
-    total: number;
-    limit: number;
-    offset: number;
-    nextCursor: string | null;
-  }> {
+  }): Promise<DocumentListResponse> {
     const q = new URLSearchParams();
     if (options?.limit !== undefined) q.set("limit", String(options.limit));
     if (options?.offset !== undefined) q.set("offset", String(options.offset));
@@ -167,7 +161,7 @@ export class AmkpClient {
 
   async listDocumentVersions(
     sourceKey: string,
-  ): Promise<{ sourceKey: string; items: unknown[] }> {
+  ): Promise<{ sourceKey: string; items: DocumentSummary[] }> {
     return this.request(
       "GET",
       `/v1/documents/versions?sourceKey=${encodeURIComponent(sourceKey)}`,
@@ -183,7 +177,7 @@ export class AmkpClient {
 
   async listDocumentChunks(
     documentId: string,
-  ): Promise<{ items: unknown[] }> {
+  ): Promise<{ items: ChunkSummary[] }> {
     return this.request(
       "GET",
       `/v1/documents/${encodeURIComponent(documentId)}/chunks`,
@@ -274,7 +268,7 @@ export class AmkpClient {
     );
   }
 
-  async listMcpTools(): Promise<unknown> {
+  async listMcpTools(): Promise<McpToolManifest> {
     return this.request("GET", "/v1/mcp/tools");
   }
 
@@ -294,11 +288,13 @@ export class AmkpClient {
       expectedKeywords?: string[];
     }>;
     judge?: { kind: "lexical_stub" | "llm"; modelId?: string };
-  }): Promise<unknown> {
+  }): Promise<GoldenEvalReport> {
     return this.request("POST", "/v1/eval/golden-set", input);
   }
 
-  async runTableRankEval(input: { queries: string[] }): Promise<unknown> {
+  async runTableRankEval(input: {
+    queries: string[];
+  }): Promise<TableRankEvalReport> {
     return this.request("POST", "/v1/eval/table-rank", input);
   }
 
@@ -403,7 +399,7 @@ export class AmkpAdminClient {
     return this.request("POST", "/v1/accounts", { name });
   }
 
-  async listAccounts(limit = 100): Promise<{ items: unknown[] }> {
+  async listAccounts(limit = 100): Promise<{ items: AccountResponse[] }> {
     return this.request(
       "GET",
       `/v1/accounts?limit=${encodeURIComponent(String(limit))}`,
@@ -429,7 +425,7 @@ export class AmkpAdminClient {
   async listAudit(
     limit = 50,
     opts?: { tenantId?: string },
-  ): Promise<{ items: unknown[] }> {
+  ): Promise<{ items: AuditRecord[] }> {
     const q = new URLSearchParams();
     q.set("limit", String(limit));
     if (opts?.tenantId) q.set("tenantId", opts.tenantId);
@@ -439,7 +435,7 @@ export class AmkpAdminClient {
   async listTenants(opts?: {
     accountId?: string;
     limit?: number;
-  }): Promise<{ items: unknown[] }> {
+  }): Promise<{ items: TenantPolicyResponse[] }> {
     const q = new URLSearchParams();
     if (opts?.accountId) q.set("accountId", opts.accountId);
     if (opts?.limit !== undefined) q.set("limit", String(opts.limit));
@@ -447,7 +443,7 @@ export class AmkpAdminClient {
     return this.request("GET", `/v1/tenants${qs ? `?${qs}` : ""}`);
   }
 
-  async getTenant(tenantId: string): Promise<unknown> {
+  async getTenant(tenantId: string): Promise<TenantPolicyResponse> {
     return this.request("GET", `/v1/tenants/${encodeURIComponent(tenantId)}`);
   }
 
@@ -461,7 +457,7 @@ export class AmkpAdminClient {
       agenticOverride?: boolean;
       actor?: string;
     },
-  ): Promise<unknown> {
+  ): Promise<TenantPolicyResponse> {
     return this.request(
       "PATCH",
       `/v1/tenants/${encodeURIComponent(tenantId)}`,
@@ -481,7 +477,7 @@ export class AmkpAdminClient {
     );
   }
 
-  async listApiKeys(tenantId: string): Promise<{ items: unknown[] }> {
+  async listApiKeys(tenantId: string): Promise<{ items: ApiKeySummary[] }> {
     return this.request(
       "GET",
       `/v1/tenants/${encodeURIComponent(tenantId)}/api-keys`,
@@ -588,4 +584,100 @@ export type {
   EvidenceItem,
   TraceHopStep,
   TraceRecord,
+};
+
+/** OpenAPI-aligned DTOs (hand-maintained; keep in sync with packages/openapi). */
+export type AccountResponse = {
+  accountId: string;
+  name: string;
+  createdAt?: string;
+};
+
+export type DocumentSummary = {
+  documentId: string;
+  documentVersionId?: string;
+  sourceKey: string;
+  version: number;
+  contentHash?: string;
+  filename?: string;
+  contentType?: string;
+  byteSize?: number;
+  status: string;
+  createdAt?: string;
+};
+
+export type DocumentListResponse = {
+  items: DocumentSummary[];
+  total: number;
+  limit: number;
+  offset: number;
+  nextCursor: string | null;
+};
+
+export type ChunkSummary = {
+  chunkId: string;
+  documentId: string;
+  parseTier?: string;
+  parseConfidence?: number;
+  ordinal?: number;
+  content?: string;
+  createdAt?: string;
+};
+
+export type TenantPolicyResponse = {
+  tenantId: string;
+  accountId?: string;
+  name?: string;
+  agenticEnabled?: boolean;
+  pageVisionEnabled?: boolean;
+  preferCorrectnessThreshold?: number;
+  agenticReadinessPassed?: boolean;
+  createdAt?: string;
+};
+
+export type GoldenEvalReport = {
+  tenantId: string;
+  requestId: string;
+  completedAt: string;
+  judge: { kind: string; modelId?: string | null };
+  summary: { total: number; passed: number; failed: number };
+  outcomes: unknown[];
+};
+
+export type TableRankEvalReport = {
+  tenantId: string;
+  requestId: string;
+  completedAt: string;
+  results: unknown[];
+  summary: {
+    avgMultimodalTableRank: number;
+    avgTextOnlyTableRank: number;
+  };
+};
+
+export type McpToolManifest = {
+  schemaVersion: "1";
+  audience: "product";
+  tools: Array<{
+    name: string;
+    description: string;
+    inputSchema: Record<string, unknown>;
+  }>;
+  adminTools: unknown[];
+};
+
+export type ApiKeySummary = {
+  apiKeyId: string;
+  createdAt?: string;
+  revokedAt?: string | null;
+};
+
+export type AuditRecord = {
+  id?: string;
+  action?: string;
+  actor?: string;
+  tenantId?: string | null;
+  createdAt?: string;
+  meta?: Record<string, unknown>;
+  [key: string]: unknown;
 };
