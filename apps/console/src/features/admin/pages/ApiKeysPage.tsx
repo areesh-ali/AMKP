@@ -1,3 +1,4 @@
+import type { ApiKeySummary } from "@amkp/sdk-js";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { createPlaneClient } from "../../../shared/api/client";
 import { formatApiError } from "../../../shared/api/errors";
@@ -12,25 +13,10 @@ import {
   PageHeader,
 } from "../../../shared/ui";
 
-type KeyRow = {
-  apiKeyId: string;
-  createdAt?: string;
-  revokedAt?: string | null;
-};
-
-function asKeys(items: unknown[]): KeyRow[] {
-  return items.filter(
-    (i): i is KeyRow =>
-      typeof i === "object" &&
-      i !== null &&
-      typeof (i as KeyRow).apiKeyId === "string",
-  );
-}
-
 export function ApiKeysPage() {
   const { session } = useSession();
   const [tenantId, setTenantId] = useState(session?.activeTenantId ?? "");
-  const [keys, setKeys] = useState<KeyRow[]>([]);
+  const [keys, setKeys] = useState<ApiKeySummary[]>([]);
   const [plaintext, setPlaintext] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -46,7 +32,7 @@ export function ApiKeysPage() {
       const { admin } = createPlaneClient(session);
       if (!admin) return;
       const res = await admin.listApiKeys(tenantId.trim());
-      setKeys(asKeys(res.items));
+      setKeys(res.items);
     } catch (e) {
       setError(formatApiError(e));
     } finally {
