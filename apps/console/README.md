@@ -1,50 +1,38 @@
 # AMKP Console
 
-Human product layer for the AMKP enterprise knowledge plane. Brand: **AMKP**. Consumes the plane only via `@amkp/sdk-js`.
+First-party web product to **operate** the knowledge plane. Brand is **AMKP**. Interaction grammar is Claude-like (composer, working steps, artifacts); climax is still **Evidence + citations + cost**.
 
-## Stack
+## Architecture
 
-- Vite + React 19 + TypeScript strict
-- **Tailwind CSS v4** (`@tailwindcss/vite`) — theme tokens in `src/styles/index.css`
-- React Router
+See [ARCHITECTURE.md](./ARCHITECTURE.md) — atomic `app/` · `features/*` · `shared/ui/{atoms,molecules,organisms}`. Plane access only via `@amkp/sdk-js`.
 
-## Folder structure
-
-See [`ARCHITECTURE.md`](./ARCHITECTURE.md) — atomic UI (`shared/ui/{atoms,molecules,organisms}`) + feature slices (`features/*`). Do not add flat `pages/` or dump UI into `components/`.
-
-## Design
-
-Binding UX (WDS):
-
-- `_bmad-output/A-Product-Brief/visual-direction.md`
-- `_bmad-output/D-Design-System/00-design-system.md`
-- `_bmad-output/deliveries/DD-001-knowledge-studio.yaml`
-- Interactive prototype: `_bmad-output/C-UX-Scenarios/02-kens-knowledge-studio/prototype-knowledge-studio.html`
-
-Theme colors/fonts map 1:1 into Tailwind `@theme` (e.g. `bg-canvas`, `text-teal`, `font-display`).
-
-## Dev
+## Local
 
 ```bash
-# from repo root
-pnpm install
-pnpm --filter @amkp/sdk-js build
-pnpm --filter @amkp/console dev
+# from repo root — API + worker must be up; CORS must allow :5173
+pnpm docker:up
+pnpm --filter @amkp/adapters-postgres prisma:migrate
+pnpm dev:api          # other terminal
+pnpm dev:worker       # other terminal
+pnpm dev:console      # http://localhost:5173
 ```
 
-```bash
-# .env.local (optional)
-VITE_AMKP_BASE_URL=http://127.0.0.1:3000
-```
-
-## Scripts
-
-| Script | Purpose |
+| Env | Meaning |
 | --- | --- |
-| `dev` | Vite + Tailwind (port 5173) |
-| `build` | Typecheck + production bundle |
-| `typecheck` | `tsc --noEmit` |
+| `VITE_AMKP_BASE_URL` | API origin (default `http://127.0.0.1:3000`; empty = same-origin) |
 
-## Non-goals
+## Docker stack
 
-Does not replace SDK, MCP, or OpenAPI. Retrieve UX is Evidence-first (Claude shell, not chat-as-primary).
+```bash
+pnpm docker:stack
+# Console http://localhost:8080 — nginx proxies /v1 → api
+```
+
+## Roles
+
+| Role | Credential | Surfaces |
+| --- | --- | --- |
+| Platform Admin | `PLATFORM_ADMIN_TOKEN` | Tenants, keys, audit, policy, health |
+| Tenant Operator | Tenant API key (`amkp_…`) | Studio, documents, traces, eval |
+
+Sign-in **probes** the plane before writing the session vault. Vault is sessionStorage — **dev only**.

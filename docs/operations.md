@@ -8,6 +8,30 @@
 | Shared Postgres index | unset `AMKP_VECTOR_INDEX` (production default) |
 | Peppered API keys | `AMKP_API_KEY_PEPPER` (HMAC-SHA256) |
 
+## Docker full stack
+
+Infra-only (Postgres/Redis): `pnpm docker:up` → [`infra/docker-compose.yml`](../infra/docker-compose.yml).
+
+**Deployable stack** (migrate + api + worker + Console nginx):
+
+```bash
+pnpm docker:stack          # build + up
+pnpm docker:stack:logs
+pnpm docker:stack:down
+```
+
+| Service | Port | Notes |
+| --- | --- | --- |
+| console | `8080` | SPA; proxies `/v1` → api (same-origin) |
+| api | `3000` | Nest; health `/health`, ready `/ready` |
+| worker | `3001` (internal) | BullMQ consumers |
+| postgres | `5433`→`5432` | App containers use host `postgres:5432` |
+| redis | `6379` | Required for BullMQ in stack |
+
+Set `PLATFORM_ADMIN_TOKEN` and `AMKP_API_KEY_PEPPER` before any shared/demo deploy. Console session vault is **dev-only** (sessionStorage).
+
+Images: [`infra/Dockerfile`](../infra/Dockerfile) (api/worker/migrate), [`infra/Dockerfile.console`](../infra/Dockerfile.console).
+
 ## Production adapters
 
 | Concern | Env | Default |
