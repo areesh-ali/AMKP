@@ -1,8 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { SessionProvider } from "../shared/session/SessionContext";
+import "../styles/index.css";
 import { App } from "./App";
-import "./styles/index.css";
 
 const root = document.getElementById("root");
 if (!root) {
@@ -12,7 +13,9 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <SessionProvider>
+        <App />
+      </SessionProvider>
     </BrowserRouter>
   </StrictMode>,
 );

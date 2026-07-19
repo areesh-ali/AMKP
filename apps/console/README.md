@@ -8,6 +8,10 @@ Human product layer for the AMKP enterprise knowledge plane. Brand: **AMKP**. Co
 - **Tailwind CSS v4** (`@tailwindcss/vite`) — theme tokens in `src/styles/index.css`
 - React Router
 
+## Folder structure
+
+See [`ARCHITECTURE.md`](./ARCHITECTURE.md) — atomic UI (`shared/ui/{atoms,molecules,organisms}`) + feature slices (`features/*`). Do not add flat `pages/` or dump UI into `components/`.
+
 ## Design
 
 Binding UX (WDS):

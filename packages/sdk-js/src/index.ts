@@ -1,4 +1,10 @@
-import type { EvidenceEnvelope, TraceRecord } from "@amkp/domain";
+import type {
+  CostEstimate,
+  EvidenceEnvelope,
+  EvidenceItem,
+  TraceHopStep,
+  TraceRecord,
+} from "@amkp/domain";
 
 export interface AmkpClientOptions {
   baseUrl: string;
@@ -195,8 +201,15 @@ export class AmkpClient {
 
   async getDocument(documentId: string): Promise<{
     documentId: string;
+    documentVersionId?: string;
+    sourceKey?: string;
     status: string;
     version: number;
+    contentHash?: string;
+    filename?: string;
+    contentType?: string;
+    byteSize?: number;
+    createdAt?: string;
   }> {
     return this.request(
       "GET",
@@ -356,6 +369,34 @@ export class AmkpAdminClient {
     this.adminToken = opts.adminToken;
     this.fetchFn = opts.fetch ?? fetch;
     this.requestId = opts.requestId;
+  }
+
+  async health(): Promise<{
+    ok: boolean;
+    service?: string;
+    adapters?: Record<string, string>;
+  }> {
+    const res = await this.fetchFn(`${this.baseUrl}/health`);
+    if (!res.ok) throw await this.toApiError(res);
+    return res.json() as Promise<{
+      ok: boolean;
+      service?: string;
+      adapters?: Record<string, string>;
+    }>;
+  }
+
+  async ready(): Promise<{
+    ok: boolean;
+    database: string;
+    redis?: string;
+  }> {
+    const res = await this.fetchFn(`${this.baseUrl}/ready`);
+    if (!res.ok) throw await this.toApiError(res);
+    return res.json() as Promise<{
+      ok: boolean;
+      database: string;
+      redis?: string;
+    }>;
   }
 
   async createAccount(name: string): Promise<{ accountId: string; name: string }> {
@@ -541,4 +582,10 @@ async function safeJson(res: Response): Promise<unknown> {
   }
 }
 
-export type { EvidenceEnvelope, TraceRecord };
+export type {
+  CostEstimate,
+  EvidenceEnvelope,
+  EvidenceItem,
+  TraceHopStep,
+  TraceRecord,
+};
