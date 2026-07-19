@@ -6,8 +6,12 @@ import {
   AlertBanner,
   Badge,
   Button,
+  Input,
+  Label,
   PageHeader,
 } from "../../../shared/ui";
+
+const DELETE_CONFIRM = "DELETE ORPHANS";
 
 export function HealthPage() {
   const { session } = useSession();
@@ -29,6 +33,7 @@ export function HealthPage() {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [deletePhrase, setDeletePhrase] = useState("");
 
   const refresh = useCallback(async () => {
     if (!session || session.role !== "admin") return;
@@ -69,11 +74,12 @@ export function HealthPage() {
 
   async function onSweepDelete() {
     if (!session || session.role !== "admin") return;
-    if (
-      !window.confirm(
-        "Delete orphaned storage objects? This is destructive. Prefer dry-run first.",
-      )
-    ) {
+    if (deletePhrase.trim() !== DELETE_CONFIRM) {
+      setError(`Type ${DELETE_CONFIRM} to enable destructive orphan delete.`);
+      return;
+    }
+    if (!sweep?.dryRun) {
+      setError("Run orphan sweep (dry-run) first and review the orphaned list.");
       return;
     }
     setBusy(true);
@@ -83,6 +89,7 @@ export function HealthPage() {
       if (!admin) return;
       const res = await admin.sweepOrphanObjects({ dryRun: false });
       setSweep(res);
+      setDeletePhrase("");
     } catch (e) {
       setError(formatApiError(e));
     } finally {
@@ -107,10 +114,26 @@ export function HealthPage() {
           type="button"
           variant="danger"
           onClick={() => void onSweepDelete()}
-          disabled={busy}
+          disabled={busy || deletePhrase.trim() !== DELETE_CONFIRM}
         >
           Orphan sweep (delete)
         </Button>
+      </div>
+      <div className="max-w-md space-y-1">
+        <Label htmlFor="delete-phrase">
+          Destructive confirm — type {DELETE_CONFIRM}
+        </Label>
+        <Input
+          id="delete-phrase"
+          mono
+          value={deletePhrase}
+          onChange={(e) => setDeletePhrase(e.target.value)}
+          placeholder={DELETE_CONFIRM}
+          autoComplete="off"
+        />
+        <p className="text-[12px] text-muted">
+          Requires a prior dry-run result in this session. Prefer CLI for prod.
+        </p>
       </div>
       {error ? <AlertBanner message={error} /> : null}
 
