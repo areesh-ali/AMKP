@@ -1,1 +1,1 @@
-{"prompt": "CONTINUE WITHOUT STOPPING unless user said stop. Amelia+Sally+Winston. Console polish cadence: tests/atomic structure hold. Re-arm loop (do not pkill wake pattern)."}
+{"prompt": "IDLE CONSOLE POLISH: only re-check if user has not said stop. Prefer SDK typing / E2E if user directed. Otherwise confirm tests green and re-arm long."}
