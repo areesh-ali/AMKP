@@ -1,0 +1,145 @@
+# Full AMKP stack: postgres + redis + migrate + api + worker + console
+# Usage from repo root:
+#   pnpm docker:stack
+#   open http://localhost:8080  (Console) · API http://localhost:3000
+#
+# Requires PLATFORM_ADMIN_TOKEN (and ideally AMKP_API_KEY_PEPPER) in the environment
+# or a sibling .env file next to this compose file / project root.
+
+name: amkp-stack
+
+x-app-env: &app-env
+  NODE_ENV: production
+  DATABASE_URL: postgresql://amkp:${POSTGRES_PASSWORD:-amkp}@postgres:5432/amkp
+  REDIS_URL: redis://redis:6379
+  PLATFORM_ADMIN_TOKEN: ${PLATFORM_ADMIN_TOKEN:-dev-admin-token-change-me}
+  AMKP_API_KEY_PEPPER: ${AMKP_API_KEY_PEPPER:-dev-pepper-change-me}
+  AMKP_CORS_ORIGINS: ${AMKP_CORS_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173}
+  AMKP_EMBEDDING_API_KEY: ${AMKP_EMBEDDING_API_KEY:-}
+  AMKP_EMBEDDING_MODEL: ${AMKP_EMBEDDING_MODEL:-text-embedding-3-small}
+  AMKP_EMBEDDING_DIMS: ${AMKP_EMBEDDING_DIMS:-64}
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: amkp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-amkp}
+      POSTGRES_DB: amkp
+    ports:
+      - "5433:5432"
+    volumes:
+      - amkp_stack_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U amkp -d amkp"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  migrate:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+      target: runtime
+    environment:
+      DATABASE_URL: postgresql://amkp:${POSTGRES_PASSWORD:-amkp}@postgres:5432/amkp
+    command:
+      [
+        "pnpm",
+        "--filter",
+        "@amkp/adapters-postgres",
+        "exec",
+        "prisma",
+        "migrate",
+        "deploy",
+      ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+      target: runtime
+    command: ["pnpm", "--filter", "@amkp/api", "start"]
+    environment:
+      <<: *app-env
+      PORT: "3000"
+      OTEL_SERVICE_NAME: amkp-api
+    ports:
+      - "3000:3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  worker:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+      target: runtime
+    command: ["pnpm", "--filter", "@amkp/worker", "start"]
+    environment:
+      <<: *app-env
+      WORKER_HEALTH_PORT: "3001"
+      OTEL_SERVICE_NAME: amkp-worker
+    expose:
+      - "3001"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3001/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  console:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.console
+      args:
+        # Empty → browser uses same origin; nginx proxies /v1 → api
+        VITE_AMKP_BASE_URL: ${VITE_AMKP_BASE_URL:-}
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  amkp_stack_pg:

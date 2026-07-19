@@ -1,0 +1,15 @@
+**/node_modules
+**/dist
+**/.git
+**/.data
+**/coverage
+**/.turbo
+**/*.md
+!README.md
+_bmad-output/_progress
+.cursor
+.claude
+agent-transcripts
+design-artifacts
+**/.DS_Store
+apps/console/dist

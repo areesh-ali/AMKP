@@ -15,6 +15,10 @@
     "test:auth": "pnpm --filter @amkp/api test",
     "typecheck": "pnpm -r run typecheck",
     "docker:up": "docker compose -f infra/docker-compose.yml up -d",
-    "docker:down": "docker compose -f infra/docker-compose.yml down"
+    "docker:down": "docker compose -f infra/docker-compose.yml down",
+    "docker:stack": "docker compose -f infra/docker-compose.stack.yml up -d --build",
+    "docker:stack:down": "docker compose -f infra/docker-compose.stack.yml down",
+    "docker:stack:logs": "docker compose -f infra/docker-compose.stack.yml logs -f --tail=200",
+    "dev:console": "pnpm --filter @amkp/console dev"
   }
 }
