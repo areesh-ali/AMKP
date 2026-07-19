@@ -16,7 +16,11 @@ import {
 
 type SessionContextValue = {
   session: ConsoleSession | null;
-  signIn: (role: ConsoleRole, credential: string) => void;
+  signIn: (
+    role: ConsoleRole,
+    credential: string,
+    activeTenantId?: string | null,
+  ) => void;
   signOut: () => void;
   setActiveTenantId: (tenantId: string | null) => void;
 };
@@ -28,15 +32,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     readSession(),
   );
 
-  const signIn = useCallback((role: ConsoleRole, credential: string) => {
-    const next: ConsoleSession = {
-      role,
-      credential: credential.trim(),
-      activeTenantId: role === "operator" ? "support" : null,
-    };
-    writeSession(next);
-    setSession(next);
-  }, []);
+  const signIn = useCallback(
+    (
+      role: ConsoleRole,
+      credential: string,
+      activeTenantId: string | null = null,
+    ) => {
+      const next: ConsoleSession = {
+        role,
+        credential: credential.trim(),
+        activeTenantId,
+      };
+      writeSession(next);
+      setSession(next);
+    },
+    [],
+  );
 
   const signOut = useCallback(() => {
     clearSession();

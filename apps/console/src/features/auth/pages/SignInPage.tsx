@@ -1,7 +1,9 @@
 import { FormEvent, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { AmkpAdminClient, AmkpClient } from "@amkp/sdk-js";
+import { formatApiError } from "../../../shared/api/errors";
 import { useSession } from "../../../shared/session/SessionContext";
-import type { ConsoleRole } from "../../../shared/session/vault";
+import { baseUrl, type ConsoleRole } from "../../../shared/session/vault";
 import { AlertBanner, Button, Input, Label } from "../../../shared/ui";
 
 export function SignInPage() {
@@ -10,6 +12,7 @@ export function SignInPage() {
   const [role, setRole] = useState<ConsoleRole>("operator");
   const [credential, setCredential] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   if (session) {
     return (
@@ -20,15 +23,38 @@ export function SignInPage() {
     );
   }
 
-  function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
     const trimmed = credential.trim();
     if (!trimmed) {
       setError("Credential is required.");
       return;
     }
-    signIn(role, trimmed);
-    navigate(role === "admin" ? "/admin/tenants" : "/", { replace: true });
+    setBusy(true);
+    setError(null);
+    try {
+      const url = baseUrl() || window.location.origin;
+      if (role === "admin") {
+        const admin = new AmkpAdminClient({
+          baseUrl: url,
+          adminToken: trimmed,
+        });
+        await admin.listAccounts(1);
+        signIn("admin", trimmed, null);
+        navigate("/admin/tenants", { replace: true });
+      } else {
+        const tenant = new AmkpClient({ baseUrl: url, apiKey: trimmed });
+        const me = await tenant.me();
+        signIn("operator", trimmed, me.tenantId);
+        navigate("/", { replace: true });
+      }
+    } catch (err) {
+      setError(
+        `${formatApiError(err)} — check role, credential, and that the plane is reachable (${baseUrl() || "same-origin"}). CORS needs AMKP_CORS_ORIGINS for local Vite.`,
+      );
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -41,13 +67,13 @@ export function SignInPage() {
     >
       <form
         className="w-full max-w-[420px] rounded-xl border border-line bg-elevated px-9 py-10 shadow-[0_8px_24px_rgba(26,25,23,0.06)]"
-        onSubmit={onSubmit}
+        onSubmit={(e) => void onSubmit(e)}
       >
         <h1 className="mb-2 font-display text-[40px] font-semibold tracking-[-0.02em]">
           AMKP
         </h1>
         <p className="mt-0 mb-7 text-muted">
-          Enterprise knowledge plane — Console
+          Console — operate the knowledge plane
         </p>
         <div className="mb-6 flex gap-2" role="radiogroup" aria-label="Role">
           {(
@@ -99,11 +125,18 @@ export function SignInPage() {
           </div>
         ) : (
           <p className="mb-4 text-[12px] text-muted">
-            Stored in this tab&apos;s session vault only — cleared on sign-out.
+            Dev vault: credential stays in this tab&apos;s sessionStorage only.
+            Not a production auth model — use a BFF/httpOnly session before
+            internet exposure.
           </p>
         )}
-        <Button type="submit" variant="primary" className="w-full">
-          Continue
+        <Button
+          type="submit"
+          variant="primary"
+          className="w-full"
+          disabled={busy}
+        >
+          {busy ? "Verifying…" : "Continue"}
         </Button>
         <p className="mt-4 text-[13px] text-muted">
           SDK &amp; MCP remain for builders. Console operates the plane — it does

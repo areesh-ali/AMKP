@@ -44,5 +44,8 @@ export function clearSession(): void {
 }
 
 export function baseUrl(): string {
-  return import.meta.env.VITE_AMKP_BASE_URL ?? "http://127.0.0.1:3000";
+  const v = import.meta.env.VITE_AMKP_BASE_URL as string | undefined;
+  // Empty string = same-origin (nginx proxies /v1 → api in docker stack).
+  if (v === "" || v === "/") return "";
+  return v ?? "http://127.0.0.1:3000";
 }
